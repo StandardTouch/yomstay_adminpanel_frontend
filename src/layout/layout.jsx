@@ -10,11 +10,11 @@ function InnerLayout() {
   const { toggleSidebar, open } = useSidebar();
 
   return (
-    <div className="w-screen flex">
+    <div className="w-screen flex bg-pastelgreen-dark">
       <AppSidebar />
       <main className="w-full ">
         {/* Header - place inside main, no fixed, so it doesn't overlap sidebar */}
-        <div className="h-14 px-4 flex items-center justify-between bg-gray-100 w-full text-3xl text-center text-black">
+        <div className="h-14 px-4  flex items-center justify-between bg-gray-100 w-full text-3xl text-center text-black">
           <div>
             <button
               onClick={toggleSidebar}

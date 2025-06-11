@@ -1,14 +1,52 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+
+
 @tailwind utilities;
 
-
+/*ShadCN Theming */
 
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+/* Font Families */
+  --font-insaniburger: var(--font-insaniburger);
+  --font-manrope: var(--font-manrope);
+  --font-maisonnene: var(--font-maisonnene);
+
+  /* Colors */
+  --color-pastelgreen: #C7E0A3;
+  --color-pastelgreen-light: rgba(199, 224, 163, 0.3);
+  --color-pastelgreen-dark: #bbd497;
+  --color-navyblue: #1F204C;
+  --color-navyblue-light: rgba(31, 32, 76, 0.3);
+  --color-navyblue-dark: #1F204C;
+  --color-lavender: #CDA5CD;
+  --color-lavender-light: rgba(205, 165, 205, 0.3);
+  --color-lavender-dark: #CDA5CD;
+  --color-success: #00ab55;
+  --color-success-light: #ddf5f0;
+  --color-danger: #e7515a;
+  --color-danger-light: #fff5f5;
+  --color-black: #0e1726;
+  --color-black-light: #e3e4eb;
+  --color-white: #ffffff;
+  --color-white-light: #e0e6ed;
+  --color-lightgray: #F5F5F5;
+
+  /* Spacing */
+  --spacing-4\.5: 18px;
+
+  /* Box Shadows */
+  --shadow-3xl: 0 2px 2px rgb(224 230 237 / 46%), 1px 6px 7px rgb(224 230 237 / 46%);
+
+  /* Background Gradients */
+  --bg-gradient-generic: linear-gradient(135deg, #CDA5CD 0, #1F204C 20%, #1F204C 40%, #C7E0A3 60%);
+  --bg-gradient-yomstay: linear-gradient(72deg, rgba(31,32,76,1) 0%, rgba(199,224,163,1) 0%, rgba(205,165,205,1) 82%);
+  --bg-gradient-primary: linear-gradient(326deg, rgba(199,224,163,1) 0%, rgba(205,165,205,1) 44%, rgba(31,32,76,1) 100%);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
