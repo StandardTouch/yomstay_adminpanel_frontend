@@ -5,16 +5,17 @@ import { Piecard } from "../components/pie-card";
 import { UserButton } from "@clerk/clerk-react";
 import { FaBars } from "react-icons/fa6";
 import { useSidebar } from "../components/ui/sidebar";
+import { Outlet } from "react-router-dom";
 
-function InnerLayout() {
+function InnerLayout({ children }) {
   const { toggleSidebar, open } = useSidebar();
 
   return (
-    <div className="w-screen flex bg-pastelgreen-dark">
+    <div className="w-screen flex bg-white">
       <AppSidebar />
       <main className="w-full ">
         {/* Header - place inside main, no fixed, so it doesn't overlap sidebar */}
-        <div className="h-14 px-4  flex items-center justify-between bg-gray-100 w-full text-3xl text-center text-black">
+        <div className="h-14 px-4  flex items-center justify-between bg-white w-full text-3xl text-center text-black">
           <div>
             <button
               onClick={toggleSidebar}
@@ -24,25 +25,25 @@ function InnerLayout() {
               <FaBars className="w-5 h-5" />
             </button>
           </div>
-          <div>Yomstay Admin Panel</div>
+          <div>Admin Panel</div>
           <div>
             <UserButton />
           </div>
         </div>
 
         <div className="flex pt-4 flex-col gap-4 sm:flex-row px-4">
-          <Component />
-          <Piecard />
+          {/* Render nested route content here */}
+          <Outlet />
         </div>
       </main>
     </div>
   );
 }
 
-export default function Layout() {
+export default function Layout({ children }) {
   return (
     <SidebarProvider>
-      <InnerLayout />
+      <InnerLayout>{children}</InnerLayout>
     </SidebarProvider>
   );
 }
