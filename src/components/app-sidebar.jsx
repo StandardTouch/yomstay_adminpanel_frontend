@@ -23,23 +23,22 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarHeader, useSidebar } from "./ui/sidebar";
 
-// Menu items.
-const items = [
+// Grouped sidebar items for scalability
+const sidebarGroups = [
   {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: Home,
+    label: "Main",
+    items: [
+      { title: "Dashboard", url: "/dashboard", icon: Home },
+      { title: "Users", url: "users", icon: User },
+    ],
   },
   {
-    title: "Users",
-    url: "users",
-    icon: User,
+    label: "Management",
+    items: [
+      { title: "Hotels", url: "hotels", icon: Hotel },
+    ],
   },
-  {
-    title: "Hotels",
-    url: "hotels",
-    icon: Hotel,
-  },
+  // Add more groups here as needed
 ];
 
 export function AppSidebar() {
@@ -63,7 +62,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         {/* sidebar header  */}
-        <SidebarHeader className="flex items-center space-x-2 px-3 py-2 text-white">
+        <SidebarHeader
+          className={`flex items-center space-x-2 text-white ${open ? "px-3 py-2" : "px-2 py-1"}`}
+        >
           {open ? (
             <img src="/logo.png" alt="Logo" className="w-full" />
           ) : (
@@ -72,42 +73,36 @@ export function AppSidebar() {
           {/* {open && <span className="whitespace-nowrap font-bold">Yomstay</span>} */}
         </SidebarHeader>
 
-        {/* other group */}
-        <SidebarGroup>
-          {/* <SidebarGroupLabel className="text-white">
-            Application
-          </SidebarGroupLabel> */}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="text-white p-0">
-                    <NavLink
-                      to={item.url}
-                      {...(item.url === "/dashboard" ? { end: true } : {})}
-                      className={({ isActive }) => {
-                        console.log(
-                          item.title,
-                          item.url,
-                          isActive,
-                          window.location.pathname
-                        );
-                        return `flex items-center gap-2 w-full px-2 py-2 rounded transition-all duration-200 border-l-4 ${
-                          isActive
-                            ? "bg-red-500 text-white font-bold border-navyblue shadow"
-                            : "text-yellow-500 border-transparent hover:bg-white/10"
-                        }`;
-                      }}
-                    >
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {/* Render sidebar groups dynamically */}
+        {sidebarGroups.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel className="text-white">{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className={`${!open ? "items-center justify-center" : ""}`}>
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild className={`text-white p-0 ${!open ? "flex flex-col items-center justify-center" : ""}`}>
+                      <NavLink
+                        to={item.url}
+                        {...(item.url === "/dashboard" ? { end: true } : {})}
+                        className={({ isActive }) =>
+                          `flex items-center gap-2 w-full px-2 py-2 rounded transition-all duration-200 border-l-4 ${
+                            isActive
+                              ? "bg-red-500 text-white font-bold border-navyblue shadow"
+                              : "text-yellow-500 border-transparent hover:bg-white/10"
+                          } ${!open ? "justify-center" : ""}`
+                        }
+                      >
+                        <item.icon className={`${!open ? "text-2xl" : ""}`} />
+                        <span className={`${!open ? "hidden" : ""}`}>{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
     </Sidebar>
   );
