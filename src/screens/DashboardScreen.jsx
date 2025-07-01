@@ -123,11 +123,13 @@ export default function DashboardScreen() {
       </Card>
 
       {/* Quick Actions */}
-      <Card className="p-4 flex flex-wrap gap-4 items-center w-full">
-        <div className="font-semibold mr-4">Quick Actions:</div>
-        <Button variant="default" className="gap-2"><Plus size={16} /> Add Hotel</Button>
-        <Button variant="secondary" className="gap-2"><List size={16} /> View All Bookings</Button>
-        <Button variant="outline" className="gap-2"><User size={16} /> Manage Users</Button>
+      <Card className="p-4 w-full">
+        <div className="font-semibold mb-3">Quick Actions:</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <Button variant="default" className="gap-2 w-full justify-center"><Plus size={16} /> Add Hotel</Button>
+          <Button variant="secondary" className="gap-2 w-full justify-center"><List size={16} /> View All Bookings</Button>
+          <Button variant="outline" className="gap-2 w-full justify-center"><User size={16} /> Manage Users</Button>
+        </div>
       </Card>
     </div>
   );
