@@ -10,6 +10,7 @@ import {
   User,
 } from "lucide-react";
 import { FaHotel } from "react-icons/fa6";
+import { useTheme } from "next-themes";
 
 import {
   Sidebar,
@@ -51,6 +52,7 @@ export function AppSidebar() {
     isMobile,
     toggleSidebar,
   } = useSidebar();
+  const { resolvedTheme } = useTheme();
 
   // When on mobile, ensure sidebar is open by default
   useEffect(() => {
@@ -58,17 +60,25 @@ export function AppSidebar() {
       setOpenMobile(true);
     }
   }, [isMobile, setOpenMobile]);
+
+  // Select logo based on theme
+  let logoSrc = "/logo.png";
+  if (resolvedTheme === "dark") logoSrc = "/logo_white.png";
+  else if (resolvedTheme === "light") logoSrc = "/logo_black.png";
+
   return (
     <Sidebar collapsible="icon">
-      <SidebarContent>
+      <SidebarContent
+        className="bg-white dark:bg-black border-r border-[--color-navyblue] dark:border-[--color-navyblue] text-black dark:text-white min-h-screen"
+      >
         {/* sidebar header  */}
         <SidebarHeader
-          className={`flex items-center space-x-2 text-white ${open ? "px-3 py-2" : "px-2 py-1"}`}
+          className={`flex items-center space-x-2 ${open ? "px-3 py-2" : "px-2 py-1"}`}
         >
           {open ? (
-            <img src="/logo.png" alt="Logo" className="w-full" />
+            <img src={logoSrc} alt="Logo" className="w-full" />
           ) : (
-            <img src="/logo_small.png" alt="Logo Small" className="w-8 h-8" />
+            <img src={logoSrc} alt="Logo Small" className="w-8 h-8" />
           )}
           {/* {open && <span className="whitespace-nowrap font-bold">Yomstay</span>} */}
         </SidebarHeader>
@@ -76,20 +86,22 @@ export function AppSidebar() {
         {/* Render sidebar groups dynamically */}
         {sidebarGroups.map((group) => (
           <SidebarGroup key={group.label}>
-            <SidebarGroupLabel className="text-white">{group.label}</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-[--color-navyblue] dark:text-[--color-navyblue] opacity-80">
+              {group.label}
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu className={`${!open ? "items-center justify-center" : ""}`}>
                 {group.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild className={`text-white p-0 ${!open ? "flex flex-col items-center justify-center" : ""}`}>
+                    <SidebarMenuButton asChild className={`p-0 ${!open ? "flex flex-col items-center justify-center" : ""}`}>
                       <NavLink
                         to={item.url}
                         {...(item.url === "/dashboard" ? { end: true } : {})}
                         className={({ isActive }) =>
-                          `flex items-center gap-2 w-full px-2 py-2 rounded transition-all duration-200 border-l-4 ${
+                          `flex items-center gap-2 w-full px-2 py-2 rounded transition-all duration-200 border-l-4 text-black dark:text-white border-transparent hover:bg-[--color-navyblue-light] dark:hover:bg-[--color-navyblue-dark]/40 hover:text-[--color-navyblue] dark:hover:text-[--color-navyblue] ${
                             isActive
-                              ? "bg-red-500 text-white font-bold border-navyblue shadow"
-                              : "text-yellow-500 border-transparent hover:bg-white/10"
+                              ? "bg-[--color-navyblue-light] dark:bg-[--color-navyblue-dark]/60 text-[--color-navyblue] dark:text-[--color-navyblue] font-bold border-[--color-navyblue] shadow"
+                              : ""
                           } ${!open ? "justify-center" : ""}`
                         }
                       >

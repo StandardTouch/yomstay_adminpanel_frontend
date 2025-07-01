@@ -7,8 +7,8 @@
 
 /*ShadCN Theming */
 
+@custom-variant dark (&:where(.dark, .dark *));
 
-@custom-variant dark (&:is(.dark *));
 
 @theme inline {
 /* Font Families */
