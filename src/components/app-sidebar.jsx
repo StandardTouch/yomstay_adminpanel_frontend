@@ -69,7 +69,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent
-        className="bg-white dark:bg-black border-r border-[--color-navyblue] dark:border-[--color-navyblue] text-black dark:text-white min-h-screen"
+        className="bg-[hsl(var(--sidebar-background))] border-r border-[--color-navyblue] text-black dark:text-white min-h-screen"
       >
         {/* sidebar header  */}
         <SidebarHeader
