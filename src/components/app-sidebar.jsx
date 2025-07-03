@@ -89,31 +89,31 @@ export function AppSidebar() {
             <SidebarGroupLabel className="text-[--color-navyblue] dark:text-[--color-navyblue] opacity-80">
               {group.label}
             </SidebarGroupLabel>
-            <SidebarGroupContent>
+          <SidebarGroupContent>
               <SidebarMenu className={`${!open ? "items-center justify-center" : ""}`}>
                 {group.items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild className={`p-0 ${!open ? "flex flex-col items-center justify-center" : ""}`}>
-                      <NavLink
-                        to={item.url}
-                        {...(item.url === "/dashboard" ? { end: true } : {})}
+                    <NavLink
+                      to={item.url}
+                      {...(item.url === "/dashboard" ? { end: true } : {})}
                         className={({ isActive }) =>
                           `flex items-center gap-2 w-full px-2 py-2 rounded transition-all duration-200 border-l-4 text-black dark:text-white border-transparent hover:bg-[--color-navyblue-light] dark:hover:bg-[--color-navyblue-dark]/40 hover:text-[--color-navyblue] dark:hover:text-[--color-navyblue] ${
-                            isActive
+                          isActive
                               ? "bg-[--color-navyblue-light] dark:bg-[--color-navyblue-dark]/60 text-[--color-navyblue] dark:text-[--color-navyblue] font-bold border-[--color-navyblue] shadow"
                               : ""
                           } ${!open ? "justify-center" : ""}`
                         }
-                      >
+                    >
                         <item.icon className={`${!open ? "text-2xl" : ""}`} />
                         <span className={`${!open ? "hidden" : ""}`}>{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
         ))}
       </SidebarContent>
     </Sidebar>
