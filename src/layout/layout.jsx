@@ -9,6 +9,7 @@ import { Outlet } from "react-router-dom";
 import { Header } from "@/components/ui/header";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import {NovuInbox} from '@/components/ui/inbox/NovuInbox';
 
 export default function Layout() {
   return (
@@ -21,6 +22,8 @@ export default function Layout() {
             <div className="flex items-center gap-2">
               <ModeToggle />
               <UserButton />
+              <NovuInbox  />
+
             </div>
           </div>
         </Header>
