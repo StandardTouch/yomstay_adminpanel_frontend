@@ -47,8 +47,8 @@ export default function DashboardScreen() {
           <Card key={item.label} className="flex items-center gap-4 p-4 w-full">
             <div className="rounded-full bg-muted p-2">{item.icon}</div>
             <div>
-              <div className="text-2xl font-bold">{item.value}</div>
-              <div className="text-muted-foreground text-sm">{item.label}</div>
+              <div className="text-2xl font-bold text-center">{item.value}</div>
+              <div className="text-muted-foreground text-sm text-center">{item.label}</div>
             </div>
           </Card>
         ))}
