@@ -17,7 +17,7 @@ export default function Layout() {
       <AppSidebar />
       <SidebarInset>
         <Header fixed>
-          <div className="flex min-w-[80%] items-center justify-between gap-4 px-2 sm:px-6">
+          <div className="flex min-w-[80%] items-center justify-between gap-4 px-1 w-full">
             <Breadcrumbs />
             <div className="flex items-center gap-2">
               <ModeToggle />

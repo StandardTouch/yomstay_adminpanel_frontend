@@ -66,6 +66,10 @@ export function AppSidebar() {
   if (resolvedTheme === "dark") logoSrc = "/logo_white.png";
   else if (resolvedTheme === "light") logoSrc = "/logo_black.png";
 
+  let smallLogoSrc = "/logo_small.png";
+  if (resolvedTheme === "dark") smallLogoSrc = "/logo_small_white.png";
+  else if (resolvedTheme === "light") smallLogoSrc = "/logo_small_black.png";
+
   return (
     <Sidebar collapsible="icon">
       <SidebarContent
@@ -73,12 +77,12 @@ export function AppSidebar() {
       >
         {/* sidebar header  */}
         <SidebarHeader
-          className={`flex items-center space-x-2 ${open ? "px-3 py-2" : "px-2 py-1"}`}
+          className={`flex items-center space-x-2 ${open ? "px-3 py-2" : "px-2"}`}
         >
           {open ? (
             <img src={logoSrc} alt="Logo" className="w-full" />
           ) : (
-            <img src={logoSrc} alt="Logo Small" className="w-8 h-8" />
+            <img src={smallLogoSrc} alt="Logo Small" className="w-6 pt-1" />
           )}
           {/* {open && <span className="whitespace-nowrap font-bold">Yomstay</span>} */}
         </SidebarHeader>
@@ -89,7 +93,7 @@ export function AppSidebar() {
             <SidebarGroupLabel className="text-[--color-navyblue] dark:text-[--color-navyblue] opacity-80">
               {group.label}
             </SidebarGroupLabel>
-          <SidebarGroupContent>
+          <SidebarGroupContent className={`${open ? "border-l-4 border-transparent" : ""}`}>
               <SidebarMenu className={`${!open ? "items-center justify-center" : ""}`}>
                 {group.items.map((item) => (
                 <SidebarMenuItem key={item.title}>
@@ -98,7 +102,7 @@ export function AppSidebar() {
                       to={item.url}
                       {...(item.url === "/dashboard" ? { end: true } : {})}
                         className={({ isActive }) =>
-                          `flex items-center gap-2 w-full px-2 py-2 rounded transition-all duration-200 border-l-4 text-black dark:text-white border-transparent hover:bg-[--color-navyblue-light] dark:hover:bg-[--color-navyblue-dark]/40 hover:text-[--color-navyblue] dark:hover:text-[--color-navyblue] ${
+                          `flex items-center gap-2 w-full px-2 py-2 rounded transition-all  duration-200 text-black dark:text-white hover:bg-[--color-navyblue-light] dark:hover:bg-[--color-navyblue-dark]/40 hover:text-[--color-navyblue] dark:hover:text-[--color-navyblue] ${
                           isActive
                               ? "bg-[--color-navyblue-light] dark:bg-[--color-navyblue-dark]/60 text-[--color-navyblue] dark:text-[--color-navyblue] font-bold border-[--color-navyblue] shadow"
                               : ""
