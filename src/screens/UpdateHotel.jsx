@@ -12,6 +12,14 @@ import { ImageCard } from "./UpdateHotel/ImageCard";
 import { AmenityItem } from "./UpdateHotel/AmenityItem";
 import { FaqItem } from "./UpdateHotel/FaqItem";
 import { ReviewItem } from "./UpdateHotel/ReviewItem";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 function UpdateHotel({ hotel, setShow, onAddHotel }) {
   const [fields, setFields] = useState({
@@ -85,8 +93,8 @@ function UpdateHotel({ hotel, setShow, onAddHotel }) {
             <TabsTrigger value="images">Images</TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="address">Address</TabsTrigger>
-            <TabsTrigger value="amenities" onClick={() => setModal({ open: true, type: "amenity" })}>Amenities</TabsTrigger>
-            <TabsTrigger value="faqs" onClick={() => setModal({ open: true, type: "faq" })}>Faqs</TabsTrigger>
+            <TabsTrigger value="amenities" onClick={() => setModal({ type: "amenity" })}>Amenities</TabsTrigger>
+            <TabsTrigger value="faqs" onClick={() => setModal({ type: "faq" })}>Faqs</TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
           </TabsList>
         </div>
@@ -249,14 +257,29 @@ function UpdateHotel({ hotel, setShow, onAddHotel }) {
               </section>
             ) : (
               <section className="flex flex-col gap-3">
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="border-2 py-2 rounded-md">Select Amenity</DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {fields.amenities.map((amenity, idx) => (
+                      <DropdownMenuItem key={idx} onClick={() => setAddAmenity(amenity)} className="cursor-pointer w-50">
+                        <div className="flex items-center gap-2">
+                          <img src={amenity.icon} alt="" className="w-10 h-10" />
+                        {amenity.name}
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <div className="flex flex-col gap-2">
                   <label htmlFor="name">Name</label>
                   <Input type="text" className="w-full p-3" id="name" required value={addAmenity.name} onChange={e => setAddAmenity({ ...addAmenity, name: e.target.value })} />
                 </div>
-                <div className="flex flex-col justify-between items-center w-full h-10 ">
-                  <label htmlFor="icon" className="w-full h-full flex items-center text-center rounded-md cursor-pointer dark:bg-slate-800 bg-slate-300 ">
-                    <p className="text-xs w-full">Upload Icon Image</p>
-                  </label>
+                <div className="flex flex-col justify-between items-center w-full ">
+                  {addAmenity.icon ? <img src={addAmenity.icon} alt="" className="w-10 h-10" />:
+                  <label htmlFor="icon" className="w-full h-full flex flex-col p-2 rounded-md cursor-pointer dark:bg-slate-800 bg-slate-300 ">
+                    <p className="text-xs w-full">Upload a File</p>
+                    <p className="text-xs w-full">Select a file to Upload and click the add button</p>
+                  </label>}
                   <input type="file" className="w-full p-3 hidden" id="icon" required onChange={e => setAddAmenity({ ...addAmenity, icon: URL.createObjectURL(e.target.files[0]) })} />
                 </div>
               </section>
