@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,7 @@ import { Star, Upload, X, Plus } from "lucide-react";
 import { MdOutlineStar } from "react-icons/md";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { ImageCard } from "./UpdateHotel/ImageCard";
 import { AmenityItem } from "./UpdateHotel/AmenityItem";
 import { FaqItem } from "./UpdateHotel/FaqItem";
@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-function UpdateHotel({ hotel, setShow, onAddHotel }) {
+function UpdateHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
   const [fields, setFields] = useState({
     name: hotel.name,
     description: hotel.description,
@@ -37,9 +37,11 @@ function UpdateHotel({ hotel, setShow, onAddHotel }) {
     faq: hotel.faq,
     reviews: hotel.reviews,
   });
+
   const [modal, setModal] = useState({ open: false, type: "amenity" });
   const [addFaq, setAddFaq] = useState({ question: "", answer: "" });
   const [addAmenity, setAddAmenity] = useState({ id: Math.random().toString(), name: "", icon: "" });
+  const [amenitiesList, setAmenitiesList] = useState(hotel.amenities);
 
   const handleField = (key, value) => setFields(f => ({ ...f, [key]: value }));
 
@@ -47,6 +49,7 @@ function UpdateHotel({ hotel, setShow, onAddHotel }) {
     onAddHotel({
       id: hotel.id,
       ...fields,
+      amenities: amenitiesList,
       city: { name: fields.city },
       state: { name: fields.state },
       country: { name: fields.country },
@@ -72,11 +75,42 @@ function UpdateHotel({ hotel, setShow, onAddHotel }) {
   };
   const handleAddAmenity = e => {
     e.preventDefault();
-    if (!addAmenity.name || !addAmenity.icon) return alert("Please fill out all fields");
-    handleField("amenities", [addAmenity, ...fields.amenities]);
+    const amenityExists = amenitiesList.some(item => item.id === addAmenity.id);
+    if (!amenityExists) {
+      if (!addAmenity.name || !addAmenity.icon) return alert("Please fill out all fields");
+      setAmenitiesList([addAmenity, ...amenitiesList]);
+      handleField("amenities", [addAmenity, ...fields.amenities]);
+      handleCancel();
+      return;
+    } else {
+      alert("This amenity is already added.");
+      handleCancel();
+    }
+  };
+
+  const [image, setImage] = useState(null);
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setImage(URL.createObjectURL(file));
+      console.log(URL.createObjectURL(file));
+      setAddAmenity({ ...addAmenity, icon: URL.createObjectURL(file) });
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault(); // Necessary to allow drop
+  };
+
+  const handleCancel = () => {
+    setImage(null);
     setAddAmenity({ id: Math.random().toString(), name: "", icon: "" });
     setModal({ ...modal, open: false });
   };
+
+  // console.log(defaultAmenities);
 
   return (
     <div className="w-full bg-inherit flex flex-col gap-4 pb-10">
@@ -103,8 +137,12 @@ function UpdateHotel({ hotel, setShow, onAddHotel }) {
           <div className="flex flex-col gap-2 p-1">
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-2">
               <h2 className="text-2xl font-semibold">Images</h2>
-              <p>Select a featured image by clicking on the star icon</p>
             </div>
+            <div className="flex flex-col gap-2">
+              <p>Featured Image</p>
+              <img src={fields.images.find(img => img.isPrimary)?.url} alt="hotel" className=" rounded-md md:w-1/4 w-1/2 p-1 " />
+            </div>
+              <p>Select a featured image by clicking on the star icon</p>
             <div className="flex md:flex-row flex-wrap border rounded-md">
               {fields.images.map((image, idx) => (
                 <ImageCard
@@ -203,8 +241,8 @@ function UpdateHotel({ hotel, setShow, onAddHotel }) {
               </Button>
             </div>
             <div className="flex flex-wrap w-full gap-2">
-              {fields.amenities.map((amenity, idx) => (
-                <AmenityItem key={amenity.id || idx} amenity={amenity} onDelete={() => handleField("amenities", fields.amenities.filter((a, i) => i !== idx))} />
+              {amenitiesList.map((amenity, idx) => (
+                <AmenityItem key={amenity.id || idx} amenity={amenity} onDelete={() => setAmenitiesList(amenitiesList.filter((_, i) => i !== idx))} />
               ))}
             </div>
           </div>
@@ -239,9 +277,10 @@ function UpdateHotel({ hotel, setShow, onAddHotel }) {
       </Tabs>
       {/* Modal for Add Faq/Amenity */}
       <Sheet open={modal.open} onOpenChange={open => setModal(m => ({ ...m, open }))}>
-        <SheetContent side="right" className="max-w-md w-full">
+        <SheetContent side="right" className="max-w-md w-full overflow-y-auto ">
           <SheetHeader>
             <SheetTitle>{modal.type === "faq" ? "Add Faq" : "Add Amenity"}</SheetTitle>
+            <SheetDescription></SheetDescription>
           </SheetHeader>
           <form className="px-3">
             {modal.type === "faq" ? (
@@ -256,31 +295,55 @@ function UpdateHotel({ hotel, setShow, onAddHotel }) {
                 </div>
               </section>
             ) : (
-              <section className="flex flex-col gap-3">
+              <section className="flex flex-col gap-3 text-start">
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="border-2 py-2 rounded-md">Select Amenity</DropdownMenuTrigger>
+                  <DropdownMenuTrigger className="w-full border py-2 rounded-md cursor-pointer">Click To Select Amenity</DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    {fields.amenities.map((amenity, idx) => (
-                      <DropdownMenuItem key={idx} onClick={() => setAddAmenity(amenity)} className="cursor-pointer w-50">
+                    {defaultAmenities.map((amenity, idx) => (
+                      <DropdownMenuItem key={idx} onClick={() => { setAddAmenity(amenity); setImage(amenity.icon) }} className="cursor-pointer w-80">
                         <div className="flex items-center gap-2">
                           <img src={amenity.icon} alt="" className="w-10 h-10" />
-                        {amenity.name}
+                          {amenity.name}
                         </div>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="name">Name</label>
+                <div className="flex flex-col gap-2 text-start">
+                  <label htmlFor="name">Add Amenity</label>
                   <Input type="text" className="w-full p-3" id="name" required value={addAmenity.name} onChange={e => setAddAmenity({ ...addAmenity, name: e.target.value })} />
                 </div>
                 <div className="flex flex-col justify-between items-center w-full ">
-                  {addAmenity.icon ? <img src={addAmenity.icon} alt="" className="w-10 h-10" />:
-                  <label htmlFor="icon" className="w-full h-full flex flex-col p-2 rounded-md cursor-pointer dark:bg-slate-800 bg-slate-300 ">
-                    <p className="text-xs w-full">Upload a File</p>
-                    <p className="text-xs w-full">Select a file to Upload and click the add button</p>
-                  </label>}
-                  <input type="file" className="w-full p-3 hidden" id="icon" required onChange={e => setAddAmenity({ ...addAmenity, icon: URL.createObjectURL(e.target.files[0]) })} />
+                  <label htmlFor="icon" className="w-full h-full flex flex-col gap-2 p-2 rounded-md cursor-pointer dark:bg-slate-800 bg-slate-300 ">
+                    <div>
+                      <p className=" w-full">Upload a File</p>
+                      <p className="text-xs w-full ">Select a file to Upload and click the add button</p>
+                    </div>
+                    <div
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
+                      onChange={() => setAddAmenity({ ...addAmenity, icon: image })}
+                      className="border-2 border-dashed rounded-md p-5 text-center cursor-pointer border-gray-600 dark:border-gray-300"
+                    >
+                      {image ? (
+                        <div className="relative">
+                          <img src={image} alt="Uploaded" style={{ maxWidth: '100%' }} />
+                          <Button className="absolute top-2 right-2" variant="destructive" onClick={() => setImage(null)}>Remove</Button>
+                        </div>
+                      ) : (
+                        <div className="w-full flex flex-col items-center justify-center py-8">
+                          <Upload size={25} />
+                          <p className="text-xs">Click to Upload or drag and drop</p>
+                          <p className="text-xs">SVG, PNG, JPG or GIF ( max. 800x400px )</p>
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                  <input type="file" className="w-full p-3 hidden" id="icon" required
+                    onChange={e => {
+                      setAddAmenity({ ...addAmenity, icon: URL.createObjectURL(e.target.files[0]) });
+                      setImage(URL.createObjectURL(e.target.files[0]))
+                    }} />
                 </div>
               </section>
             )}
@@ -291,7 +354,7 @@ function UpdateHotel({ hotel, setShow, onAddHotel }) {
                 <Button type="submit" className="w-full cursor-pointer" onClick={handleAddAmenity}>Add Amenities</Button>
               )}
               <SheetClose asChild>
-                <Button type="button" variant="outline" className="w-full cursor-pointer">Cancel</Button>
+                <Button type="button" variant="outline" onClick={handleCancel} className="w-full cursor-pointer">Cancel</Button>
               </SheetClose>
             </SheetFooter>
           </form>
