@@ -10,6 +10,18 @@ import {
   SheetTitle, SheetFooter, SheetClose,
 } from "@/components/ui/sheet";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 export default function HotelsScreen() {
   const Hotels = [
     {
@@ -514,10 +526,21 @@ export default function HotelsScreen() {
                 </CardFooter>
 
               </div>
-              <Button variant="destructive" size="sm" className="cursor-pointer absolute bottom-2 right-2"
-                onClick={() => { setShow(false); setHotellist(hotellist.filter((item) => item.id !== hotel.id)); }} >
-                Remove Hotel
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger><Button variant="destructive" size="sm" className="cursor-pointer absolute bottom-2 right-2">Remove Hotel</Button></AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your hotel.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => {setHotellist(hotellist.filter((item) => item.id !== hotel.id));}}>Continue</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
 
             </Card>
           ))}
@@ -587,7 +610,7 @@ export default function HotelsScreen() {
                   Cancel
                 </Button>
               </SheetClose>
-              
+
             </SheetFooter>
           </form>
         </SheetContent>
