@@ -276,7 +276,7 @@ function UpdateHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
         </TabsContent>
       </Tabs>
       {/* Modal for Add Faq/Amenity */}
-      <Sheet open={modal.open} onOpenChange={open => setModal(m => ({ ...m, open }))}>
+      <Sheet open={modal.open} onOpenChange={open => {setModal(m => ({ ...m, open })); handleCancel();}}>
         <SheetContent side="right" className="max-w-md w-full overflow-y-auto ">
           <SheetHeader>
             <SheetTitle>{modal.type === "faq" ? "Add Faq" : "Add Amenity"}</SheetTitle>
