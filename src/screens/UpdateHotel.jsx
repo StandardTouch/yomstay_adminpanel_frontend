@@ -107,6 +107,7 @@ function UpdateHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
   const handleCancel = () => {
     setImage(null);
     setAddAmenity({ id: Math.random().toString(), name: "", icon: "" });
+    setAddFaq({ question: "", answer: "" });
     setModal({ ...modal, open: false });
   };
 
