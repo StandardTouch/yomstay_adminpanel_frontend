@@ -21,6 +21,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
 function UpdateHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
   const [fields, setFields] = useState({
     name: hotel.name,
@@ -143,7 +152,7 @@ function UpdateHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
               <p>Featured Image</p>
               <img src={fields.images.find(img => img.isPrimary)?.url} alt="hotel" className=" rounded-md md:w-1/4 w-1/2 p-1 " />
             </div>
-              <p>Select a featured image by clicking on the star icon</p>
+            <p>Select a featured image by clicking on the star icon</p>
             <div className="flex md:flex-row flex-wrap border rounded-md">
               {fields.images.map((image, idx) => (
                 <ImageCard
@@ -277,7 +286,7 @@ function UpdateHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
         </TabsContent>
       </Tabs>
       {/* Modal for Add Faq/Amenity */}
-      <Sheet open={modal.open} onOpenChange={open => {setModal(m => ({ ...m, open })); handleCancel();}}>
+      <Sheet open={modal.open} onOpenChange={open => { setModal(m => ({ ...m, open })); handleCancel(); }}>
         <SheetContent side="right" className="max-w-md w-full overflow-y-auto ">
           <SheetHeader>
             <SheetTitle>{modal.type === "faq" ? "Add Faq" : "Add Amenity"}</SheetTitle>
@@ -298,8 +307,55 @@ function UpdateHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
             ) : (
               <section className="flex flex-col gap-3 text-start">
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="w-full border py-2 rounded-md cursor-pointer">Click To Select Amenity</DropdownMenuTrigger>
+                  <DropdownMenuTrigger className="w-full border py-2 rounded-md cursor-pointer">Click to Select or Add Amenity</DropdownMenuTrigger>
                   <DropdownMenuContent>
+                    <Dialog>
+                      <DialogTrigger className="p-2 cursor-pointer dark:hover:bg-zinc-800 hover:bg-zinc-100 rounded-md w-full">Click to Add New Amenity</DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Add Amenity</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex flex-col gap-2 text-start">
+                            <label htmlFor="name">Add Amenity</label>
+                            <Input type="text" className="w-full p-3" id="name" required value={addAmenity.name} onChange={e => setAddAmenity({ ...addAmenity, name: e.target.value })} />
+                          </div>
+                          <div className="flex flex-col justify-between items-center w-full ">
+                            <label htmlFor="icon" className="w-full h-full flex flex-col gap-2 p-2 rounded-md cursor-pointer dark:bg-slate-800 bg-slate-300 ">
+                              <div>
+                                <p className=" w-full">Upload a File</p>
+                                <p className="text-xs w-full ">Select a file to Upload and click the add button</p>
+                              </div>
+                              <div
+                                onDrop={handleDrop}
+                                onDragOver={handleDragOver}
+                                onChange={() => setAddAmenity({ ...addAmenity, icon: image })}
+                                className="border-2 border-dashed rounded-md p-5 text-center cursor-pointer border-gray-600 dark:border-gray-300"
+                              >
+                                {image ? (
+                                  <div className="relative">
+                                    <img src={image} alt="Uploaded" style={{ maxWidth: '100%' }} className="overflow-auto h-50" />
+                                    <Button className="absolute top-2 right-2" variant="destructive" onClick={() => setImage(null)}>Remove</Button>
+                                  </div>
+                                ) : (
+                                  <div className="w-full flex flex-col items-center justify-center py-8">
+                                    <Upload size={25} />
+                                    <p className="text-xs">Click to Upload or drag and drop</p>
+                                    <p className="text-xs">SVG, PNG, JPG or GIF ( max. 800x400px )</p>
+                                  </div>
+                                )}
+                              </div>
+                            </label>
+                            <input type="file" className="w-full p-3 hidden" id="icon" required
+                              onChange={e => {
+                                setAddAmenity({ ...addAmenity, icon: URL.createObjectURL(e.target.files[0]) });
+                                setImage(URL.createObjectURL(e.target.files[0]))
+                              }} />
+                          </div>
+                          <Button type="submit" className="w-full cursor-pointer" onClick={handleAddAmenity}>Add Amenities</Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                     {defaultAmenities.map((amenity, idx) => (
                       <DropdownMenuItem key={idx} onClick={() => { setAddAmenity(amenity); setImage(amenity.icon) }} className="cursor-pointer w-80">
                         <div className="flex items-center gap-2">
@@ -310,41 +366,8 @@ function UpdateHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <div className="flex flex-col gap-2 text-start">
-                  <label htmlFor="name">Add Amenity</label>
-                  <Input type="text" className="w-full p-3" id="name" required value={addAmenity.name} onChange={e => setAddAmenity({ ...addAmenity, name: e.target.value })} />
-                </div>
-                <div className="flex flex-col justify-between items-center w-full ">
-                  <label htmlFor="icon" className="w-full h-full flex flex-col gap-2 p-2 rounded-md cursor-pointer dark:bg-slate-800 bg-slate-300 ">
-                    <div>
-                      <p className=" w-full">Upload a File</p>
-                      <p className="text-xs w-full ">Select a file to Upload and click the add button</p>
-                    </div>
-                    <div
-                      onDrop={handleDrop}
-                      onDragOver={handleDragOver}
-                      onChange={() => setAddAmenity({ ...addAmenity, icon: image })}
-                      className="border-2 border-dashed rounded-md p-5 text-center cursor-pointer border-gray-600 dark:border-gray-300"
-                    >
-                      {image ? (
-                        <div className="relative">
-                          <img src={image} alt="Uploaded" style={{ maxWidth: '100%' }} />
-                          <Button className="absolute top-2 right-2" variant="destructive" onClick={() => setImage(null)}>Remove</Button>
-                        </div>
-                      ) : (
-                        <div className="w-full flex flex-col items-center justify-center py-8">
-                          <Upload size={25} />
-                          <p className="text-xs">Click to Upload or drag and drop</p>
-                          <p className="text-xs">SVG, PNG, JPG or GIF ( max. 800x400px )</p>
-                        </div>
-                      )}
-                    </div>
-                  </label>
-                  <input type="file" className="w-full p-3 hidden" id="icon" required
-                    onChange={e => {
-                      setAddAmenity({ ...addAmenity, icon: URL.createObjectURL(e.target.files[0]) });
-                      setImage(URL.createObjectURL(e.target.files[0]))
-                    }} />
+                <div>
+                  {addAmenity.name && addAmenity.icon && <AmenityItem amenity={addAmenity} onDelete={() => setAddAmenity({ name: "", icon: "" })} />}
                 </div>
               </section>
             )}
