@@ -19,11 +19,12 @@ export default function Layout() {
         <Header fixed>
           <div className="flex min-w-[80%] items-center justify-between gap-4 px-1 w-full">
             <Breadcrumbs />
-            <div className="flex items-center gap-2">
-              <ModeToggle />
-              <UserButton />
-              <NovuInbox  />
-
+            <div className="flex items-center gap-2  ">
+              <div className="flex items-center gap-2 fixed right-4 ">
+                <ModeToggle />
+                <UserButton />
+                <NovuInbox  />
+              </div>
             </div>
           </div>
         </Header>
