@@ -250,7 +250,7 @@ function UpdateHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
                 <Plus size={16} /> Add Amenities
               </Button>
             </div>
-            <div className="flex flex-wrap w-full gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 w-full">
               {amenitiesList.map((amenity, idx) => (
                 <AmenityItem key={amenity.id || idx} amenity={amenity} onDelete={() => setAmenitiesList(amenitiesList.filter((_, i) => i !== idx))} />
               ))}

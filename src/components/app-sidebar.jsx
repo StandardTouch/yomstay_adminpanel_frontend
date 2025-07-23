@@ -37,6 +37,7 @@ const sidebarGroups = [
     label: "Management",
     items: [
       { title: "Hotels", url: "hotels", icon: Hotel },
+      { title: "Amenities", url: "amenities", icon: Inbox },
     ],
   },
   // Add more groups here as needed
@@ -57,7 +58,7 @@ export function AppSidebar() {
   // When on mobile, ensure sidebar is open by default
   useEffect(() => {
     if (isMobile) {
-      setOpenMobile(true);
+      setOpenMobile(false);
     }
   }, [isMobile, setOpenMobile]);
 

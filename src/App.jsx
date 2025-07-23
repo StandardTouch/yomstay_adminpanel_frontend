@@ -7,6 +7,7 @@ import { Spinner } from "./common/spinner";
 import UsersScreen from "./screens/UsersScreen";
 import HotelsScreen from "./screens/HotelsScreen";
 import DashboardScreen from "./screens/DashboardScreen";
+import GlobalAmenities from "./screens/GlobalAmenities";
 
 function App() {
   const { isSignedIn, user, isLoaded } = useUser();
@@ -32,6 +33,7 @@ function App() {
           <Route index element={<DashboardScreen />} />
           <Route path="users" element={<UsersScreen />} />
           <Route path="hotels" element={<HotelsScreen />} />
+          <Route path="amenities" element={<GlobalAmenities />} />
         </Route>
 
         {/* Login route */}
