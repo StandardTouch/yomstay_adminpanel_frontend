@@ -17,8 +17,8 @@ function AlertBox({ onDelete, Check, hotelName }) {
         <AlertDialog>
             <AlertDialogTrigger>
                 <div className={`cursor-pointer bg-red-500 hover:bg-red-700 text-white rounded-2xl
-                    ${Check === "Hotel" && " pb-1 px-1.5 rounded-md absolute bottom-2 right-2"}
-                    ${Check === "Faq" && " pb-1 px-1.5 text-sm rounded-md absolute top-2 right-2"}
+                    ${Check === "Hotel" && " py-2 px-2.5 rounded-md absolute bottom-2 right-2"}
+                    ${Check === "Faq" && " py-1 px-2.5 text-sm rounded-md absolute top-2 right-2"}
                     ${Check === "Amenity" && "p-0.5 rounded-2xl"}
                     ${Check === "Image" && "p-1 rounded-2xl"}`}>
                     {(Check === "Amenity" || Check === "Image") && <X size={16} />}
