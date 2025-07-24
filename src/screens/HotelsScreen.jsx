@@ -9,18 +9,8 @@ import {
   Sheet, SheetContent, SheetHeader,
   SheetTitle, SheetFooter, SheetClose,
 } from "@/components/ui/sheet";
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import AlertBox from "../components/AlertBox";
+import AddButton from "../components/AddButton";
 
 export default function HotelsScreen() {
   const Hotels = [
@@ -472,9 +462,7 @@ export default function HotelsScreen() {
       {!show && (
         <div className="mb-6 flex justify-between">
           <h1 className="text-2xl font-bold ">Hotels</h1>
-          <Button className="gap-2 cursor-pointer" onClick={() => setAddOpen(true)} >
-            <Plus size={16} /> Add Hotel
-          </Button>
+          <AddButton buttonValue="Add Hotel" onAdd={() => setAddOpen(true)} />
         </div>
       )}
 
@@ -526,21 +514,7 @@ export default function HotelsScreen() {
                 </CardFooter>
 
               </div>
-              <AlertDialog>
-                <AlertDialogTrigger><div className="border-2 p-1 pt-0 bg-red-500 hover:bg-red-700 rounded-md cursor-pointer absolute bottom-2 right-2">Remove Hotel</div></AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete your hotel.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction className="bg-red-500 hover:bg-red-700 text-white" onClick={() => {setHotellist(hotellist.filter((item) => item.id !== hotel.id));}}>Continue</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <AlertBox Check="hotel" onDelete={() => {setHotellist(hotellist.filter((item) => item.id !== hotel.id));}} />
             </Card>
           ))}
         </div>

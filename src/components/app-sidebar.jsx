@@ -103,7 +103,7 @@ export function AppSidebar() {
                       to={item.url}
                       {...(item.url === "/dashboard" ? { end: true } : {})}
                         className={({ isActive }) =>
-                          `flex items-center gap-2 w-full px-2 py-2 rounded transition-all  duration-200 text-black dark:text-white hover:bg-[--color-navyblue-light] dark:hover:bg-[--color-navyblue-dark]/40 hover:text-[--color-navyblue] dark:hover:text-[--color-navyblue] ${
+                          `flex items-center gap-2 w-full px-2 py-2 rounded transition-all duration-200 text-black dark:text-white hover:bg-[--color-navyblue-light] dark:hover:bg-[--color-navyblue-dark]/40 hover:text-[--color-navyblue] dark:hover:text-[--color-navyblue] ${
                           isActive
                               ? "bg-[--color-navyblue-light] dark:bg-[--color-navyblue-dark]/60 text-[--color-navyblue] dark:text-[--color-navyblue] font-bold border-[--color-navyblue] shadow"
                               : ""

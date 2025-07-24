@@ -7,6 +7,8 @@ import { Plus } from "lucide-react";
 import { MdEditSquare } from "react-icons/md";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { AmenityItem } from "./UpdateHotel/AmenityItem";
+import AddButton from "../components/AddButton";
+import DragDrop from "./UpdateHotel/DragDrop";
 
 
 export default function GlobalAmenities() {
@@ -57,7 +59,7 @@ export default function GlobalAmenities() {
     const [amenities, setAmenities] = useState(Amenities);
     const [addOpen, setAddOpen] = useState(false);
     const [showAlert, setShowAlert] = useState(false);
-    const [newAmenity, setNewAmenity] = useState({
+    const [addAmenity, setAddAmenity] = useState({
         id: Math.random().toString(),
         name: "",
         icon: "",
@@ -65,17 +67,17 @@ export default function GlobalAmenities() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!newAmenity.name || !newAmenity.icon) return alert("Please fill out all fields");
+        if (!addAmenity.name || !addAmenity.icon) return alert("Please fill out all fields");
         setAmenities((prevamenity) => {
-            const amenityExists = prevamenity.some((amenity) => amenity.id === newAmenity.id);
+            const amenityExists = prevamenity.some((amenity) => amenity.id === addAmenity.id);
             if (amenityExists) {
                 // Replace the existing amenity with the new one
                 return prevamenity.map((amenity) =>
-                    amenity.id === newAmenity.id ? newAmenity : amenity
+                    amenity.id === addAmenity.id ? addAmenity : amenity
                 );
             } else {
                 // Add new amenity if ID doesn't exist
-                return [...prevamenity, newAmenity];
+                return [...prevamenity, addAmenity];
             }
         });
         handleCancel();
@@ -83,36 +85,21 @@ export default function GlobalAmenities() {
 
     const [image, setImage] = useState(null);
 
-    const handleDrop = (e) => {
-        e.preventDefault();
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-            setImage(URL.createObjectURL(file));
-            setNewAmenity({ ...newAmenity, icon: URL.createObjectURL(file) });
-        }
-    };
-
-    const handleDragOver = (e) => {
-        e.preventDefault(); // Necessary to allow drop
-    };
-
     const handleCancel = () => {
         setAddOpen(false);
         setImage(null);
-        setNewAmenity({ id: Math.random().toString(), name: "", icon: "" });
+        setAddAmenity({ id: Math.random().toString(), name: "", icon: "" });
     };
 
     return (
         <div className="p-4 sm:p-8 w-full max-w-7xl mx-auto relative ">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Global Amenities</h1>
-                <Button className="gap-2 cursor-pointer" onClick={() => setAddOpen(true)} >
-                    <Plus size={16} /> Add Amenity
-                </Button>
+                <AddButton buttonValue="Add Amenity" onAdd={() => setAddOpen(true)} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                 {amenities.map((amenity) => (
-                    <AmenityItem key={amenity.id || idx} amenity={amenity} onAdd={() => { setAddOpen(true); setNewAmenity(amenity); setImage(amenity.icon); }} onDelete={() => setAmenities(amenities.filter((a) => a.id !== amenity.id))} />
+                    <AmenityItem key={amenity.id || idx} amenity={amenity} onAdd={() => { setAddOpen(true); setAddAmenity(amenity); setImage(amenity.icon); }} onDelete={() => setAmenities(amenities.filter((a) => a.id !== amenity.id))} />
                 ))}
             </div>
 
@@ -125,41 +112,8 @@ export default function GlobalAmenities() {
                     <form className="px-3">
                         <div className="flex flex-col gap-3">
                             <label htmlFor="name">Amenity Name</label>
-                            <Input placeholder="Amenity Name" id="name" value={newAmenity.name} onChange={(e) => setNewAmenity({ ...newAmenity, name: e.target.value })} className="w-full" />
-                            <div className="flex flex-col gap-2">
-                                <div className="flex flex-col justify-between items-center w-full ">
-                                    <label htmlFor="icon" className="w-full h-full flex flex-col gap-2 p-2 rounded-md cursor-pointer dark:bg-slate-800 bg-slate-300 ">
-                                        {!image && <div>
-                                            <p className=" w-full">Upload a File</p>
-                                            <p className="text-xs w-full ">Select a file to Upload and click the add button</p>
-                                        </div>}
-                                        <div
-                                            onDrop={handleDrop}
-                                            onDragOver={handleDragOver}
-                                            onChange={() => setNewAmenity({ ...newAmenity, icon: image })}
-                                            className="border-2 border-dashed rounded-md p-5 text-center cursor-pointer border-gray-600 dark:border-gray-300"
-                                        >
-                                            {image ? (
-                                                <div className="relative">
-                                                    <img src={image} alt="Uploaded" style={{ maxWidth: '100%' }} className="overflow-auto h-40" />
-                                                    <Button className="absolute top-2 right-2" variant="destructive" onClick={() => { setImage(null); setNewAmenity({ ...newAmenity, icon: "" }) }}>Remove</Button>
-                                                </div>
-                                            ) : (
-                                                <div className="w-full flex flex-col items-center justify-center py-8">
-                                                    <Upload size={25} />
-                                                    <p className="text-xs">Click to Upload or drag and drop</p>
-                                                    <p className="text-xs">SVG, PNG, JPG or GIF ( max. 800x400px )</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </label>
-                                    <input type="file" className="w-full p-3 hidden" id="icon" required
-                                        onChange={e => {
-                                            setNewAmenity({ ...newAmenity, icon: URL.createObjectURL(e.target.files[0]) });
-                                            setImage(URL.createObjectURL(e.target.files[0]))
-                                        }} />
-                                </div>
-                            </div>
+                            <Input placeholder="Amenity Name" id="name" value={addAmenity.name} onChange={(e) => setAddAmenity({ ...addAmenity, name: e.target.value })} className="w-full" />
+                            <DragDrop image={image} setImage={setImage} setAddAmenity={setAddAmenity} addAmenity={addAmenity} />
                         </div>
                         <SheetFooter className="flex flex-col gap-3 px-0">
                             <Button type="submit" className="w-full cursor-pointer" onClick={handleSubmit}>Add Amenities</Button>
