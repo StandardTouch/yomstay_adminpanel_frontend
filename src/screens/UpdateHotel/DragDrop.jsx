@@ -43,7 +43,7 @@ function DragDrop({ image, setImage, setAddAmenity, addAmenity }) {
                         </div>
                     </div>}
                 </label>
-                <input type="file" className="w-full p-3 hidden" id="icon" required
+                <input type="file" accept="image/*" className="w-full p-3 hidden" id="icon" required
                     onChange={e => {
                         setAddAmenity({ ...addAmenity, icon: URL.createObjectURL(e.target.files[0]) });
                         setImage(URL.createObjectURL(e.target.files[0]))
