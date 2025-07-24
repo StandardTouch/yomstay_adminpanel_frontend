@@ -58,7 +58,6 @@ export default function GlobalAmenities() {
 
     const [amenities, setAmenities] = useState(Amenities);
     const [addOpen, setAddOpen] = useState(false);
-    const [showAlert, setShowAlert] = useState(false);
     const [addAmenity, setAddAmenity] = useState({
         id: Math.random().toString(),
         name: "",
@@ -67,7 +66,7 @@ export default function GlobalAmenities() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!addAmenity.name || !addAmenity.icon) return alert("Please fill out all fields");
+        if (!addAmenity.name) return alert("Please fill out all fields");
         setAmenities((prevamenity) => {
             const amenityExists = prevamenity.some((amenity) => amenity.id === addAmenity.id);
             if (amenityExists) {
@@ -77,7 +76,7 @@ export default function GlobalAmenities() {
                 );
             } else {
                 // Add new amenity if ID doesn't exist
-                return [...prevamenity, addAmenity];
+                return [addAmenity, ...prevamenity];
             }
         });
         handleCancel();

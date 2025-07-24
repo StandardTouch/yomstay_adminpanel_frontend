@@ -86,7 +86,7 @@ function UpdateHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
     e.preventDefault();
     const amenityExists = amenitiesList.some(item => item.id === addAmenity.id);
     if (!amenityExists) {
-      if (!addAmenity.name || !addAmenity.icon) return alert("Please fill out all fields");
+      if (!addAmenity.name) return alert("Please fill out all fields");
       setAmenitiesList([addAmenity, ...amenitiesList]);
       handleField("amenities", [addAmenity, ...fields.amenities]);
       handleCancel();

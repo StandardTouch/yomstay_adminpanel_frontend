@@ -514,7 +514,7 @@ export default function HotelsScreen() {
                 </CardFooter>
 
               </div>
-              <AlertBox Check="hotel" onDelete={() => {setHotellist(hotellist.filter((item) => item.id !== hotel.id));}} />
+              <AlertBox Check="Hotel" hotelName={hotel.name} onDelete={() => {setHotellist(hotellist.filter((item) => item.id !== hotel.id));}} />
             </Card>
           ))}
         </div>

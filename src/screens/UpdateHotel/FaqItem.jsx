@@ -9,6 +9,6 @@ export const FaqItem = ({ faq, onChange, onDelete }) => (
     <Input type="text" className="w-full p-3" required value={faq.question} onChange={e => onChange({ ...faq, question: e.target.value })} />
     <label className="text-lg">Answer</label>
     <Textarea required value={faq.answer} onChange={e => onChange({ ...faq, answer: e.target.value })} />
-    <AlertBox Check="faq" onDelete={onDelete} />
+    <AlertBox Check="Faq" onDelete={onDelete} />
   </div>
 ); 

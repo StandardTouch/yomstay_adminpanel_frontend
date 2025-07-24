@@ -12,18 +12,23 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
-function AlertBox({ onDelete, Check }) {
+function AlertBox({ onDelete, Check, hotelName }) {
     return (
         <AlertDialog>
-            {Check === "hotel" && <AlertDialogTrigger><div className=" py-0.5 px-1.5 bg-red-500 hover:bg-red-700 text-white rounded-md cursor-pointer absolute bottom-2 right-2">Remove Hotel</div></AlertDialogTrigger>}
-            {Check === "amenity" && <AlertDialogTrigger><div className="cursor-pointer bg-red-500 hover:bg-red-700 text-white p-0.5 rounded-2xl"><X size={16} /></div></AlertDialogTrigger>}
-            {Check === "faq" && <AlertDialogTrigger><div className=" py-0.5 px-1.5 text-sm bg-red-500 hover:bg-red-700 text-white rounded-md cursor-pointer absolute top-2 right-2">Remove</div></AlertDialogTrigger>}
-            {Check === "Image" && <AlertDialogTrigger><div className="cursor-pointer w-fit p-1 rounded-2xl h-fit bg-red-500 hover:bg-red-700 text-white">
-                <X size={20} />
-            </div></AlertDialogTrigger>}
+            <AlertDialogTrigger>
+                <div className={`cursor-pointer bg-red-500 hover:bg-red-700 text-white rounded-2xl
+                    ${Check === "Hotel" && " pb-1 px-1.5 rounded-md absolute bottom-2 right-2"}
+                    ${Check === "Faq" && " pb-1 px-1.5 text-sm rounded-md absolute top-2 right-2"}
+                    ${Check === "Amenity" && "p-0.5 rounded-2xl"}
+                    ${Check === "Image" && "p-1 rounded-2xl"}`}>
+                    {(Check === "Amenity" || Check === "Image") && <X size={16} />}
+                    {(Check === "Hotel" || Check === "Faq") && (`Remove ${Check}`)}
+                </div>
+            </AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <div className='text-red-500 font-medium'>{hotelName}</div>
                     <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete your {Check}.
                     </AlertDialogDescription>
