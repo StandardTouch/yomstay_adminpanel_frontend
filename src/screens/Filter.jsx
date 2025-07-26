@@ -1,13 +1,6 @@
 import React, { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import SortBy from './Filter/SortBy'
-import Prices from './Filter/Prices'
-import Time from './Filter/Time'
-import NumberOfStars from './Filter/NumberOfStars'
-import Amenities from './Filter/Amenities'
-import RoomFacilities from './Filter/RoomFacilities'
-import ThemedOffers from './Filter/ThemedOffers'
-import FilterTabContent from './FilterTabContent'; // path may vary
+import FilterTabContent from './FilterTabContent'
 
 function Filter() {
     const [showTrue, setShowTrue] = useState({
@@ -18,6 +11,7 @@ function Filter() {
         amenities: false,
         roomFacilities: false,
         themedOffers: false,
+        moreDetails: false
     });
     // console.log(showTrue)
     const [allValues, setAllValues] = useState({
@@ -28,6 +22,7 @@ function Filter() {
         amenities: [],
         roomFacilities: [],
         themedOffers: [],
+        moreDetails: []
     })
     return (
         <div className="p-4 sm:p-8 w-full relative  ">
@@ -45,6 +40,7 @@ function Filter() {
                             <TabsTrigger value="amenities">Amenities</TabsTrigger>
                             <TabsTrigger value="room-facilities">Room facilities</TabsTrigger>
                             <TabsTrigger value="themed-offers">Themed offers</TabsTrigger>
+                            <TabsTrigger value="more-details">More details</TabsTrigger>
                             <TabsTrigger value="all-details">All Details</TabsTrigger>
                         </TabsList>
                     </div>
@@ -182,62 +178,52 @@ function Filter() {
                         />
                     </TabsContent>
 
+                    <TabsContent value="more-details">
+                        <FilterTabContent
+                            value="more-details"
+                            title="More details"
+                            stateKey="moreDetails"
+                            data={[
+                                { name: "See only the offers without pre-payment" },
+                                { name: "Pool access included" },
+                                { name: "Pay later in Cash" },
+                                { name: "King Size Bed" },
+                            ]}
+                            showTrue={showTrue}
+                            setShowTrue={setShowTrue}
+                            allValues={allValues}
+                            setAllValues={setAllValues}
+                        />
+                    </TabsContent>
 
-                    {/* <TabsContent value="sort-by"><SortBy showTrue={showTrue} setAllValues={setAllValues} allValues={allValues} setShowTrue={setShowTrue} /></TabsContent>
-                    <TabsContent value="prices"><Prices showTrue={showTrue} setShowTrue={setShowTrue} setAllValues={setAllValues} allValues={allValues} /></TabsContent>
-                    <TabsContent value="time"><Time showTrue={showTrue} setShowTrue={setShowTrue} setAllValues={setAllValues} allValues={allValues} /></TabsContent>
-                    <TabsContent value="number-of-stars"><NumberOfStars showTrue={showTrue} setShowTrue={setShowTrue} /></TabsContent>
-                    <TabsContent value="amenities"><Amenities showTrue={showTrue} setShowTrue={setShowTrue} setAllValues={setAllValues} allValues={allValues} /></TabsContent>
-                    <TabsContent value="room-facilities"><RoomFacilities showTrue={showTrue} setShowTrue={setShowTrue} setAllValues={setAllValues} allValues={allValues} /></TabsContent>
-                    <TabsContent value="themed-offers"><ThemedOffers showTrue={showTrue} setShowTrue={setShowTrue} setAllValues={setAllValues} allValues={allValues} /></TabsContent> */}
                     <TabsContent value="all-details"><div className='flex flex-col gap-2 *:border-b-2 *:p-1'>
 
-                        {showTrue.sortby > false &&
-                            <div>
-                                <h2 className='text-lg font-medium'>Sort by</h2>
-                                {allValues.sortby.map((item) =>
-                                    <li className='text-sm' key={item.name}>{item.name}</li>
-                                )}
-                            </div>}
-                        {showTrue.prices > false &&
-                            <div>
-                                <h2 className='text-lg font-medium'>Prices</h2>
-                                {allValues.prices.map((item) =>
-                                    <li className='text-sm' key={item.name}>{item.name}</li>
-                                )}
-                            </div>}
-                        {showTrue.time > false &&
-                            <div>
-                                <h2 className='text-lg font-medium'>Time</h2>
-                                {allValues.time.map((item) =>
-                                    <li className='text-sm' key={item.name}>{item.name}</li>
-                                )}
-                            </div>}
-                        {showTrue.numberOfStars > false &&
-                            <div>
-                                <h2 className='text-lg font-medium'>Number of stars</h2>
-                            </div>}
-                        {showTrue.amenities > false &&
-                            <div>
-                                <h2 className='text-lg font-medium'>Amenities</h2>
-                                {allValues.amenities.map((item) =>
-                                    <li className='text-sm' key={item.name}>{item.name}</li>
-                                )}
-                            </div>}
-                        {showTrue.roomFacilities > false &&
-                            <div>
-                                <h2 className='text-lg font-medium'>Room facilities</h2>
-                                {allValues.roomFacilities.map((item) =>
-                                    <li className='text-sm' key={item.name}>{item.name}</li>
-                                )}
-                            </div>}
-                        {showTrue.themedOffers > false &&
-                            <div>
-                                <h2 className='text-lg font-medium'>Themed offers</h2>
-                                {allValues.themedOffers.map((item) =>
-                                    <li className='text-sm' key={item.name}>{item.name}</li>
-                                )}
-                            </div>}
+                        {Object.keys(showTrue).map((key) => {
+                            if (!showTrue[key]) return null;
+
+                            const titleMap = {
+                                sortby: 'Sort by',
+                                prices: 'Prices',
+                                time: 'Time',
+                                numberOfStars: 'Number of stars',
+                                amenities: 'Amenities',
+                                roomFacilities: 'Room facilities',
+                                themedOffers: 'Themed offers',
+                                moreDetails: 'More Details'
+                            };
+
+                            return (
+                                <div key={key}>
+                                    <h2 className="text-lg font-medium">{titleMap[key]}</h2>
+                                    {Array.isArray(allValues[key]) && allValues[key].length > 0 && (
+                                        allValues[key].map((item) => (
+                                            <li className="text-sm" key={item.name}>{item.name}</li>
+                                        ))
+                                    )}
+                                </div>
+                            );
+                        })}
+
                     </div></TabsContent>
                 </Tabs>
             </div>
