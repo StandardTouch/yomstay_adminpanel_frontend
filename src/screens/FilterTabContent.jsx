@@ -25,13 +25,20 @@ function FilterTabContent({ value, title, data = [], stateKey, showTrue, setShow
     };
 
     return (
-        <div className='w-full flex flex-col gap-2 border rounded-md shadow p-2'>
+        <div className=' w-full flex flex-col gap-2 border rounded-md shadow p-3'>
             <div className='flex justify-between items-center'>
                 <h2 className='text-2xl font-medium'>{title}</h2>
                 <Switch
                     defaultChecked={showTrue[stateKey]}
-                    onCheckedChange={(e) => setShowTrue({ ...showTrue, [stateKey]: e })}
-                    className='cursor-pointer'
+                    onCheckedChange={(e) => {
+                        if (!e) {
+                            setAllValues((prev) => ({
+                                ...prev,
+                                [stateKey]: []
+                            }));
+                        }
+                        setShowTrue({ ...showTrue, [stateKey]: e });
+                    }}
                 />
             </div>
             {showTrue[stateKey] && data.length > 0 && (
@@ -43,8 +50,8 @@ function FilterTabContent({ value, title, data = [], stateKey, showTrue, setShow
                             onClick={handleClick}
                             className={`border shadow dark:shadow-zinc-600 cursor-pointer hover:bg-zinc-700 hover:text-white ${
                                 selectedValues.find((i) => i.name === item.name)
-                                    ? "bg-primary dark:bg-black text-white"
-                                    : "bg-white text-black"
+                                    ? "bg-primary dark:text-black text-white"
+                                    : "bg-white dark:bg-black dark:text-white text-black"
                             }`}
                         >
                             {item.name}
