@@ -7,6 +7,7 @@ import {
   Inbox,
   Search,
   Settings,
+  SlidersHorizontal,
   User,
 } from "lucide-react";
 import { FaHotel } from "react-icons/fa6";
@@ -38,6 +39,7 @@ const sidebarGroups = [
     items: [
       { title: "Hotels", url: "hotels", icon: Hotel },
       { title: "Amenities", url: "amenities", icon: Inbox },
+      { title: "Filter", url: "filter", icon: SlidersHorizontal },
     ],
   },
   // Add more groups here as needed
@@ -97,7 +99,7 @@ export function AppSidebar() {
           <SidebarGroupContent className={`${open ? "border-l-4 border-transparent" : ""}`}>
               <SidebarMenu className={`${!open ? "items-center justify-center" : ""}`}>
                 {group.items.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.title} onClick={openMobile ? () => setOpenMobile(false) : null}>
                     <SidebarMenuButton asChild className={`p-0 ${!open ? "flex flex-col items-center justify-center" : ""}`}>
                     <NavLink
                       to={item.url}
