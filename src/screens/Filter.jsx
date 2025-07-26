@@ -39,45 +39,49 @@ function Filter() {
             { name: "Duration" },
         ],
         numberOfStars: [],
-        amenities: [{ name: "Free WiFi" },
-        { name: "Elevator" },
-        { name: "Fitness room" },
-        { name: "Wheelchair accessible rooms (on request)" },
-        { name: "Business center" },
-        { name: "Bar / Café" },
-        { name: "Breakfast Area" },
-        { name: "Meeting room" },
+        amenities: [
+            { name: "Free WiFi", icon: "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f4f9.png" },
+            { name: "Elevator", icon: "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f6d7.png" },
+            { name: "Fitness room", icon: "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f3c0.png" },
+            { name: "Wheelchair accessible rooms (on request)", icon: "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f6b9.png" },
+            { name: "Business center", icon: "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f4bc.png" },
+            { name: "Bar / Café", icon: "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f37a.png" },
+            { name: "Breakfast Area", icon: "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f95e.png" },
+            { name: "Meeting room", icon: "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f4bb.png" },
         ],
-        roomFacilities: [{ name: "Flat screen TV" },
-        { name: "Air conditioned" },
-        { name: "Free WiFi" },
-        { name: "Desk" },
-        { name: "Fridge / Mini fridge" },
-        { name: "Wheelchair accessibility (on request)" },
-        { name: "Room service" },
-        { name: "Bathtub" },
-        { name: "DVD player" },
-        { name: "Extra bed (charged)" },
-        { name: "Bathtub / Jacuzzi" },
+        roomFacilities: [
+            { name: "Flat screen TV" },
+            { name: "Air conditioned" },
+            { name: "Free WiFi" },
+            { name: "Desk" },
+            { name: "Fridge / Mini fridge" },
+            { name: "Wheelchair accessibility (on request)" },
+            { name: "Room service" },
+            { name: "Bathtub" },
+            { name: "DVD player" },
+            { name: "Extra bed (charged)" },
+            { name: "Bathtub / Jacuzzi" },
         ],
-        themedOffers: [{ name: "Wellness" },
-        { name: "Romantic" },
-        { name: "Business" },
-        { name: "Rest between two flights" },
-        { name: "Food" },
-        { name: "Good deals" },
-        { name: "Best Rated" },
-        { name: "Best Deals" },
-        { name: "Top Picks for Leisure & Relaxation" },
-        { name: "Best Views from High Floors" },
-        { name: "Best bars and restaurants" },
-        { name: "Top Leisure Pick" },
-        { name: "Hotel Carousel Leisure" },
+        themedOffers: [
+            { name: "Wellness" },
+            { name: "Romantic" },
+            { name: "Business" },
+            { name: "Rest between two flights" },
+            { name: "Food" },
+            { name: "Good deals" },
+            { name: "Best Rated" },
+            { name: "Best Deals" },
+            { name: "Top Picks for Leisure & Relaxation" },
+            { name: "Best Views from High Floors" },
+            { name: "Best bars and restaurants" },
+            { name: "Top Leisure Pick" },
+            { name: "Hotel Carousel Leisure" },
         ],
-        moreDetails: [{ name: "See only the offers without pre-payment" },
-        { name: "Pool access included" },
-        { name: "Pay later in Cash" },
-        { name: "King Size Bed" },
+        moreDetails: [
+            { name: "See only the offers without pre-payment" },
+            { name: "Pool access included" },
+            { name: "Pay later in Cash" },
+            { name: "King Size Bed" },
         ]
     }]
     return (
@@ -93,6 +97,7 @@ function Filter() {
                             <TabsTrigger value="selected">Selected Filters</TabsTrigger>
                         </TabsList>
                     </div>
+                    
                     <TabsContent value="select">
                         <div className='grid grid-cols-1 lg:grid-cols-2 pt-5 gap-4 w-full'>
 
@@ -206,7 +211,10 @@ function Filter() {
                                         <h2 className="text-xl font-medium pb-2">{titleMap[key]}</h2>
                                         {Array.isArray(allValues[key]) && allValues[key].length > 0 && (
                                             allValues[key].map((item) => (
-                                                <li className="text-sm pl-2" key={item.name}>{item.name}</li>
+                                                <li className=" flex gap-2 pb-2 text-sm pl-2" key={item.name}>
+                                                    {item.icon && <img src={item.icon} className="w-5 h-5" alt="" />}
+                                                    {item.name}
+                                                </li>
                                             ))
                                         )}
                                     </div>

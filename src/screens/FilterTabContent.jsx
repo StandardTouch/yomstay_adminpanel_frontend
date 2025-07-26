@@ -1,4 +1,3 @@
-// components/FilterTabContent.jsx
 import React, { useState, useEffect } from 'react';
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,10 @@ function FilterTabContent({ value, title, data = [], stateKey, showTrue, setShow
         const exists = selectedValues.find((item) => item.name === selected);
         const updated = exists
             ? selectedValues.filter((item) => item.name !== selected)
-            : [...selectedValues, { name: selected }];
+            : [
+                ...selectedValues,
+                { name: selected, icon: data.find((item) => item.name === selected)?.icon }
+            ];
 
         setSelectedValues(updated);
         setAllValues((prev) => ({
@@ -48,12 +50,12 @@ function FilterTabContent({ value, title, data = [], stateKey, showTrue, setShow
                             key={item.name}
                             value={item.name}
                             onClick={handleClick}
-                            className={`border shadow dark:shadow-zinc-600 cursor-pointer hover:bg-zinc-700 hover:text-white ${
-                                selectedValues.find((i) => i.name === item.name)
+                            className={`border shadow dark:shadow-zinc-600 cursor-pointer hover:bg-zinc-700 hover:text-white ${selectedValues.find((i) => i.name === item.name)
                                     ? "bg-primary dark:text-black text-white"
                                     : "bg-white dark:bg-black dark:text-white text-black"
-                            }`}
+                                }`}
                         >
+                            {item.icon && <img src={item.icon} className="w-5 h-5" alt="" />}
                             {item.name}
                         </Button>
                     ))}
