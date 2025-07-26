@@ -231,7 +231,7 @@ export default function UsersScreen() {
       </Card>
       {/* Add User Modal */}
       <Sheet open={addOpen} onOpenChange={setAddOpen}>
-        <SheetContent side="right" className="max-w-md w-full">
+        <SheetContent side="right" className="max-w-md w-full overflow-auto">
           <SheetHeader>
             <SheetTitle>Add User</SheetTitle>
           </SheetHeader>

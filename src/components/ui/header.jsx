@@ -40,7 +40,7 @@ export const Header = ({
       <header
         className={cn(
           'bg-background flex h-16 items-center gap-3 p-4 sm:gap-4 ',
-          fixed && 'header-fixed peer/header sticky top-0 z-50 w-[inherit] rounded-md',
+          fixed && 'header-fixed peer/header fixed z-50 w-[inherit] rounded-md',
           offset > 10 && fixed ? 'shadow-sm' : 'shadow-none',
           className
         )}
