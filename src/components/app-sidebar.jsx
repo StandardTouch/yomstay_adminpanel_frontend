@@ -7,6 +7,7 @@ import {
   Inbox,
   Search,
   Settings,
+  SlidersHorizontal,
   User,
 } from "lucide-react";
 import { FaHotel } from "react-icons/fa6";
@@ -37,6 +38,8 @@ const sidebarGroups = [
     label: "Management",
     items: [
       { title: "Hotels", url: "hotels", icon: Hotel },
+      { title: "Amenities", url: "amenities", icon: Inbox },
+      { title: "Filter", url: "filter", icon: SlidersHorizontal },
     ],
   },
   // Add more groups here as needed
@@ -57,7 +60,7 @@ export function AppSidebar() {
   // When on mobile, ensure sidebar is open by default
   useEffect(() => {
     if (isMobile) {
-      setOpenMobile(true);
+      setOpenMobile(false);
     }
   }, [isMobile, setOpenMobile]);
 
@@ -96,13 +99,13 @@ export function AppSidebar() {
           <SidebarGroupContent className={`${open ? "border-l-4 border-transparent" : ""}`}>
               <SidebarMenu className={`${!open ? "items-center justify-center" : ""}`}>
                 {group.items.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.title} onClick={openMobile ? () => setOpenMobile(false) : null}>
                     <SidebarMenuButton asChild className={`p-0 ${!open ? "flex flex-col items-center justify-center" : ""}`}>
                     <NavLink
                       to={item.url}
                       {...(item.url === "/dashboard" ? { end: true } : {})}
                         className={({ isActive }) =>
-                          `flex items-center gap-2 w-full px-2 py-2 rounded transition-all  duration-200 text-black dark:text-white hover:bg-[--color-navyblue-light] dark:hover:bg-[--color-navyblue-dark]/40 hover:text-[--color-navyblue] dark:hover:text-[--color-navyblue] ${
+                          `flex items-center gap-2 w-full px-2 py-2 rounded transition-all duration-200 text-black dark:text-white hover:bg-[--color-navyblue-light] dark:hover:bg-[--color-navyblue-dark]/40 hover:text-[--color-navyblue] dark:hover:text-[--color-navyblue] ${
                           isActive
                               ? "bg-[--color-navyblue-light] dark:bg-[--color-navyblue-dark]/60 text-[--color-navyblue] dark:text-[--color-navyblue] font-bold border-[--color-navyblue] shadow"
                               : ""

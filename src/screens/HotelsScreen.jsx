@@ -9,18 +9,8 @@ import {
   Sheet, SheetContent, SheetHeader,
   SheetTitle, SheetFooter, SheetClose,
 } from "@/components/ui/sheet";
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import AlertBox from "../components/AlertBox";
+import AddButton from "../components/AddButton";
 
 export default function HotelsScreen() {
   const Hotels = [
@@ -35,7 +25,7 @@ export default function HotelsScreen() {
       ownerId: "4a632c30-0ba8-4ea7-8549-dce67d0f8fdf",
       createdAt: "2025-06-30T11:09:23.447Z",
       updatedAt: "2025-06-30T11:09:23.447Z",
-      starRating: 2,
+      starRating: 3,
       numberOfRooms: 141,
       location: {
         lat: 57.70589438947562,
@@ -203,7 +193,7 @@ export default function HotelsScreen() {
     },
     {
       id: "1b3d380-5837-445d-a2f0-965398f303e9",
-      name: "Heller, Kling and Graham Hotel",
+      name: "Kling and Graham Hotel",
       status: "approved",
       address: "8800 Toy Neck",
       postalCode: "14942",
@@ -212,8 +202,8 @@ export default function HotelsScreen() {
       ownerId: "4a632c30-0ba8-4ea7-8549-dce67d0f8fdf",
       createdAt: "2025-06-30T11:09:23.447Z",
       updatedAt: "2025-06-30T11:09:23.447Z",
-      starRating: 2,
-      numberOfRooms: 141,
+      starRating: 2.5,
+      numberOfRooms: 51,
       location: {
         lat: 57.70589438947562,
         lng: 157.7157639323622,
@@ -472,9 +462,7 @@ export default function HotelsScreen() {
       {!show && (
         <div className="mb-6 flex justify-between">
           <h1 className="text-2xl font-bold ">Hotels</h1>
-          <Button className="gap-2 cursor-pointer" onClick={() => setAddOpen(true)} >
-            <Plus size={16} /> Add User
-          </Button>
+          <AddButton buttonValue="Add Hotel" onAdd={() => setAddOpen(true)} />
         </div>
       )}
 
@@ -526,22 +514,7 @@ export default function HotelsScreen() {
                 </CardFooter>
 
               </div>
-              <AlertDialog>
-                <AlertDialogTrigger><Button variant="destructive" size="sm" className="cursor-pointer absolute bottom-2 right-2">Remove Hotel</Button></AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete your hotel.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => {setHotellist(hotellist.filter((item) => item.id !== hotel.id));}}>Continue</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-
+              <AlertBox Check="Hotel" hotelName={hotel.name} onDelete={() => {setHotellist(hotellist.filter((item) => item.id !== hotel.id));}} />
             </Card>
           ))}
         </div>
