@@ -4,7 +4,7 @@ import FilterTabContent from './FilterTabContent'
 
 function Filter() {
     const [showTrue, setShowTrue] = useState({
-        sortby: false,
+        sortby: true,
         time: false,
         prices: false,
         numberOfStars: false,
