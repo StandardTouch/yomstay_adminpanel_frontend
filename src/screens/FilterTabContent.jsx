@@ -35,7 +35,7 @@ function FilterTabContent({
 
     const isActive = updated.some((item) => item.name === selected);
     toast(
-      <p className={`${isActive ? "text-green-800" : "text-red-500"}`}>
+      <p className={`${isActive ? "text-green-700 dark:text-green-500" : "text-red-500"}`}>
         The {selected} is now {isActive ? "active" : "disabled"}
       </p>
     );
