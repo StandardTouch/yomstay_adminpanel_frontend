@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 function FilterTabContent({
   value,
@@ -32,7 +34,11 @@ function FilterTabContent({
         ];
 
     const isActive = updated.some((item) => item.name === selected);
-    alert(`The ${selected} is now ${isActive ? "active" : "disabled"}.`);
+    toast(
+      <p className={`${isActive ? "text-green-800" : "text-red-500"}`}>
+        The {selected} is now {isActive ? "active" : "disabled"}
+      </p>
+    );
 
     setSelectedValues(updated);
     setAllValues((prev) => ({
@@ -79,6 +85,11 @@ function FilterTabContent({
           ))}
         </div>
       )}
+      <Toaster
+        className="bg-red-500"
+        position="top-center"
+        toastOptions={{ duration: 1500 }}
+      />
     </div>
   );
 }
