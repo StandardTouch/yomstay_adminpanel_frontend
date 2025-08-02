@@ -402,6 +402,9 @@ function UpdateHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
           value="reviews"
           className="flex flex-col gap-2 border rounded-md p-3"
         >
+          <div>
+            <h2 className="text-2xl font-semibold">Reviews</h2>
+          </div>
           <div className="flex flex-col gap-2">
             {fields.reviews.map((review, idx) => (
               <ReviewItem key={idx} review={review} />

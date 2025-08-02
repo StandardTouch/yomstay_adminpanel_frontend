@@ -519,7 +519,7 @@ export default function HotelsScreen() {
         </div>
       )}
 
-      {
+      {!show && (
         <div
           className={`${
             filterOpen
@@ -529,7 +529,8 @@ export default function HotelsScreen() {
         >
           <DropdownMenu>
             <DropdownMenuTrigger className="flex justify-center items-center gap-1 w-full border shadow p-1 rounded-md cursor-pointer">
-              {filterText.country === "" ? "Country" : filterText.country} <ChevronDown size={16} />
+              {filterText.country === "" ? "Country" : filterText.country}{" "}
+              <ChevronDown size={16} />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 h-56">
               <DropdownMenuItem
@@ -554,7 +555,8 @@ export default function HotelsScreen() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger className="flex justify-center items-center gap-1 w-full border shadow p-1 rounded-md cursor-pointer">
-              {filterText.city === "" ? "City" : filterText.city} <ChevronDown size={16} />
+              {filterText.city === "" ? "City" : filterText.city}{" "}
+              <ChevronDown size={16} />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 h-56">
               <DropdownMenuItem
@@ -579,7 +581,8 @@ export default function HotelsScreen() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger className="flex justify-center items-center gap-1 w-full border shadow p-1 rounded-md cursor-pointer">
-              {filterText.starRating === "" ? "Rating" : filterText.starRating} <ChevronDown size={16} />
+              {filterText.starRating === "" ? "Rating" : filterText.starRating}{" "}
+              <ChevronDown size={16} />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 h-56">
               <DropdownMenuItem
@@ -603,7 +606,7 @@ export default function HotelsScreen() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      }
+      )}
 
       {/* Modal for updating a hotel */}
       {show && (
