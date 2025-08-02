@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+
 jobs:
   FTP-Deploy-Action:
     name: 🎉 Deploy
@@ -13,16 +14,24 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 2
+
       - name: Use Node.js 22
         uses: actions/setup-node@v3
         with:
           node-version: "22"
+
       - name: Cache npm dependencies
         uses: actions/cache@v3
         id: cache-node-modules
         with:
           path: "**/node_modules"
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+
+      - name: 📄 Create .env file from GitHub Secrets
+        run: |
+          echo "VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}" >> .env
+          echo "NOVU_APP_ID=${{ secrets.NOVU_APP_ID }}" >> .env
+
       - name: 🔨 Install Dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: |
@@ -30,8 +39,10 @@ jobs:
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
           CI: false
+
       - name: 🏗 Build Project
         run: npm run build
+
       - name: 📂 Sync folders and files to the server
         uses: SamKirkland/FTP-Deploy-Action@4.3.3
         with:
