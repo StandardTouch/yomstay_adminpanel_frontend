@@ -7,7 +7,7 @@ export default function SignInPage() {
       <div className="flex-1 h-full flex flex-col justify-center items-center bg-white shadow-lg relative">
         <div className="w-full max-w-md p-4 sm:p-8 rounded-xl bg-white/90 border border-navyblue/10 shadow-xl flex flex-col items-center">
           <h2 className="text-navyblue text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center">
-            Admin Loginssss
+            Admin Login
           </h2>
           <SignIn
             withSignUp={false}
