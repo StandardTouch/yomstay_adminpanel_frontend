@@ -1,17 +1,17 @@
 # Steps to Add StandardTouch API Securely :-
 
-## 1. Update [`.gitignore`]
-Add the following to your [`.gitignore`] to avoid exposing sensitive files:
+## 1. Update `.gitignore`
+Add the following to your `.gitignore` to avoid exposing sensitive files:
 
 ```gitignore
 .env
 .npmrc
 ```
 
-## 2. Create [`set-npmrc.js`]
-This script will auto-generate your [`.npmrc`] with your GitHub token securely.
+## 2. Create `set-npmrc.js`
+This script will auto-generate your `.npmrc` with your GitHub token securely.
 
-📄 Create a file named [`set-npmrc.js`] and paste this code inside:
+📄 Create a file named `set-npmrc.js` and paste this code inside:
 
 ```js
 import { config } from "dotenv"; // Importing dotenv's config function
@@ -37,25 +37,25 @@ fs.writeFileSync(npmrcPath, npmrcContent, { encoding: "utf8" });
 console.log(".npmrc file has been updated with the GitHub token.");
 ```
 
-## 3. Create or Update [`.env`]
-In the root of your project, create a [`.env`] file (or update it) with:
+## 3. Create or Update `.env`
+In the root of your project, create a `.env` file (or update it) with:
 
 ```env
 GT_TOKEN= your token 
 ```
 
-## 4. Update [`package.json`] Scripts
-In your [`package.json`], add this line to the [`scripts`] section:
+## 4. Update `package.json` Scripts
+In your `package.json`, add this line to the `scripts` section:
 
 ```json
 "scripts": {
   "preinstall": "node set-npmrc.js"
 }
 ```
-This ensures the [`.npmrc`] is set up before installing any packages.
+This ensures the `.npmrc` is set up before installing any packages.
 
 ## 5. Install dotenv
-Install the [`dotenv`] package to enable reading from [`.env`]:
+Install the `dotenv` package to enable reading from `.env`:
 
 ```bash
 npm install -D dotenv
