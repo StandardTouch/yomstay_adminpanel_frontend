@@ -2,7 +2,8 @@ import React from "react";
 import Layout from "./layout/layout";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
-import SignInPage from "./features/auth/screens/sigin.component";
+import SignInPage from "./features/auth/screens/SigninPage";
+import AuthGuard from "./features/auth/components/AuthGuard";
 import { Spinner } from "./common/components/spinner";
 import UsersScreen from "./features/users/screens/UsersScreen";
 import HotelsScreen from "./features/hotels/screens/hotel_listing/HotelsScreen";
@@ -29,8 +30,15 @@ function App() {
           }
         />
 
-        {/* Dashboard route with nested routes */}
-        <Route path="/dashboard" element={<Layout />}>
+        {/* Dashboard route with nested routes - Protected by AuthGuard */}
+        <Route
+          path="/dashboard"
+          element={
+            <AuthGuard requiredRole="admin">
+              <Layout />
+            </AuthGuard>
+          }
+        >
           <Route index element={<DashboardScreen />} />
           <Route path="users" element={<UsersScreen />} />
           <Route path="hotels" element={<HotelsScreen />} />
