@@ -14,10 +14,10 @@ import {
   SheetFooter,
   SheetClose,
 } from "@/components/ui/sheet";
-import { ImageCard } from "./UpdateHotel/ImageCard";
-import { AmenityItem } from "./UpdateHotel/AmenityItem";
-import { FaqItem } from "./UpdateHotel/FaqItem";
-import { ReviewItem } from "./UpdateHotel/ReviewItem";
+import { ImageCard } from "./components/ImageCard";
+import { AmenityItem } from "../../../../common/components/hotel/AmenityItem";
+import { FaqItem } from "./components/FaqItem";
+import { ReviewItem } from "./components/ReviewItem";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,10 +35,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import AddButton from "../components/AddButton";
-import DragDrop from "./UpdateHotel/DragDrop";
+import AddButton from "../../../../components/AddButton";
+import DragDrop from "../../../../common/components/hotel/DragDrop";
 
-function UpdateHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
+function SingleHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
   const [fields, setFields] = useState({
     name: hotel.name,
     description: hotel.description,
@@ -574,4 +574,4 @@ function UpdateHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
   );
 }
 
-export default UpdateHotel;
+export default SingleHotel;

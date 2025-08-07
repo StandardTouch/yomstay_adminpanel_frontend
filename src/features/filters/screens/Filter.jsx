@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import FilterTabContent from "./FilterTabContent";
+import FilterTabContent from "../components/FilterTabContent";
 
 function Filter() {
   const [showTrue, setShowTrue] = useState({

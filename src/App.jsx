@@ -2,13 +2,13 @@ import React from "react";
 import Layout from "./layout/layout";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
-import SignInPage from "./common/sigin.component";
-import { Spinner } from "./common/spinner";
-import UsersScreen from "./screens/UsersScreen";
-import HotelsScreen from "./screens/HotelsScreen";
-import DashboardScreen from "./screens/DashboardScreen";
-import GlobalAmenities from "./screens/GlobalAmenities";
-import Filter from "./screens/Filter";
+import SignInPage from "./features/auth/screens/sigin.component";
+import { Spinner } from "./common/components/spinner";
+import UsersScreen from "./features/users/screens/UsersScreen";
+import HotelsScreen from "./features/hotels/screens/hotel_listing/HotelsScreen";
+import DashboardScreen from "./features/dashboard/screens/DashboardScreen";
+import GlobalAmenities from "./features/global_amenities/screens/GlobalAmenities";
+import Filter from "./features/filters/screens/Filter";
 
 function App() {
   const { isSignedIn, user, isLoaded } = useUser();

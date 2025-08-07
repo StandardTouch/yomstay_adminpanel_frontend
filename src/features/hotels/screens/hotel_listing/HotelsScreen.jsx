@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import UpdateHotel from "./UpdateHotel";
+import UpdateHotel from "../single_hotel/singleHotel";
 import { ChevronDown, Hand, Plus, Upload } from "lucide-react";
 import {
   Sheet,
@@ -21,8 +21,8 @@ import {
   SheetFooter,
   SheetClose,
 } from "@/components/ui/sheet";
-import AlertBox from "../components/AlertBox";
-import AddButton from "../components/AddButton";
+import AlertBox from "../../../../components/AlertBox";
+import AddButton from "../../../../components/AddButton";
 import { Description } from "@radix-ui/react-dialog";
 import {
   DropdownMenu,
