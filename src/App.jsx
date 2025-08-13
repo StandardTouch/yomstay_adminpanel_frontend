@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Layout from "./layout/layout";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
@@ -10,9 +10,19 @@ import HotelsScreen from "./features/hotels/screens/hotel_listing/HotelsScreen";
 import DashboardScreen from "./features/dashboard/screens/DashboardScreen";
 import GlobalAmenities from "./features/global_amenities/screens/GlobalAmenities";
 import Filter from "./features/filters/screens/Filter";
+import { setAuth } from "./utils/apiClient";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const { isSignedIn, user, isLoaded } = useUser();
+
+  // Cleanup API client on unmount
+  useEffect(() => {
+    return () => {
+      setAuth(false);
+    };
+  }, []);
 
   // Prevent redirects before the user state is loaded
   if (!isLoaded) {
@@ -49,6 +59,7 @@ function App() {
         {/* Login route */}
         <Route path="/login" element={<SignInPage />} />
       </Routes>
+      <ToastContainer />
     </BrowserRouter>
   );
 }

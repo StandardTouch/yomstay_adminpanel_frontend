@@ -8,7 +8,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import { cn } from "../../utils/utils";
+import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
