@@ -1,0 +1,400 @@
+# YomStay Admin Panel - Cursor Rules
+
+## Project Overview
+
+React admin panel for YomStay hotel management system using:
+
+- **Redux Toolkit** for state management
+- **StandardTouch/yomstay_api** generated client for API calls
+- **Clerk** authentication
+- **ShadCN/UI** components with Tailwind CSS
+- **React Router** for navigation
+- **Custom toast** utility for notifications
+
+## File Structure Standards
+
+### Core Directory Organization
+
+```
+src/
+├── contexts/           # React contexts (API, theme, etc.)
+├── features/          # Feature-based modules
+│   └── [feature]/
+│       ├── screens/   # Main feature screens
+│       ├── components/ # Feature-specific components
+│       ├── [feature]Slice.js    # Redux state management
+│       └── [feature]Selectors.js # Redux selectors
+├── components/        # Shared/reusable components
+│   └── ui/           # ShadCN UI components
+├── common/           # Common utilities & components
+├── utils/            # Utility functions
+├── hooks/            # Custom React hooks
+├── layout/           # Layout components
+├── store/            # Redux store configuration
+└── lib/              # Library utilities
+```
+
+### Feature Module Pattern
+
+Each feature MUST follow this structure:
+
+- `screens/` - Main feature pages (e.g., `UsersScreen.jsx`)
+- `components/` - Feature-specific components
+- `[feature]Slice.js` - Redux slice with async thunks
+- `[feature]Selectors.js` - Memoized selectors for performance
+
+## Redux Implementation Rules
+
+### 1. Slice Structure
+
+```javascript
+// src/features/[feature]/[feature]Slice.js
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+
+export const fetch[Feature] = createAsyncThunk(
+  "[feature]/fetch[Feature]",
+  async (queryParams = {}, { rejectWithValue }) => {
+    try {
+      const { apiClient, ...filters } = queryParams;
+
+      if (!apiClient?.[apiInstance]) {
+        throw new Error("API client is required");
+      }
+
+      // Build opts object for StandardTouch API
+      const opts = {
+        // Map parameters here
+      };
+
+      // Remove undefined values
+      Object.keys(opts).forEach(key =>
+        opts[key] === undefined && delete opts[key]
+      );
+
+      const response = await apiClient.[apiInstance].[methodName](opts);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch [feature]");
+    }
+  }
+);
+
+const [feature]Slice = createSlice({
+  name: "[feature]",
+  initialState: {
+    data: [],
+    loading: false,
+    error: null,
+    // Include pagination, filters, etc.
+  },
+  reducers: {
+    // Synchronous actions only
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetch[Feature].pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetch[Feature].fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = action.payload.data || action.payload;
+      })
+      .addCase(fetch[Feature].rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+  },
+});
+```
+
+### 2. Selectors Pattern
+
+```javascript
+// src/features/[feature]/[feature]Selectors.js
+import { createSelector } from "@reduxjs/toolkit";
+
+// Basic selectors
+export const select[Feature]State = (state) => state.[feature];
+export const select[Feature] = (state) => state.[feature].data;
+export const select[Feature]Loading = (state) => state.[feature].loading;
+export const select[Feature]Error = (state) => state.[feature].error;
+
+// Memoized computed selectors
+export const selectFiltered[Feature] = createSelector(
+  [select[Feature], /* other selectors */],
+  (data, /* other params */) => {
+    // Computed logic here
+    return filteredData;
+  }
+);
+```
+
+### 3. Component Integration
+
+```javascript
+// In components
+import { useDispatch, useSelector } from "react-redux";
+import { useApi } from "../../../contexts/ApiContext";
+import { fetch[Feature] } from "../[feature]Slice";
+import { select[Feature], select[Feature]Loading } from "../[feature]Selectors";
+
+const [Feature]Screen = () => {
+  const dispatch = useDispatch();
+  const apiClient = useApi();
+  const data = useSelector(select[Feature]);
+  const loading = useSelector(select[Feature]Loading);
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn && apiClient) {
+      dispatch(fetch[Feature]({
+        // Parameters
+        apiClient, // ALWAYS include this
+      }));
+    }
+  }, [dispatch, isLoaded, isSignedIn, apiClient]);
+};
+```
+
+## API Integration Rules
+
+### 1. Always Use ApiContext
+
+```javascript
+import { useApi } from "../../../contexts/ApiContext";
+
+const Component = () => {
+  const apiClient = useApi(); // Get all API instances
+
+  // Available: apiClient.users, apiClient.hotels, apiClient.hotelAmenities,
+  // apiClient.locations, apiClient.currencies, apiClient.webhooks
+};
+```
+
+### 2. StandardTouch API Patterns
+
+- **GET** requests: `apiClient.[resource].[resource]Get(opts)`
+- **POST** requests: `apiClient.[resource].[resource]Post(data, opts)`
+- **PUT** requests: `apiClient.[resource].[resource]IdPut(id, data, opts)`
+- **DELETE** requests: `apiClient.[resource].[resource]IdDelete(id, opts)`
+
+### 3. Always Pass apiClient to Thunks
+
+```javascript
+dispatch(
+  actionThunk({
+    param1: value1,
+    param2: value2,
+    apiClient, // REQUIRED
+  })
+);
+```
+
+## Toast Usage Rules
+
+### Import and Usage
+
+```javascript
+import {
+  showSuccess,
+  showError,
+  showInfo,
+  showWarning,
+  showLoading,
+  updateToast,
+} from "../../../utils/toast";
+
+// Success/Error/Info/Warning
+showSuccess("Operation completed successfully");
+showError("Something went wrong");
+
+// Loading with updates
+const toastId = showLoading("Processing...");
+// Later update:
+updateToast(toastId, "success", "Completed!");
+```
+
+## Component Development Rules
+
+### 1. ShadCN/UI Components
+
+- Use existing ShadCN components from `@/components/ui/`
+- Follow established component patterns
+- Use `cn()` utility for className merging
+
+### 2. Styling Guidelines
+
+- **Primary approach**: Tailwind CSS classes
+- **Utils**: Use `cn()` from `@/lib/utils` for conditional classes
+- **Theme**: Support both light/dark themes via CSS variables
+- **Responsive**: Mobile-first responsive design
+
+### 3. Component Structure
+
+```javascript
+import React from "react";
+import { cn } from "@/lib/utils";
+
+const MyComponent = ({ className, variant = "default", ...props }) => {
+  return (
+    <div
+      className={cn(
+        "base-classes",
+        {
+          "variant-classes": variant === "special",
+        },
+        className
+      )}
+      {...props}
+    >
+      {/* Content */}
+    </div>
+  );
+};
+
+export default MyComponent;
+```
+
+## Authentication Rules
+
+### 1. Clerk Integration
+
+```javascript
+import { useAuth, useUser } from "@clerk/clerk-react";
+
+const Component = () => {
+  const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
+
+  // Always check isLoaded before isSignedIn
+  if (!isLoaded) return <Spinner />;
+  if (!isSignedIn) return <AuthGuard />;
+};
+```
+
+### 2. Protected Routes
+
+- Use `AuthGuard` component for route protection
+- Check authentication state before API calls
+- Handle authentication errors gracefully
+
+## File Naming Conventions
+
+### 1. Components
+
+- **React components**: PascalCase (e.g., `UserModal.jsx`)
+- **Screens**: PascalCase with "Screen" suffix (e.g., `UsersScreen.jsx`)
+- **UI components**: PascalCase (e.g., `Button.jsx`)
+
+### 2. Redux Files
+
+- **Slices**: camelCase with "Slice" suffix (e.g., `usersSlice.js`)
+- **Selectors**: camelCase with "Selectors" suffix (e.g., `usersSelectors.js`)
+
+### 3. Utilities
+
+- **Utils**: camelCase (e.g., `toast.js`, `apiClient.js`)
+- **Hooks**: camelCase with "use" prefix (e.g., `useAuth.js`)
+
+## Error Handling Rules
+
+### 1. API Errors
+
+```javascript
+try {
+  const result = await dispatch(actionThunk(params)).unwrap();
+  showSuccess("Success message");
+} catch (error) {
+  console.error("Operation failed:", error);
+  showError(error.message || "Operation failed");
+}
+```
+
+### 2. Loading States
+
+Always handle loading and error states:
+
+```javascript
+if (loading) return <Spinner />;
+if (error) return <ErrorMessage error={error} />;
+```
+
+## Performance Rules
+
+### 1. Selectors
+
+- Use `createSelector` for computed/filtered data
+- Memoize expensive calculations
+- Avoid creating objects in selectors
+
+### 2. API Calls
+
+- Include `apiClient` in useEffect dependencies
+- Use `useMemo` for stable API client references
+- Avoid unnecessary re-renders with proper dependencies
+
+## Code Quality Rules
+
+### 1. Imports
+
+```javascript
+// External libraries first
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
+// Internal imports
+import { useApi } from "../../contexts/ApiContext";
+import { showSuccess, showError } from "../../utils/toast";
+import { Button } from "@/components/ui/button";
+```
+
+### 2. Constants
+
+- Define constants in separate files for reusability
+- Use UPPER_CASE for constants
+- Group related constants together
+
+### 3. Error Prevention
+
+- Always validate API client exists before use
+- Handle edge cases (empty arrays, null values)
+- Provide meaningful error messages
+- Use TypeScript-style JSDoc comments for complex functions
+
+## Testing Considerations
+
+### 1. Component Testing
+
+- Test component rendering with different props
+- Test user interactions and state changes
+- Mock API calls and Redux store
+
+### 2. Redux Testing
+
+- Test async thunks with mocked API responses
+- Test reducer state changes
+- Test selectors with various state shapes
+
+## Development Workflow
+
+### 1. New Feature Checklist
+
+1. ✅ Create feature directory structure
+2. ✅ Implement Redux slice with async thunks
+3. ✅ Create selectors file
+4. ✅ Add to root reducer
+5. ✅ Implement main screen component
+6. ✅ Add feature-specific components
+7. ✅ Integrate with API context
+8. ✅ Add proper error handling
+9. ✅ Test functionality
+
+### 2. Code Review Focus
+
+- Redux patterns consistency
+- API integration correctness
+- Error handling completeness
+- Component reusability
+- Performance considerations
+
+These rules ensure consistency, maintainability, and scalability across the YomStay Admin Panel codebase.
