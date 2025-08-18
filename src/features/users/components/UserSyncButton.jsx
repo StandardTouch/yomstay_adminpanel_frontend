@@ -23,10 +23,12 @@ import {
   showWarning,
   updateToast,
 } from "../../../utils/toast";
+import { useApi } from "../../../contexts/ApiContext";
 
-const UserSyncButton = ({ apiClient }) => {
+const UserSyncButton = () => {
   const dispatch = useDispatch();
   const { isSignedIn } = useAuth();
+  const apiClient = useApi();
   const syncLoading = useSelector(selectUsersSyncLoading);
   const syncError = useSelector(selectUsersSyncError);
   const lastSyncResult = useSelector(selectUsersLastSyncResult);

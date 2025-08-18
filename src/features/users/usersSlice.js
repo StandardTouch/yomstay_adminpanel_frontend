@@ -8,11 +8,11 @@ export const fetchUsers = createAsyncThunk(
       // Extract API client from query params
       const { apiClient, ...filters } = queryParams;
 
-      if (!apiClient) {
+      if (!apiClient?.users) {
         throw new Error("API client is required");
       }
 
-      // Build query parameters with all available filters
+      // Extract filter parameters
       const {
         search,
         role,
@@ -28,28 +28,28 @@ export const fetchUsers = createAsyncThunk(
         syncStatus,
       } = filters;
 
-      // Build query string
-      const params = new URLSearchParams();
-      if (search) params.append("search", search);
-      if (role) params.append("role", role);
-      if (hasProfileImage !== undefined)
-        params.append("hasProfileImage", hasProfileImage);
-      if (createdAfter) params.append("createdAfter", createdAfter);
-      if (createdBefore) params.append("createdBefore", createdBefore);
-      if (updatedAfter) params.append("updatedAfter", updatedAfter);
-      if (updatedBefore) params.append("updatedBefore", updatedBefore);
-      if (page) params.append("page", page.toString());
-      if (pageSize) params.append("pageSize", pageSize.toString());
-      if (sortBy) params.append("sortBy", sortBy);
-      if (sortOrder) params.append("sortOrder", sortOrder);
-      if (syncStatus && syncStatus !== "all")
-        params.append("syncStatus", syncStatus);
+      // Use the StandardTouch UserApi usersGet method with options object
+      const opts = {
+        search,
+        role,
+        hasProfileImage,
+        createdAfter,
+        createdBefore,
+        updatedAfter,
+        updatedBefore,
+        page,
+        pageSize,
+        sortBy,
+        sortOrder,
+        syncStatus: syncStatus && syncStatus !== "all" ? syncStatus : undefined,
+      };
 
-      const queryString = params.toString();
-      const endpoint = `/users${queryString ? `?${queryString}` : ""}`;
+      // Remove undefined values
+      Object.keys(opts).forEach(
+        (key) => opts[key] === undefined && delete opts[key]
+      );
 
-      // Use the Clerk API client
-      const response = await apiClient.get(endpoint);
+      const response = await apiClient.users.usersGet(opts);
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch users");
@@ -91,8 +91,21 @@ export const createUser = createAsyncThunk(
         formData.append("profileImage", profileImage);
       }
 
-      // Use the Clerk API client
-      const response = await apiClient.post("/users", formData);
+      // Use the StandardTouch UserApi usersPost method
+      // Signature: usersPost(email, firstName, lastName, password, role, opts)
+      const opts = {
+        phone,
+        profileImage,
+      };
+
+      const response = await apiClient.users.usersPost(
+        email,
+        firstName,
+        lastName,
+        password,
+        role,
+        opts
+      );
       return response;
     } catch (error) {
       console.error("Error creating user:", error);
@@ -142,8 +155,8 @@ export const updateUser = createAsyncThunk(
         formData.append("profileImage", profileImage);
       }
 
-      // Use the Clerk API client
-      const response = await apiClient.put(`/users/${id}`, formData);
+      // Use the StandardTouch UserApi usersIdPut method
+      const response = await apiClient.users.usersIdPut(id, formData);
       return response;
     } catch (error) {
       console.error("Error updating user:", error);
@@ -185,8 +198,8 @@ export const deleteUser = createAsyncThunk(
         throw new Error("API client is required");
       }
 
-      // Use the Clerk API client
-      await apiClient.delete(`/users/${userId}`);
+      // Use the StandardTouch UserApi usersIdDelete method
+      await apiClient.users.usersIdDelete(userId);
       return userId; // Return the deleted user ID
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -205,8 +218,8 @@ export const syncUsers = createAsyncThunk(
 
       const { forceUpdate = false, dryRun = false } = syncOptions;
 
-      // Use the Clerk API client
-      const response = await apiClient.post("/users/sync", {
+      // Use the StandardTouch UserApi usersSyncPost method
+      const response = await apiClient.users.usersSyncPost({
         forceUpdate,
         dryRun,
       });

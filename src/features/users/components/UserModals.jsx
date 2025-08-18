@@ -17,6 +17,7 @@ import { createUser, updateUser } from "../usersSlice";
 import { selectUsersLoading } from "../usersSelectors";
 import { showSuccess, showError } from "../../../utils/toast";
 import SearchableDropdown from "../../../common/components/SearchableDropdown";
+import { useApi } from "../../../contexts/ApiContext";
 
 import { Badge } from "@/components/ui/badge";
 
@@ -28,10 +29,10 @@ const UserModals = ({
   editUser,
   onUpdateUser,
   roleOptions,
-  apiClient,
 }) => {
   const dispatch = useDispatch();
   const loading = useSelector(selectUsersLoading);
+  const apiClient = useApi();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -51,7 +52,10 @@ const UserModals = ({
   // Hotel fetching function
   const fetchHotelsForDropdown = async () => {
     try {
-      const response = await apiClient.get("/hotels?page=1&pageSize=100");
+      const response = await apiClient.hotels.hotelsGet({
+        page: 1,
+        pageSize: 100,
+      });
 
       if (response.success && response.data?.hotels) {
         return response.data.hotels.map((hotel) => ({

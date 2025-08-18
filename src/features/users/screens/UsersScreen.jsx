@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@clerk/clerk-react";
-import { useClerkApiClient } from "../../../utils/clerkApiClient";
+import { useApi } from "../../../contexts/ApiContext";
 import {
   showSuccess,
   showError,
@@ -50,7 +50,7 @@ import { Trash2 } from "lucide-react";
 const UsersScreen = () => {
   const dispatch = useDispatch();
   const { isSignedIn, isLoaded } = useAuth();
-  const apiClient = useClerkApiClient();
+  const apiClient = useApi();
 
   // Redux state
   const users = useSelector(selectUsers);
@@ -357,7 +357,6 @@ const UsersScreen = () => {
               handleDateFilter("updatedBefore", value)
             }
             onClearFilters={handleClearFilters}
-            apiClient={apiClient}
           />
         </div>
 
@@ -493,7 +492,6 @@ const UsersScreen = () => {
             handleDateFilter("updatedBefore", value)
           }
           onClearFilters={handleClearFilters}
-          apiClient={apiClient}
         />
       </div>
 
@@ -534,7 +532,6 @@ const UsersScreen = () => {
         setEditOpen={setEditOpen}
         editUser={editUser}
         roleOptions={roleOptions}
-        apiClient={apiClient}
       />
 
       {/* Bulk Delete Confirmation Modal */}
