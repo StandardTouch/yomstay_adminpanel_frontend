@@ -27,6 +27,7 @@ const UserAdvancedModal = ({
   updatedBefore,
   onUpdatedBeforeChange,
   onClearFilters,
+  apiClient,
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -58,7 +59,7 @@ const UserAdvancedModal = ({
                   User Synchronization
                 </h3>
                 <div className="pl-2">
-                  <UserSyncButton />
+                  <UserSyncButton apiClient={apiClient} />
                 </div>
               </div>
 

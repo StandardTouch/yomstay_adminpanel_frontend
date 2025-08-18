@@ -1,11 +1,17 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { makeRequest } from "../../utils/apiClient";
 
 // Async thunk for fetching users with query parameters
 export const fetchUsers = createAsyncThunk(
   "users/fetchUsers",
-  async (queryParams = {}, { rejectWithValue, dispatch }) => {
+  async (queryParams = {}, { rejectWithValue }) => {
     try {
+      // Extract API client from query params
+      const { apiClient, ...filters } = queryParams;
+
+      if (!apiClient) {
+        throw new Error("API client is required");
+      }
+
       // Build query parameters with all available filters
       const {
         search,
@@ -19,7 +25,8 @@ export const fetchUsers = createAsyncThunk(
         pageSize = 20,
         sortBy = "createdAt",
         sortOrder = "desc",
-      } = queryParams;
+        syncStatus,
+      } = filters;
 
       // Build query string
       const params = new URLSearchParams();
@@ -35,12 +42,14 @@ export const fetchUsers = createAsyncThunk(
       if (pageSize) params.append("pageSize", pageSize.toString());
       if (sortBy) params.append("sortBy", sortBy);
       if (sortOrder) params.append("sortOrder", sortOrder);
+      if (syncStatus && syncStatus !== "all")
+        params.append("syncStatus", syncStatus);
 
       const queryString = params.toString();
       const endpoint = `/users${queryString ? `?${queryString}` : ""}`;
 
-      // Use the authenticated API client
-      const response = await makeRequest(endpoint, { method: "GET" });
+      // Use the Clerk API client
+      const response = await apiClient.get(endpoint);
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch users");
@@ -50,8 +59,12 @@ export const fetchUsers = createAsyncThunk(
 
 export const createUser = createAsyncThunk(
   "users/createUser",
-  async (userData, { rejectWithValue }) => {
+  async ({ userData, apiClient }, { rejectWithValue }) => {
     try {
+      if (!apiClient) {
+        throw new Error("API client is required");
+      }
+
       const {
         email,
         firstName,
@@ -78,15 +91,8 @@ export const createUser = createAsyncThunk(
         formData.append("profileImage", profileImage);
       }
 
-      // Use the authenticated API client
-      const response = await makeRequest("/users", {
-        method: "POST",
-        body: formData,
-        // Don't set Content-Type header - let browser set it for FormData
-        headers: {
-          // Remove Content-Type to let browser set multipart boundary
-        },
-      });
+      // Use the Clerk API client
+      const response = await apiClient.post("/users", formData);
       return response;
     } catch (error) {
       console.error("Error creating user:", error);
@@ -115,8 +121,12 @@ export const createUser = createAsyncThunk(
 
 export const updateUser = createAsyncThunk(
   "users/updateUser",
-  async ({ id, userData, profileImage }, { rejectWithValue }) => {
+  async ({ id, userData, profileImage, apiClient }, { rejectWithValue }) => {
     try {
+      if (!apiClient) {
+        throw new Error("API client is required");
+      }
+
       // Create FormData for multipart/form-data request
       const formData = new FormData();
 
@@ -132,16 +142,8 @@ export const updateUser = createAsyncThunk(
         formData.append("profileImage", profileImage);
       }
 
-      // Use the authenticated API client with FormData
-      const response = await makeRequest(`/users/${id}`, {
-        method: "PUT",
-        body: formData,
-        // Don't set Content-Type header - let browser set it for FormData
-        headers: {
-          // Remove Content-Type to let browser set multipart boundary
-        },
-      });
-
+      // Use the Clerk API client
+      const response = await apiClient.put(`/users/${id}`, formData);
       return response;
     } catch (error) {
       console.error("Error updating user:", error);
@@ -177,10 +179,14 @@ export const updateUser = createAsyncThunk(
 
 export const deleteUser = createAsyncThunk(
   "users/deleteUser",
-  async (userId, { rejectWithValue }) => {
+  async ({ userId, apiClient }, { rejectWithValue }) => {
     try {
-      // Use the authenticated API client
-      await makeRequest(`/users/${userId}`, { method: "DELETE" });
+      if (!apiClient) {
+        throw new Error("API client is required");
+      }
+
+      // Use the Clerk API client
+      await apiClient.delete(`/users/${userId}`);
       return userId; // Return the deleted user ID
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -191,17 +197,18 @@ export const deleteUser = createAsyncThunk(
 
 export const syncUsers = createAsyncThunk(
   "users/syncUsers",
-  async (syncOptions = {}, { rejectWithValue, dispatch, getState }) => {
+  async ({ syncOptions = {}, apiClient }, { rejectWithValue }) => {
     try {
+      if (!apiClient) {
+        throw new Error("API client is required");
+      }
+
       const { forceUpdate = false, dryRun = false } = syncOptions;
 
-      // Use the authenticated API client
-      const response = await makeRequest("/users/sync", {
-        method: "POST",
-        body: JSON.stringify({
-          forceUpdate,
-          dryRun,
-        }),
+      // Use the Clerk API client
+      const response = await apiClient.post("/users/sync", {
+        forceUpdate,
+        dryRun,
       });
       return response;
     } catch (error) {

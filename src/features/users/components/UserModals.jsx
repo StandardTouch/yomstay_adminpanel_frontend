@@ -17,7 +17,7 @@ import { createUser, updateUser } from "../usersSlice";
 import { selectUsersLoading } from "../usersSelectors";
 import { showSuccess, showError } from "../../../utils/toast";
 import SearchableDropdown from "../../../common/components/SearchableDropdown";
-import { makeRequest } from "../../../utils/apiClient";
+
 import { Badge } from "@/components/ui/badge";
 
 const UserModals = ({
@@ -28,6 +28,7 @@ const UserModals = ({
   editUser,
   onUpdateUser,
   roleOptions,
+  apiClient,
 }) => {
   const dispatch = useDispatch();
   const loading = useSelector(selectUsersLoading);
@@ -50,9 +51,7 @@ const UserModals = ({
   // Hotel fetching function
   const fetchHotelsForDropdown = async () => {
     try {
-      const response = await makeRequest("/hotels?page=1&pageSize=100", {
-        method: "GET",
-      });
+      const response = await apiClient.get("/hotels?page=1&pageSize=100");
 
       if (response.success && response.data?.hotels) {
         return response.data.hotels.map((hotel) => ({
@@ -150,7 +149,7 @@ const UserModals = ({
           userData.hotelId = formData.hotelId;
         }
 
-        await dispatch(createUser(userData)).unwrap();
+        await dispatch(createUser({ userData, apiClient })).unwrap();
 
         showSuccess("User created successfully!");
         setAddOpen(false);
@@ -176,6 +175,7 @@ const UserModals = ({
             id: editUser.clerkUser?.id || editUser.id,
             userData,
             profileImage,
+            apiClient,
           })
         ).unwrap();
 

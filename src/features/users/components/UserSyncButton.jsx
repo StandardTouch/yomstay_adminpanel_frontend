@@ -23,11 +23,10 @@ import {
   showWarning,
   updateToast,
 } from "../../../utils/toast";
-import { setAuth } from "../../../utils/apiClient";
 
-const UserSyncButton = () => {
+const UserSyncButton = ({ apiClient }) => {
   const dispatch = useDispatch();
-  const { getToken, isSignedIn } = useAuth();
+  const { isSignedIn } = useAuth();
   const syncLoading = useSelector(selectUsersSyncLoading);
   const syncError = useSelector(selectUsersSyncError);
   const lastSyncResult = useSelector(selectUsersLastSyncResult);
@@ -42,61 +41,47 @@ const UserSyncButton = () => {
     dispatch(clearSyncError());
     dispatch(clearLastSyncResult());
 
-    // Ensure we have a fresh token before proceeding
+    // Ensure user is signed in
     if (!isSignedIn) {
       showError("You must be signed in to sync users");
       return;
     }
 
+    // Show loading toast
+    const toastId = showLoading("Syncing users...");
+
     try {
-      // Get a fresh token
-      const freshToken = await getToken();
-      if (!freshToken) {
-        showError("Failed to get authentication token");
-        return;
-      }
+      const result = await dispatch(
+        syncUsers({ syncOptions: { forceUpdate, dryRun }, apiClient })
+      ).unwrap();
 
-      // Update the API client with the fresh token
-      setAuth(true, freshToken);
+      if (result.success) {
+        const summary = result.data.summary;
+        const message = `Sync completed! Processed ${
+          summary.totalProcessed
+        } users. Created: ${
+          summary.createdInClerk + summary.createdInLocal
+        }, Updated: ${
+          summary.updatedInClerk + summary.updatedInLocal
+        }, Skipped: ${summary.skipped}, Failed: ${summary.failed}`;
 
-      // Show loading toast
-      const toastId = showLoading("Syncing users...");
+        updateToast(toastId, "success", message);
 
-      try {
-        const result = await dispatch(
-          syncUsers({ forceUpdate, dryRun })
-        ).unwrap();
-
-        if (result.success) {
-          const summary = result.data.summary;
-          const message = `Sync completed! Processed ${
-            summary.totalProcessed
-          } users. Created: ${
-            summary.createdInClerk + summary.createdInLocal
-          }, Updated: ${
-            summary.updatedInClerk + summary.updatedInLocal
-          }, Skipped: ${summary.skipped}, Failed: ${summary.failed}`;
-
-          updateToast(toastId, "success", message);
-
-          // Show detailed results
-          if (summary.failed > 0) {
-            showWarning(
-              `${summary.failed} users failed to sync. Check the details below.`
-            );
-          }
-
-          // Refresh users data to show updated sync status
-          dispatch(fetchUsers());
-        } else {
-          updateToast(toastId, "error", "Sync failed. Please try again.");
+        // Show detailed results
+        if (summary.failed > 0) {
+          showWarning(
+            `${summary.failed} users failed to sync. Check the details below.`
+          );
         }
-      } catch (error) {
-        updateToast(toastId, "error", `Sync failed: ${error}`);
+
+        // Refresh users data to show updated sync status
+        dispatch(fetchUsers({ apiClient }));
+      } else {
+        updateToast(toastId, "error", "Sync failed. Please try again.");
       }
     } catch (error) {
-      showError("Authentication error. Please try signing in again.");
-      console.error("Token refresh error:", error);
+      console.error("Sync error:", error);
+      updateToast(toastId, "error", `Sync failed: ${error}`);
     }
   };
 

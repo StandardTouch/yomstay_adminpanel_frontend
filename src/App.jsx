@@ -10,19 +10,14 @@ import HotelsScreen from "./features/hotels/screens/hotel_listing/HotelsScreen";
 import DashboardScreen from "./features/dashboard/screens/DashboardScreen";
 import GlobalAmenities from "./features/global_amenities/screens/GlobalAmenities";
 import Filter from "./features/filters/screens/Filter";
-import { setAuth } from "./utils/apiClient";
+
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const { isSignedIn, user, isLoaded } = useUser();
 
-  // Cleanup API client on unmount
-  useEffect(() => {
-    return () => {
-      setAuth(false);
-    };
-  }, []);
+  // No cleanup needed - Clerk handles auth automatically
 
   // Prevent redirects before the user state is loaded
   if (!isLoaded) {

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@clerk/clerk-react";
-import { setAuth } from "../../../utils/apiClient";
+import { useClerkApiClient } from "../../../utils/clerkApiClient";
 import {
   showSuccess,
   showError,
@@ -49,39 +49,8 @@ import { Trash2 } from "lucide-react";
 
 const UsersScreen = () => {
   const dispatch = useDispatch();
-
-  // Get Clerk auth state directly
-  const { getToken, isSignedIn, isLoaded } = useAuth();
-  const [authReady, setAuthReady] = useState(false);
-
-  // Set auth state when user signs in/out
-  useEffect(() => {
-    const updateAuth = async () => {
-      if (isSignedIn) {
-        try {
-          // Just verify we can get a token, but don't store it
-          const token = await getToken();
-          if (token) {
-            // Pass the getToken function instead of the token
-            setAuth(true, getToken);
-            setAuthReady(true);
-          }
-        } catch (error) {
-          setAuth(false);
-          setAuthReady(false);
-        }
-      } else {
-        setAuth(false);
-        setAuthReady(false);
-      }
-    };
-
-    if (isLoaded) {
-      updateAuth();
-    }
-  }, [isSignedIn, isLoaded, getToken]);
-
-  // No more token refresh needed - Clerk handles it automatically
+  const { isSignedIn, isLoaded } = useAuth();
+  const apiClient = useClerkApiClient();
 
   // Redux state
   const users = useSelector(selectUsers);
@@ -124,7 +93,7 @@ const UsersScreen = () => {
   // Fetch users on component mount and filter changes
   useEffect(() => {
     // Only fetch users if auth is ready and user is signed in
-    if (authReady && isSignedIn) {
+    if (isLoaded && isSignedIn) {
       dispatch(
         fetchUsers({
           page: pagination.page,
@@ -139,12 +108,13 @@ const UsersScreen = () => {
           sortBy: filters.sortBy,
           sortOrder: filters.sortOrder,
           syncStatus: filters.syncStatus,
+          apiClient, // Pass the API client
         })
       );
     }
   }, [
     dispatch,
-    authReady, // Add authReady dependency
+    isLoaded, // Add isLoaded dependency
     isSignedIn,
     pagination.page,
     pagination.pageSize,
@@ -158,6 +128,7 @@ const UsersScreen = () => {
     filters.sortBy,
     filters.sortOrder,
     filters.syncStatus,
+    apiClient, // Now stable reference due to useMemo in useClerkApiClient
   ]);
 
   // Handle search with debounce
@@ -212,7 +183,7 @@ const UsersScreen = () => {
   // Handle user deletion
   const handleDeleteUser = async (user) => {
     try {
-      await dispatch(deleteUser(user.id)).unwrap();
+      await dispatch(deleteUser({ userId: user.id, apiClient })).unwrap();
       // Remove from selected if it was selected
       setSelected((prev) => prev.filter((id) => id !== user.id));
       // Show success message
@@ -258,7 +229,7 @@ const UsersScreen = () => {
     setBulkDeleteLoading(true);
     try {
       for (const userId of selected) {
-        await dispatch(deleteUser(userId));
+        await dispatch(deleteUser({ userId, apiClient }));
       }
       setSelected([]);
       setBulkDeleteModal({ open: false, count: 0 });
@@ -386,6 +357,7 @@ const UsersScreen = () => {
               handleDateFilter("updatedBefore", value)
             }
             onClearFilters={handleClearFilters}
+            apiClient={apiClient}
           />
         </div>
 
@@ -414,7 +386,7 @@ const UsersScreen = () => {
   }
 
   // Token loading state
-  if (!isLoaded || !authReady) {
+  if (!isLoaded) {
     return (
       <div className="p-4 sm:p-8 w-full max-w-7xl mx-auto">
         <div className="flex items-center justify-center h-64">
@@ -448,7 +420,29 @@ const UsersScreen = () => {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <p className="text-red-600 mb-2">Error loading users: {error}</p>
-            <Button onClick={() => dispatch(fetchUsers())}>Retry</Button>
+            <Button
+              onClick={() =>
+                dispatch(
+                  fetchUsers({
+                    page: pagination.page,
+                    pageSize: pagination.pageSize,
+                    search: filters.search,
+                    role: filters.role === "all" ? undefined : filters.role,
+                    hasProfileImage: filters.hasProfileImage,
+                    createdAfter: filters.createdAfter,
+                    createdBefore: filters.createdBefore,
+                    updatedAfter: filters.updatedAfter,
+                    updatedBefore: filters.updatedBefore,
+                    sortBy: filters.sortBy,
+                    sortOrder: filters.sortOrder,
+                    syncStatus: filters.syncStatus,
+                    apiClient,
+                  })
+                )
+              }
+            >
+              Retry
+            </Button>
           </div>
         </div>
       </div>
@@ -499,6 +493,7 @@ const UsersScreen = () => {
             handleDateFilter("updatedBefore", value)
           }
           onClearFilters={handleClearFilters}
+          apiClient={apiClient}
         />
       </div>
 
@@ -539,6 +534,7 @@ const UsersScreen = () => {
         setEditOpen={setEditOpen}
         editUser={editUser}
         roleOptions={roleOptions}
+        apiClient={apiClient}
       />
 
       {/* Bulk Delete Confirmation Modal */}
