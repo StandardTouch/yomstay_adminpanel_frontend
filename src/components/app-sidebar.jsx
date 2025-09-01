@@ -42,6 +42,12 @@ const sidebarGroups = [
       { title: "Filter", url: "filter", icon: SlidersHorizontal },
     ],
   },
+  {
+    label: "General",
+    items: [
+      { title: "Settings", url: "settings", icon: Settings },
+    ],
+  },
   // Add more groups here as needed
 ];
 

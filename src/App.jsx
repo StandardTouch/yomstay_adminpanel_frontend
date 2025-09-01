@@ -13,6 +13,7 @@ import Filter from "./features/filters/screens/Filter";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Settings from "./features/settings/screens/settings";
 
 function App() {
   const { isSignedIn, user, isLoaded } = useUser();
@@ -49,6 +50,7 @@ function App() {
           <Route path="hotels" element={<HotelsScreen />} />
           <Route path="amenities" element={<GlobalAmenities />} />
           <Route path="filter" element={<Filter />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         {/* Login route */}
