@@ -25,7 +25,7 @@ class ApiErrorBoundary extends React.Component {
             </h2>
             <p className="text-gray-600 mb-6">
               Something went wrong with the API connection. Please try
-              refreshing the page.
+              refreshing the page. {this.state.error.message}
             </p>
             <Button
               onClick={() => window.location.reload()}

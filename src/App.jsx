@@ -13,6 +13,7 @@ import Filter from "./features/filters/screens/Filter";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import VerifyMagicLinkWithPasswordReset from "./features/auth/test";
 
 function App() {
   const { isSignedIn, user, isLoaded } = useUser();
@@ -53,6 +54,7 @@ function App() {
 
         {/* Login route */}
         <Route path="/login" element={<SignInPage />} />
+        <Route path="/verify" element={<VerifyMagicLinkWithPasswordReset />} />
       </Routes>
       <ToastContainer />
     </BrowserRouter>
