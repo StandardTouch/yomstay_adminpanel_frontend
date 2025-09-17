@@ -245,7 +245,7 @@ export default function RoomType() {
         <SheetContent className=" overflow-y-auto p-5 ">
           <SheetTitle>Add New Room Type</SheetTitle>
 
-          <div className=" scroll-y-auto flex flex-col gap-4 *:flex *:flex-col *:gap-2 *:border-b-2 *:pb-2">
+          <div className=" scroll-y-auto flex flex-col gap-4 *:flex *:flex-col *:gap-2 *:border-b-2 *:last:border-b-0 *:pb-2">
             <div>
               <label htmlFor="roomname">Room Display Name</label>
               <Input
@@ -317,6 +317,9 @@ export default function RoomType() {
             </div>
             <div>
               <Button onClick={handleSave}>Save</Button>
+              <Button variant="outline" onClick={handleCancel}>
+                Cancel
+              </Button>
             </div>
           </div>
         </SheetContent>
