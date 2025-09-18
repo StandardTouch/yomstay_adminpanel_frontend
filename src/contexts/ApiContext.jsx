@@ -48,7 +48,27 @@ export const ApiProvider = ({ children }) => {
 
         return await originalCallApi.apply(this, args);
       } catch (error) {
-        console.error("API call failed:", error);
+        console.error("API call failed:", {
+          error,
+          message: error?.message,
+          response: error?.response,
+          status: error?.response?.status || error?.status,
+          data: error?.response?.data || error?.body,
+        });
+
+        // Try to extract more error details
+        if (error?.body) {
+          try {
+            const errorData =
+              typeof error.body === "string"
+                ? JSON.parse(error.body)
+                : error.body;
+            console.error("Parsed error body:", errorData);
+          } catch (e) {
+            console.error("Raw error body:", error.body);
+          }
+        }
+
         throw error;
       }
     };

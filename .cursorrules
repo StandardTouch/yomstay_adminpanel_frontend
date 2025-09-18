@@ -174,11 +174,48 @@ const Component = () => {
 ### 2. StandardTouch API Patterns
 
 - **GET** requests: `apiClient.[resource].[resource]Get(opts)`
-- **POST** requests: `apiClient.[resource].[resource]Post(data, opts)`
+- **POST** requests: `apiClient.[resource].[resource]Post(requiredParams..., opts)`
 - **PUT** requests: `apiClient.[resource].[resource]IdPut(id, data, opts)`
 - **DELETE** requests: `apiClient.[resource].[resource]IdDelete(id, opts)`
 
-### 3. Always Pass apiClient to Thunks
+### 3. Correct Generated Client Usage
+
+**ALWAYS** use the generated client methods directly, not raw `callApi`:
+
+```javascript
+// ✅ CORRECT - Use generated client methods
+const opts = {};
+if (phone) opts.phone = phone;
+if (hotelId) opts.hotelId = hotelId;
+if (profileImage instanceof File) {
+  opts.profileImage = profileImage; // Pass File object directly
+}
+
+const response = await apiClient.users.usersPost(
+  email,        // Required parameter
+  firstName,    // Required parameter
+  lastName,     // Required parameter
+  password,     // Required parameter
+  role,         // Required parameter
+  opts          // Options object with optional fields
+);
+
+// ❌ WRONG - Don't use raw callApi for generated methods
+const formData = new FormData();
+const response = await apiClient.users.apiClient.callApi(
+  "/users", "POST", {}, {}, {}, {}, formData, ...
+);
+```
+
+**Key Rules:**
+
+- Pass **required parameters** as individual arguments
+- Pass **optional parameters** in `opts` object
+- Pass **File objects directly** in opts (don't create FormData manually)
+- Let the **generated client handle** multipart/form-data formatting
+- **Never manually set** Content-Type headers for file uploads
+
+### 4. Always Pass apiClient to Thunks
 
 ```javascript
 dispatch(

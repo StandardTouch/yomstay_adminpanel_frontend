@@ -32,11 +32,11 @@ export default function UserTable({
   onDeleteUser,
 }) {
   // State for sync issues modal
-  const [syncIssuesModal, setSyncIssuesModal] = useState({
-    open: false,
-    user: null,
-    issues: [],
-  });
+  // const [syncIssuesModal, setSyncIssuesModal] = useState({
+  //   open: false,
+  //   user: null,
+  //   issues: [],
+  // });
 
   // State for delete confirmation
   const [deleteModal, setDeleteModal] = useState({
@@ -70,13 +70,13 @@ export default function UserTable({
   };
 
   // Handle sync issues click
-  const handleSyncIssuesClick = (user) => {
-    setSyncIssuesModal({
-      open: true,
-      user,
-      issues: user.syncIssues || [],
-    });
-  };
+  // const handleSyncIssuesClick = (user) => {
+  //   setSyncIssuesModal({
+  //     open: true,
+  //     user,
+  //     issues: user.syncIssues || [],
+  //   });
+  // };
 
   // Handle delete click
   const handleDeleteClick = (user) => {
@@ -128,7 +128,7 @@ export default function UserTable({
               <TableHead>Role</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Created</TableHead>
-              <TableHead>Sync Status</TableHead>
+              {/* <TableHead>Sync Status</TableHead> */}
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -164,7 +164,7 @@ export default function UserTable({
               <TableHead>Role</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Created</TableHead>
-              <TableHead>Sync Status</TableHead>
+              {/* <TableHead>Sync Status</TableHead> */}
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -253,18 +253,11 @@ export default function UserTable({
                 </TableCell>
                 <TableCell>{user.localUser?.phone || "N/A"}</TableCell>
                 <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <div className="text-sm">
-                      Clerk:{" "}
-                      {new Date(user.clerkUser?.createdAt).toLocaleDateString()}
-                    </div>
-                    <div className="text-sm">
-                      Local:{" "}
-                      {new Date(user.localUser?.createdAt).toLocaleDateString()}
-                    </div>
+                  <div className="text-sm">
+                    {new Date(user.clerkUser?.createdAt).toLocaleDateString()}
                   </div>
                 </TableCell>
-                <TableCell>
+                {/* <TableCell>
                   <div className="flex flex-col gap-1">
                     <Badge
                       variant={user.isSynced ? "default" : "destructive"}
@@ -278,7 +271,7 @@ export default function UserTable({
                       {user.isSynced ? "Synced" : "Unsynced"}
                     </Badge>
                   </div>
-                </TableCell>
+                </TableCell> */}
                 <TableCell>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon">
@@ -308,7 +301,7 @@ export default function UserTable({
       </Card>
 
       {/* Sync Issues Modal */}
-      <Dialog
+      {/* <Dialog
         open={syncIssuesModal.open}
         onOpenChange={(open) =>
           setSyncIssuesModal((prev) => ({ ...prev, open }))
@@ -369,7 +362,7 @@ export default function UserTable({
             </div>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
       {/* Delete Confirmation Modal */}
       <ConfirmationPopup

@@ -52,7 +52,9 @@ export const fetchUsers = createAsyncThunk(
       const response = await apiClient.users.usersGet(opts);
       return response;
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to fetch users");
+      return rejectWithValue(
+        error?.message || error?.toString() || "Failed to fetch users"
+      );
     }
   }
 );
@@ -73,45 +75,73 @@ export const createUser = createAsyncThunk(
         role,
         phone,
         profileImage,
+        hotelId,
       } = userData;
 
-      // Create FormData for multipart/form-data request
-      const formData = new FormData();
-
-      // Add user data fields
-      formData.append("email", email);
-      formData.append("firstName", firstName);
-      formData.append("lastName", lastName);
-      formData.append("password", password);
-      formData.append("role", role);
-      if (phone) formData.append("phone", phone);
-
-      // Add profile image if provided
-      if (profileImage && profileImage instanceof File) {
-        formData.append("profileImage", profileImage);
+      // Validate required fields
+      if (!email || !firstName || !lastName || !password || !role) {
+        throw new Error(
+          "Missing required fields: email, firstName, lastName, password, role"
+        );
       }
 
-      // Use the StandardTouch UserApi usersPost method
-      // Signature: usersPost(email, firstName, lastName, password, role, opts)
-      const opts = {
-        phone,
-        profileImage,
-      };
-
-      const response = await apiClient.users.usersPost(
+      // Debug logging
+      console.log("Creating user with data:", {
         email,
         firstName,
         lastName,
-        password,
         role,
-        opts
+        phone,
+        hotelId,
+        hasProfileImage: profileImage instanceof File,
+      });
+
+      // Use the StandardTouch generated client correctly as per backend guidance
+      const opts = {};
+
+      // Add optional fields to opts
+      if (phone) opts.phone = phone;
+      if (hotelId) opts.hotelId = hotelId;
+      if (profileImage && profileImage instanceof File) {
+        opts.profileImage = profileImage; // Pass File object directly
+      }
+
+      // Remove undefined values from opts
+      Object.keys(opts).forEach(
+        (key) => opts[key] === undefined && delete opts[key]
+      );
+
+      const response = await apiClient.users.usersPost(
+        email, // email (required)
+        firstName, // firstName (required)
+        lastName, // lastName (required)
+        password, // password (required)
+        role, // role (required)
+        opts // options object with optional fields
       );
       return response;
     } catch (error) {
       console.error("Error creating user:", error);
 
+      // Log detailed error information for debugging
+      if (error?.response) {
+        console.error("API Error Response:", {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data || error.body,
+        });
+
+        // Try to get response text for more details
+        if (error.response.data) {
+          console.error("Response data:", error.response.data);
+        }
+      } else if (error?.body) {
+        console.error("Error body:", error.body);
+      }
+
       // Handle specific error types
       if (
+        error.status === 400 ||
         error.message?.includes("400") ||
         error.message?.includes("Bad request")
       ) {
@@ -119,6 +149,7 @@ export const createUser = createAsyncThunk(
       }
 
       if (
+        error.status === 401 ||
         error.message?.includes("401") ||
         error.message?.includes("Unauthorized")
       ) {
@@ -127,7 +158,10 @@ export const createUser = createAsyncThunk(
         );
       }
 
-      return rejectWithValue(error.message || "Failed to create user");
+      // Return only serializable error message
+      return rejectWithValue(
+        error?.message || error?.toString() || "Failed to create user"
+      );
     }
   }
 );
@@ -149,6 +183,7 @@ export const updateUser = createAsyncThunk(
       if (userData.lastName) formData.append("lastName", userData.lastName);
       if (userData.phone) formData.append("phone", userData.phone);
       if (userData.role) formData.append("role", userData.role);
+      if (userData.hotelId) formData.append("hotelId", userData.hotelId);
 
       // Add profile image if provided
       if (profileImage && profileImage instanceof File) {
@@ -185,7 +220,9 @@ export const updateUser = createAsyncThunk(
         );
       }
 
-      return rejectWithValue(error.message || "Failed to update user");
+      return rejectWithValue(
+        error?.message || error?.toString() || "Failed to update user"
+      );
     }
   }
 );
@@ -203,7 +240,9 @@ export const deleteUser = createAsyncThunk(
       return userId; // Return the deleted user ID
     } catch (error) {
       console.error("Error deleting user:", error);
-      return rejectWithValue(error.message || "Failed to delete user");
+      return rejectWithValue(
+        error?.message || error?.toString() || "Failed to delete user"
+      );
     }
   }
 );
@@ -237,7 +276,9 @@ export const syncUsers = createAsyncThunk(
         );
       }
 
-      return rejectWithValue(error.message || "Failed to sync users");
+      return rejectWithValue(
+        error?.message || error?.toString() || "Failed to sync users"
+      );
     }
   }
 );
@@ -338,7 +379,8 @@ const usersSlice = createSlice({
         // Handle the new response structure with sync status
         if (action.payload && action.payload.success && action.payload.data) {
           const responseData = action.payload.data;
-          state.users = responseData.users || [];
+          // Ensure we store only serializable data
+          state.users = JSON.parse(JSON.stringify(responseData.users || []));
           state.pagination = {
             total: responseData.total || 0,
             page: responseData.page || 1,
@@ -370,8 +412,9 @@ const usersSlice = createSlice({
       .addCase(createUser.fulfilled, (state, action) => {
         state.loading = false;
         if (action.payload && action.payload.success && action.payload.data) {
-          const userData = action.payload.data;
-          state.users.push(userData);
+          // Ensure we store only serializable data
+          const userData = JSON.parse(JSON.stringify(action.payload.data));
+          state.users.unshift(userData); // Add to beginning of array
         }
       })
       .addCase(createUser.rejected, (state, action) => {

@@ -21,10 +21,10 @@ const UserSearchFilters = ({
   onSortOrderChange,
   roleOptions,
   sortOptions,
-  syncStatusFilter,
-  onSyncStatusFilterChange,
-  syncStatusOptions,
-  syncSummary,
+  // syncStatusFilter,
+  // onSyncStatusFilterChange,
+  // syncStatusOptions,
+  // syncSummary,
 }) => {
   return (
     <div className="flex flex-wrap gap-4 mb-6">
@@ -60,7 +60,7 @@ const UserSearchFilters = ({
       </Select>
 
       {/* Sync Status Filter */}
-      <Select
+      {/* <Select
         value={syncStatusFilter || "all"}
         onValueChange={onSyncStatusFilterChange}
       >
@@ -74,7 +74,7 @@ const UserSearchFilters = ({
             </SelectItem>
           ))}
         </SelectContent>
-      </Select>
+      </Select> */}
 
       {/* Sort By */}
       <Select value={sortBy || "createdAt"} onValueChange={onSortByChange}>
@@ -102,7 +102,7 @@ const UserSearchFilters = ({
       </Select>
 
       {/* Compact Sync Status */}
-      {syncSummary && syncSummary.totalUsers > 0 && (
+      {/* {syncSummary && syncSummary.totalUsers > 0 && (
         <div className="flex items-center gap-2">
           <Badge
             variant={syncSummary.unsyncedUsers === 0 ? "default" : "secondary"}
@@ -118,7 +118,7 @@ const UserSearchFilters = ({
               : `${syncSummary.unsyncedUsers} Unsynced`}
           </Badge>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

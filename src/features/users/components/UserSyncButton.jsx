@@ -1,3 +1,5 @@
+// SYNC FUNCTIONALITY COMMENTED OUT - ENTIRE COMPONENT DISABLED
+/*
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "@clerk/clerk-react";
@@ -95,7 +97,6 @@ const UserSyncButton = () => {
 
   return (
     <div className="space-y-4">
-      {/* Quick Sync Button */}
       <Button
         onClick={handleQuickSync}
         disabled={syncLoading}
@@ -110,7 +111,6 @@ const UserSyncButton = () => {
         {syncLoading ? "Syncing..." : "Sync Now"}
       </Button>
 
-      {/* Sync Status Badge */}
       {syncSummary.totalUsers > 0 && (
         <div className="flex items-center justify-center">
           <Badge
@@ -129,7 +129,6 @@ const UserSyncButton = () => {
         </div>
       )}
 
-      {/* Sync Options Toggle */}
       <Button
         variant="outline"
         size="sm"
@@ -139,7 +138,6 @@ const UserSyncButton = () => {
         Advanced Sync Options
       </Button>
 
-      {/* Sync Options Panel */}
       {showSyncOptions && (
         <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
           <div className="space-y-3">
@@ -176,7 +174,6 @@ const UserSyncButton = () => {
         </div>
       )}
 
-      {/* Sync Summary Display */}
       {lastSyncResult && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center">
           <CheckCircle className="h-4 w-4 text-green-500" />
@@ -187,41 +184,50 @@ const UserSyncButton = () => {
         </div>
       )}
 
-      {/* Current Sync Status */}
       {syncSummary.totalUsers > 0 && (
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center">
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              <span>{syncSummary.syncedUsers} synced</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-red-500"></div>
-              <span>{syncSummary.unsyncedUsers} unsynced</span>
-            </div>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Total Users:</span>
+            <Badge variant="outline" className="text-xs">
+              {syncSummary.totalUsers}
+            </Badge>
           </div>
-
-          {/* Sync Progress Bar */}
-          <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-green-500 transition-all duration-300"
-              style={{
-                width: `${
-                  (syncSummary.syncedUsers / syncSummary.totalUsers) * 100
-                }%`,
-              }}
-            ></div>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Synced:</span>
+            <Badge variant="default" className="text-xs">
+              {syncSummary.syncedUsers}
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Unsynced:</span>
+            <Badge
+              variant={syncSummary.unsyncedUsers > 0 ? "destructive" : "outline"}
+              className="text-xs"
+            >
+              {syncSummary.unsyncedUsers}
+            </Badge>
           </div>
         </div>
       )}
 
-      {/* Error Display */}
       {syncError && (
-        <div className="flex items-center gap-2 text-sm text-destructive justify-center">
-          <AlertCircle className="h-4 w-4" />
-          <span>{syncError}</span>
+        <div className="flex items-center gap-2 p-2 bg-destructive/10 rounded border border-destructive/20">
+          <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+          <span className="text-sm text-destructive">{syncError}</span>
         </div>
       )}
+    </div>
+  );
+};
+
+export default UserSyncButton;
+*/
+
+// Placeholder component to prevent import errors
+const UserSyncButton = () => {
+  return (
+    <div className="p-4 text-center text-muted-foreground">
+      <p className="text-sm">Sync functionality is currently disabled</p>
     </div>
   );
 };

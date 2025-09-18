@@ -13,7 +13,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Filter, Settings } from "lucide-react";
-import UserSyncButton from "./UserSyncButton";
+// import UserSyncButton from "./UserSyncButton";
 
 const UserAdvancedModal = ({
   hasProfileImageFilter,
@@ -35,7 +35,7 @@ const UserAdvancedModal = ({
       <SheetTrigger asChild>
         <Button variant="outline" className="gap-2">
           <Filter size={16} />
-          Advanced Filters & Sync
+          Advanced Filters
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-96">
@@ -46,14 +46,14 @@ const UserAdvancedModal = ({
               Advanced Options
             </SheetTitle>
             <SheetDescription className="text-base">
-              Configure advanced filters and sync settings for users
+              Configure advanced filters for users
             </SheetDescription>
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto px-6 pb-6">
             <div className="space-y-8">
               {/* Sync Section */}
-              <div className="space-y-4">
+              {/* <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-foreground">
                   User Synchronization
                 </h3>
@@ -62,7 +62,7 @@ const UserAdvancedModal = ({
                 </div>
               </div>
 
-              <Separator className="my-6" />
+              <Separator className="my-6" /> */}
 
               {/* Advanced Filters Section */}
               <div className="space-y-6">

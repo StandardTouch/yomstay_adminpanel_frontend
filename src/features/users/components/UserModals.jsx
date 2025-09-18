@@ -15,9 +15,22 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { createUser, updateUser } from "../usersSlice";
 import { selectUsersLoading } from "../usersSelectors";
+import { fetchHotelsForDropdown } from "../../hotels/hotelsSlice";
+import {
+  selectDropdownHotels,
+  selectDropdownLoading,
+  selectDropdownError,
+} from "../../hotels/hotelsSelectors";
 import { showSuccess, showError } from "../../../utils/toast";
 import SearchableDropdown from "../../../common/components/SearchableDropdown";
 import { useApi } from "../../../contexts/ApiContext";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { Badge } from "@/components/ui/badge";
 
@@ -34,6 +47,11 @@ const UserModals = ({
   const loading = useSelector(selectUsersLoading);
   const apiClient = useApi();
 
+  // Hotel dropdown state
+  const dropdownHotels = useSelector(selectDropdownHotels);
+  const dropdownLoading = useSelector(selectDropdownLoading);
+  const dropdownError = useSelector(selectDropdownError);
+
   // Form state
   const [formData, setFormData] = useState({
     email: "",
@@ -49,34 +67,39 @@ const UserModals = ({
   const [profileImage, setProfileImage] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(null);
 
-  // Hotel fetching function
-  const fetchHotelsForDropdown = async () => {
-    try {
-      const response = await apiClient.hotels.hotelsGet({
-        page: 1,
-        pageSize: 100,
-      });
-
-      if (response.success && response.data?.hotels) {
-        return response.data.hotels.map((hotel) => ({
-          id: hotel.id,
-          name: hotel.name,
-          location: hotel.location || hotel.city || "",
-          badge: hotel.status || "active",
-        }));
+  // Load hotels for dropdown when component mounts or when needed
+  const loadHotelsForDropdown = React.useCallback(
+    (searchParams = {}) => {
+      if (apiClient) {
+        dispatch(
+          fetchHotelsForDropdown({
+            ...searchParams,
+            apiClient,
+          })
+        );
       }
-
-      return [];
-    } catch (error) {
-      console.error("Failed to fetch hotels:", error);
-      return [];
-    }
-  };
+    },
+    [dispatch, apiClient]
+  );
 
   // Check if role requires hotel selection
   const requiresHotel = (role) => {
     return role === "hotelOwner" || role === "hotelStaff";
   };
+
+  // Load hotels when component mounts or when modals open
+  useEffect(() => {
+    if ((addOpen || editOpen) && apiClient) {
+      loadHotelsForDropdown();
+    }
+  }, [addOpen, editOpen, loadHotelsForDropdown]);
+
+  // Show error toast when hotel loading fails
+  useEffect(() => {
+    if (dropdownError) {
+      showError(`Failed to load hotels: ${dropdownError}`);
+    }
+  }, [dropdownError]);
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -385,21 +408,27 @@ const UserModals = ({
                     >
                       Role *
                     </Label>
-                    <SearchableDropdown
+                    <Select
                       value={formData.role}
-                      onChange={(value) => {
+                      onValueChange={(value) => {
                         handleInputChange("role", value);
                         // Clear hotel selection when role changes
                         if (!requiresHotel(value)) {
                           handleInputChange("hotelId", "");
                         }
                       }}
-                      data={roleOptions}
-                      dataKey="value"
-                      labelKey="label"
-                      placeholder="Select role"
-                      searchPlaceholder="Search roles..."
-                    />
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {roleOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Hotel Selection for Hotel-related Roles */}
@@ -413,29 +442,49 @@ const UserModals = ({
                         onChange={(value) =>
                           handleInputChange("hotelId", value)
                         }
-                        fetchData={fetchHotelsForDropdown}
+                        data={dropdownHotels}
                         dataKey="id"
                         labelKey="name"
-                        searchKey="name"
+                        searchKey="searchableText"
                         placeholder="Select hotel"
                         searchPlaceholder="Search hotels..."
                         showBadge={true}
                         badgeVariant="secondary"
+                        disabled={dropdownLoading}
+                        loadingMessage="Loading hotels..."
+                        emptyMessage={
+                          dropdownError
+                            ? "Error loading hotels"
+                            : "No hotels found"
+                        }
                         renderOption={(hotel) => (
-                          <div className="flex items-center justify-between w-full">
-                            <div className="flex flex-col">
-                              <span className="font-medium">{hotel.name}</span>
-                              {hotel.location && (
-                                <span className="text-xs text-muted-foreground">
-                                  {hotel.location}
-                                </span>
-                              )}
+                          <div className="flex flex-col py-2 px-3 hover:bg-accent rounded-sm cursor-pointer">
+                            <div className="font-medium text-sm">
+                              {hotel.name}
                             </div>
-                            <Badge variant="secondary" className="ml-2">
-                              {hotel.badge}
-                            </Badge>
+                            <div className="text-xs text-muted-foreground">
+                              {[
+                                hotel.city?.name,
+                                hotel.state?.name,
+                                hotel.country?.name,
+                              ]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </div>
                           </div>
                         )}
+                        renderSelected={(selectedItems, localData) => {
+                          if (selectedItems.length === 0) {
+                            return "Select hotel";
+                          }
+                          const hotel = localData.find(
+                            (h) => h.id === selectedItems[0]
+                          );
+                          if (hotel) {
+                            return hotel.name;
+                          }
+                          return selectedItems[0];
+                        }}
                       />
                     </div>
                   )}
@@ -641,21 +690,27 @@ const UserModals = ({
                     >
                       Role *
                     </Label>
-                    <SearchableDropdown
+                    <Select
                       value={formData.role}
-                      onChange={(value) => {
+                      onValueChange={(value) => {
                         handleInputChange("role", value);
                         // Clear hotel selection when role changes
                         if (!requiresHotel(value)) {
                           handleInputChange("hotelId", "");
                         }
                       }}
-                      data={roleOptions}
-                      dataKey="value"
-                      labelKey="label"
-                      placeholder="Select role"
-                      searchPlaceholder="Search roles..."
-                    />
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {roleOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Hotel Selection for Hotel-related Roles */}
@@ -669,29 +724,49 @@ const UserModals = ({
                         onChange={(value) =>
                           handleInputChange("hotelId", value)
                         }
-                        fetchData={fetchHotelsForDropdown}
+                        data={dropdownHotels}
                         dataKey="id"
                         labelKey="name"
-                        searchKey="name"
+                        searchKey="searchableText"
                         placeholder="Select hotel"
                         searchPlaceholder="Search hotels..."
                         showBadge={true}
                         badgeVariant="secondary"
+                        disabled={dropdownLoading}
+                        loadingMessage="Loading hotels..."
+                        emptyMessage={
+                          dropdownError
+                            ? "Error loading hotels"
+                            : "No hotels found"
+                        }
                         renderOption={(hotel) => (
-                          <div className="flex items-center justify-between w-full">
-                            <div className="flex flex-col">
-                              <span className="font-medium">{hotel.name}</span>
-                              {hotel.location && (
-                                <span className="text-xs text-muted-foreground">
-                                  {hotel.location}
-                                </span>
-                              )}
+                          <div className="flex flex-col py-2 px-3 hover:bg-accent rounded-sm cursor-pointer">
+                            <div className="font-medium text-sm">
+                              {hotel.name}
                             </div>
-                            <Badge variant="secondary" className="ml-2">
-                              {hotel.badge}
-                            </Badge>
+                            <div className="text-xs text-muted-foreground">
+                              {[
+                                hotel.city?.name,
+                                hotel.state?.name,
+                                hotel.country?.name,
+                              ]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </div>
                           </div>
                         )}
+                        renderSelected={(selectedItems, localData) => {
+                          if (selectedItems.length === 0) {
+                            return "Select hotel";
+                          }
+                          const hotel = localData.find(
+                            (h) => h.id === selectedItems[0]
+                          );
+                          if (hotel) {
+                            return hotel.name;
+                          }
+                          return selectedItems[0];
+                        }}
                       />
                     </div>
                   )}

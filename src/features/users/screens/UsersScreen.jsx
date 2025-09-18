@@ -32,8 +32,8 @@ import {
   selectPageInfo,
   selectRoleOptions,
   selectSortOptions,
-  selectSyncStatusOptions,
-  selectUsersSyncSummary,
+  // selectSyncStatusOptions,
+  // selectUsersSyncSummary,
 } from "../usersSelectors";
 
 // Component imports
@@ -64,8 +64,8 @@ const UsersScreen = () => {
   const pageInfo = useSelector(selectPageInfo);
   const roleOptions = useSelector(selectRoleOptions);
   const sortOptions = useSelector(selectSortOptions);
-  const syncStatusOptions = useSelector(selectSyncStatusOptions);
-  const usersSyncSummary = useSelector(selectUsersSyncSummary);
+  // const syncStatusOptions = useSelector(selectSyncStatusOptions);
+  // const usersSyncSummary = useSelector(selectUsersSyncSummary);
 
   // Local state
   const [selected, setSelected] = useState([]);
@@ -83,7 +83,7 @@ const UsersScreen = () => {
   const [updatedBefore, setUpdatedBefore] = useState(filters.updatedBefore);
   const [sortBy, setSortBy] = useState(filters.sortBy);
   const [sortOrder, setSortOrder] = useState(filters.sortOrder);
-  const [syncStatusFilter, setSyncStatusFilter] = useState(filters.syncStatus);
+  // const [syncStatusFilter, setSyncStatusFilter] = useState(filters.syncStatus);
   const [bulkDeleteModal, setBulkDeleteModal] = useState({
     open: false,
     count: 0,
@@ -107,7 +107,7 @@ const UsersScreen = () => {
           updatedBefore: filters.updatedBefore,
           sortBy: filters.sortBy,
           sortOrder: filters.sortOrder,
-          syncStatus: filters.syncStatus,
+          // syncStatus: filters.syncStatus,
           apiClient, // Pass the API client
         })
       );
@@ -127,7 +127,7 @@ const UsersScreen = () => {
     filters.updatedBefore,
     filters.sortBy,
     filters.sortOrder,
-    filters.syncStatus,
+    // filters.syncStatus,
     apiClient, // Now stable reference due to useMemo in useClerkApiClient
   ]);
 
@@ -247,7 +247,7 @@ const UsersScreen = () => {
           updatedBefore: filters.updatedBefore,
           sortBy: filters.sortBy,
           sortOrder: filters.sortOrder,
-          syncStatus: filters.syncStatus,
+          // syncStatus: filters.syncStatus,
         })
       );
       showSuccess(`Successfully deleted ${bulkDeleteModal.count} users`);
@@ -308,7 +308,7 @@ const UsersScreen = () => {
     setUpdatedBefore("");
     setSortBy("createdAt");
     setSortOrder("desc");
-    setSyncStatusFilter("all");
+    // setSyncStatusFilter("all");
   };
 
   // Loading state
@@ -329,10 +329,10 @@ const UsersScreen = () => {
           onSortOrderChange={(value) => handleSortChange("sortOrder", value)}
           roleOptions={roleOptions}
           sortOptions={sortOptions}
-          syncStatusFilter={syncStatusFilter}
-          onSyncStatusFilterChange={setSyncStatusFilter}
-          syncStatusOptions={syncStatusOptions}
-          syncSummary={usersSyncSummary}
+          // syncStatusFilter={syncStatusFilter}
+          // onSyncStatusFilterChange={setSyncStatusFilter}
+          // syncStatusOptions={syncStatusOptions}
+          // syncSummary={usersSyncSummary}
         />
 
         {/* Advanced Filters & Sync Modal */}
@@ -434,7 +434,7 @@ const UsersScreen = () => {
                     updatedBefore: filters.updatedBefore,
                     sortBy: filters.sortBy,
                     sortOrder: filters.sortOrder,
-                    syncStatus: filters.syncStatus,
+                    // syncStatus: filters.syncStatus,
                     apiClient,
                   })
                 )
@@ -464,10 +464,10 @@ const UsersScreen = () => {
         onSortOrderChange={(value) => handleSortChange("sortOrder", value)}
         roleOptions={roleOptions}
         sortOptions={sortOptions}
-        syncStatusFilter={syncStatusFilter}
-        onSyncStatusFilterChange={setSyncStatusFilter}
-        syncStatusOptions={syncStatusOptions}
-        syncSummary={usersSyncSummary}
+        // syncStatusFilter={syncStatusFilter}
+        // onSyncStatusFilterChange={setSyncStatusFilter}
+        // syncStatusOptions={syncStatusOptions}
+        // syncSummary={usersSyncSummary}
       />
 
       {/* Advanced Filters & Sync Modal */}

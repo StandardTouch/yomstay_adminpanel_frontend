@@ -1,20 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Check, ChevronsUpDown, Search, Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 
 const SearchableDropdown = ({
@@ -96,13 +82,15 @@ const SearchableDropdown = ({
     if (!searchValue) return localData;
 
     const searchTerm = searchValue.toLowerCase();
-    return localData.filter((item) => {
+    const filtered = localData.filter((item) => {
       const searchField = item[searchKey];
       if (typeof searchField === "string") {
         return searchField.toLowerCase().includes(searchTerm);
       }
       return false;
     });
+
+    return filtered;
   }, [localData, searchValue, searchKey]);
 
   // Handle option selection
@@ -184,73 +172,99 @@ const SearchableDropdown = ({
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
+    <div className={cn("relative w-80", className)}>
+      {/* Search Input Field */}
+      <div className="relative">
+        <input
+          type="text"
+          placeholder={value && searchValue === "" ? "" : searchPlaceholder}
+          value={
+            value && searchValue === "" ? renderSelectedValue() : searchValue
+          }
+          onChange={(e) => {
+            setSearchValue(e.target.value);
+            setOpen(e.target.value.length > 0 || open);
+            if (onSearch) onSearch(e.target.value);
+          }}
+          onFocus={() => {
+            setOpen(true);
+            // Clear the input when focusing to allow searching
+            if (value && searchValue === "") {
+              setSearchValue("");
+            }
+          }}
           className={cn(
-            "w-full justify-between",
-            !value ||
-              (Array.isArray(value) &&
-                value.length === 0 &&
-                "text-muted-foreground"),
+            "w-full h-10 px-3 py-2 text-sm border border-input bg-background rounded-md",
+            "placeholder:text-muted-foreground",
+            "focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent",
+            "disabled:cursor-not-allowed disabled:opacity-50",
             triggerClassName
           )}
           disabled={disabled}
+        />
+        {isLoading && (
+          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+        )}
+      </div>
+
+      {/* Options Dropdown */}
+      {open && (
+        <div
+          className={cn(
+            "absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-md shadow-md max-h-60 overflow-auto",
+            contentClassName
+          )}
         >
-          {renderSelectedValue()}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-
-      <PopoverContent className={cn("w-full p-0", contentClassName)}>
-        <Command>
-          <CommandInput
-            placeholder={searchPlaceholder}
-            value={searchValue}
-            onValueChange={(search) => {
-              setSearchValue(search);
-              if (onSearch) onSearch(search);
-            }}
-          />
-
-          <CommandList>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-6">
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <span className="text-sm text-muted-foreground">
                 {loadingMessage}
-              </div>
-            ) : filteredData.length === 0 ? (
-              <CommandEmpty>{emptyMessage}</CommandEmpty>
-            ) : (
-              <CommandGroup>
-                {filteredData.map((item) => {
-                  const itemValue = item[dataKey];
-                  return (
-                    <CommandItem
-                      key={itemValue}
-                      value={itemValue}
-                      onSelect={() => handleSelect(itemValue)}
-                      className="cursor-pointer"
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          isSelected(itemValue) ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {renderOptionItem(item)}
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-            )}
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+              </span>
+            </div>
+          ) : filteredData.length === 0 ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              {emptyMessage}
+            </div>
+          ) : (
+            <div className="p-1">
+              {filteredData.map((item) => {
+                const itemValue = item[dataKey];
+                return (
+                  <div
+                    key={itemValue}
+                    onClick={() => {
+                      handleSelect(itemValue);
+                      setSearchValue("");
+                      setOpen(false);
+                    }}
+                    className={cn(
+                      "flex items-center px-2 py-2 text-sm cursor-pointer rounded-sm",
+                      "hover:bg-accent hover:text-accent-foreground",
+                      isSelected(itemValue) &&
+                        "bg-accent text-accent-foreground"
+                    )}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        isSelected(itemValue) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {renderOptionItem(item)}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Backdrop to close dropdown */}
+      {open && (
+        <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+      )}
+    </div>
   );
 };
 
