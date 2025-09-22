@@ -9,6 +9,7 @@ import {
   Settings,
   SlidersHorizontal,
   User,
+  Building2,
 } from "lucide-react";
 import { FaHotel } from "react-icons/fa6";
 import { useTheme } from "next-themes";
@@ -38,8 +39,15 @@ const sidebarGroups = [
     label: "Management",
     items: [
       { title: "Hotels", url: "hotels", icon: Hotel },
+      { title: "Request Hotels", url: "request_hotels", icon: Building2 },
       { title: "Amenities", url: "amenities", icon: Inbox },
       { title: "Filter", url: "filter", icon: SlidersHorizontal },
+    ],
+  },
+  {
+    label: "General",
+    items: [
+      { title: "Settings", url: "settings", icon: Settings },
     ],
   },
   // Add more groups here as needed
