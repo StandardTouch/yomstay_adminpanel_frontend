@@ -60,12 +60,12 @@ export default function UserTable({
     if (!imageUrl) return undefined;
     // Use timestamp + cache buster for more aggressive cache busting
     const finalUrl = `${imageUrl}?cb=${imageCacheBuster}&t=${Date.now()}`;
-    console.log("Image URL Debug:", {
-      original: imageUrl,
-      final: finalUrl,
-      cacheBuster: imageCacheBuster,
-      timestamp: Date.now(),
-    });
+    // console.log("Image URL Debug:", {
+    //   original: imageUrl,
+    //   final: finalUrl,
+    //   cacheBuster: imageCacheBuster,
+    //   timestamp: Date.now(),
+    // });
     return finalUrl;
   };
 
@@ -208,13 +208,13 @@ export default function UserTable({
                           });
                         }}
                         onLoad={() => {
-                          console.log("Image loaded successfully:", {
-                            url: user.localUser?.profileImageUrl,
-                            user:
-                              user.clerkUser?.firstName +
-                              " " +
-                              user.clerkUser?.lastName,
-                          });
+                          // console.log("Image loaded successfully:", {
+                          //   url: user.localUser?.profileImageUrl,
+                          //   user:
+                          //     user.clerkUser?.firstName +
+                          //     " " +
+                          //     user.clerkUser?.lastName,
+                          // });
                         }}
                       />
                       <AvatarFallback>

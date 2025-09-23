@@ -8,6 +8,7 @@ import {
   LocationApi,
   CurrenciesApi,
   WebhooksApi,
+  HotelRequestApi,
 } from "@StandardTouch/yomstay_api";
 
 // Create the API Context
@@ -81,6 +82,7 @@ export const ApiProvider = ({ children }) => {
       locations: new LocationApi(apiClient),
       currencies: new CurrenciesApi(apiClient),
       webhooks: new WebhooksApi(apiClient),
+      hotelRequests: new HotelRequestApi(apiClient),
       // Add other APIs as needed
     };
   }, [getToken, isSignedIn, isLoaded]);

@@ -50,7 +50,15 @@ export const fetchUsers = createAsyncThunk(
       );
 
       const response = await apiClient.users.usersGet(opts);
-      return response;
+      console.log("Fetch Users Response:", response);
+
+      // Return only serializable data to avoid Redux warnings
+      return {
+        statusCode: response.statusCode,
+        data: response.data ? JSON.parse(JSON.stringify(response.data)) : null,
+        message: response.message,
+        success: response.success,
+      };
     } catch (error) {
       return rejectWithValue(
         error?.message || error?.toString() || "Failed to fetch users"
@@ -86,15 +94,15 @@ export const createUser = createAsyncThunk(
       }
 
       // Debug logging
-      console.log("Creating user with data:", {
-        email,
-        firstName,
-        lastName,
-        role,
-        phone,
-        hotelId,
-        hasProfileImage: profileImage instanceof File,
-      });
+      // console.log("Creating user with data:", {
+      //   email,
+      //   firstName,
+      //   lastName,
+      //   role,
+      //   phone,
+      //   hotelId,
+      //   hasProfileImage: profileImage instanceof File,
+      // });
 
       // Use the StandardTouch generated client correctly as per backend guidance
       const opts = {};
@@ -119,7 +127,14 @@ export const createUser = createAsyncThunk(
         role, // role (required)
         opts // options object with optional fields
       );
-      return response;
+
+      // Return only serializable data to avoid Redux warnings
+      return {
+        statusCode: response.statusCode,
+        data: response.data ? JSON.parse(JSON.stringify(response.data)) : null,
+        message: response.message,
+        success: response.success,
+      };
     } catch (error) {
       console.error("Error creating user:", error);
 
@@ -174,6 +189,9 @@ export const updateUser = createAsyncThunk(
         throw new Error("API client is required");
       }
 
+      console.log("updateUser thunk - Received ID:", id, "Type:", typeof id);
+      console.log("User data:", userData);
+
       // Create FormData for multipart/form-data request
       const formData = new FormData();
 
@@ -183,16 +201,57 @@ export const updateUser = createAsyncThunk(
       if (userData.lastName) formData.append("lastName", userData.lastName);
       if (userData.phone) formData.append("phone", userData.phone);
       if (userData.role) formData.append("role", userData.role);
-      if (userData.hotelId) formData.append("hotelId", userData.hotelId);
+
+      // Add hotel associations based on role
+      if (userData.role === "hotelOwner" && userData.ownedHotels) {
+        userData.ownedHotels.forEach((hotelId, index) => {
+          formData.append(`ownedHotels[${index}]`, hotelId);
+        });
+      } else if (userData.role === "hotelStaff" && userData.hotelStaffs) {
+        userData.hotelStaffs.forEach((staff, index) => {
+          formData.append(`hotelStaffs[${index}][hotelId]`, staff.hotelId);
+          formData.append(`hotelStaffs[${index}][role]`, staff.role || "staff");
+          formData.append(
+            `hotelStaffs[${index}][isActive]`,
+            staff.isActive !== undefined ? staff.isActive : true
+          );
+        });
+      }
 
       // Add profile image if provided
       if (profileImage && profileImage instanceof File) {
         formData.append("profileImage", profileImage);
       }
 
+      // Log FormData contents for debugging
+      console.log("Calling API with ID:", id, "and FormData entries:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, ":", value);
+      }
+
       // Use the StandardTouch UserApi usersIdPut method
-      const response = await apiClient.users.usersIdPut(id, formData);
-      return response;
+      // The ID is passed as a path parameter, not in FormData
+      console.log("About to call usersIdPut with ID:", id, "Type:", typeof id);
+      console.log("ID is undefined?", id === undefined);
+      console.log("ID is null?", id === null);
+      console.log("ID is empty string?", id === "");
+
+      // According to the documentation, usersIdPut expects (id, opts)
+      // Let's try wrapping FormData in an options object
+      const opts = {
+        body: formData,
+      };
+
+      console.log("Calling with opts:", opts);
+      const response = await apiClient.users.usersIdPut(id, opts);
+
+      // Return only serializable data to avoid Redux warnings
+      return {
+        statusCode: response.statusCode,
+        data: response.data ? JSON.parse(JSON.stringify(response.data)) : null,
+        message: response.message,
+        success: response.success,
+      };
     } catch (error) {
       console.error("Error updating user:", error);
 
@@ -262,7 +321,14 @@ export const syncUsers = createAsyncThunk(
         forceUpdate,
         dryRun,
       });
-      return response;
+
+      // Return only serializable data to avoid Redux warnings
+      return {
+        statusCode: response.statusCode,
+        data: response.data ? JSON.parse(JSON.stringify(response.data)) : null,
+        message: response.message,
+        success: response.success,
+      };
     } catch (error) {
       console.error("Error syncing users:", error);
 
@@ -432,14 +498,14 @@ const usersSlice = createSlice({
         if (action.payload && action.payload.success && action.payload.data) {
           const userData = action.payload.data;
 
-          console.log(
-            "UpdateUser Response:",
-            JSON.stringify(action.payload, null, 2)
-          );
-          console.log(
-            "UserData from response:",
-            JSON.stringify(userData, null, 2)
-          );
+          // console.log(
+          //   "UpdateUser Response:",
+          //   JSON.stringify(action.payload, null, 2)
+          // );
+          // console.log(
+          //   "UserData from response:",
+          //   JSON.stringify(userData, null, 2)
+          // );
 
           // Find the user in the state by matching either clerkUser.id or localUser.id
           const index = state.users.findIndex((user) => {
@@ -449,13 +515,13 @@ const usersSlice = createSlice({
             const responseLocalId = userData.localUser?.id;
             const responseId = userData.id;
 
-            console.log("Comparing IDs:", {
-              userClerkId: clerkId,
-              userLocalId: localId,
-              responseClerkId,
-              responseLocalId,
-              responseId,
-            });
+            // console.log("Comparing IDs:", {
+            //   userClerkId: clerkId,
+            //   userLocalId: localId,
+            //   responseClerkId,
+            //   responseLocalId,
+            //   responseId,
+            // });
 
             return (
               clerkId === responseClerkId ||
@@ -465,11 +531,11 @@ const usersSlice = createSlice({
             );
           });
 
-          console.log("Found user at index:", index);
-          console.log(
-            "Original user in state:",
-            JSON.stringify(state.users[index], null, 2)
-          );
+          // console.log("Found user at index:", index);
+          // console.log(
+          //   "Original user in state:",
+          //   JSON.stringify(state.users[index], null, 2)
+          // );
 
           if (index !== -1) {
             // Extract the new profile image URL from the Clerk response
@@ -478,7 +544,7 @@ const usersSlice = createSlice({
               userData.profileImageUrl ||
               userData.imageUrl;
 
-            console.log("New Profile Image URL:", newProfileImageUrl);
+            // console.log("New Profile Image URL:", newProfileImageUrl);
 
             // Update the user with new data, preserving the existing structure
             const updatedUser = {
@@ -499,18 +565,18 @@ const usersSlice = createSlice({
               },
             };
 
-            console.log("Profile Image Debug:", {
-              originalProfileImageUrl:
-                state.users[index].localUser?.profileImageUrl,
-              newProfileImageUrl: newProfileImageUrl,
-              finalProfileImageUrl: updatedUser.localUser?.profileImageUrl,
-              userDataKeys: Object.keys(userData),
-              userDataLocalUserKeys: userData.localUser
-                ? Object.keys(userData.localUser)
-                : "No localUser",
-            });
+            // console.log("Profile Image Debug:", {
+            //   originalProfileImageUrl:
+            //     state.users[index].localUser?.profileImageUrl,
+            //   newProfileImageUrl: newProfileImageUrl,
+            //   finalProfileImageUrl: updatedUser.localUser?.profileImageUrl,
+            //   userDataKeys: Object.keys(userData),
+            //   userDataLocalUserKeys: userData.localUser
+            //     ? Object.keys(userData.localUser)
+            //     : "No localUser",
+            // });
 
-            console.log("Updated user:", JSON.stringify(updatedUser, null, 2));
+            // console.log("Updated user:", JSON.stringify(updatedUser, null, 2));
             state.users[index] = updatedUser;
           }
         }

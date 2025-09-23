@@ -33,6 +33,8 @@ export const fetchHotels = createAsyncThunk(
         lng,
         page,
         pageSize,
+        // Try to include images if the API supports it
+        include: "images",
       };
 
       // Remove undefined values
@@ -41,7 +43,31 @@ export const fetchHotels = createAsyncThunk(
       );
 
       const response = await apiClient.hotels.hotelsGet(opts);
-      return response;
+
+      // Debug logging to see the actual API response
+      console.log("fetchHotels - API response:", response);
+      console.log("fetchHotels - response.data:", response.data);
+      console.log("fetchHotels - response.data.hotels:", response.data?.hotels);
+      console.log(
+        "fetchHotels - first hotel structure:",
+        response.data?.hotels?.[0]
+      );
+      console.log(
+        "fetchHotels - first hotel images:",
+        response.data?.hotels?.[0]?.images
+      );
+      console.log(
+        "fetchHotels - first hotel featuredImage:",
+        response.data?.hotels?.[0]?.featuredImage
+      );
+
+      // Return only serializable data to avoid Redux warnings
+      return {
+        statusCode: response.statusCode,
+        data: response.data ? JSON.parse(JSON.stringify(response.data)) : null,
+        message: response.message,
+        success: response.success,
+      };
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch hotels");
     }
@@ -58,7 +84,14 @@ export const createHotel = createAsyncThunk(
       }
 
       const response = await apiClient.hotels.hotelsPost(hotelData);
-      return response;
+
+      // Return only serializable data to avoid Redux warnings
+      return {
+        statusCode: response.statusCode,
+        data: response.data ? JSON.parse(JSON.stringify(response.data)) : null,
+        message: response.message,
+        success: response.success,
+      };
     } catch (error) {
       return rejectWithValue(error.message || "Failed to create hotel");
     }
@@ -75,7 +108,14 @@ export const updateHotel = createAsyncThunk(
       }
 
       const response = await apiClient.hotels.hotelsIdPut(hotelId, hotelData);
-      return response;
+
+      // Return only serializable data to avoid Redux warnings
+      return {
+        statusCode: response.statusCode,
+        data: response.data ? JSON.parse(JSON.stringify(response.data)) : null,
+        message: response.message,
+        success: response.success,
+      };
     } catch (error) {
       return rejectWithValue(error.message || "Failed to update hotel");
     }
@@ -135,41 +175,84 @@ export const fetchHotelsForDropdown = createAsyncThunk(
 
       const response = await apiClient.hotels.hotelsGet(opts);
 
-      // Transform response for dropdown usage
+      // Transform response for dropdown usage and ensure serializability
       if (response.success && response.data?.hotels) {
-        const transformedHotels = response.data.hotels.map((hotel) => ({
-          id: hotel.id,
-          name: hotel.name,
-          status: hotel.status || "active",
-          address: hotel.address,
-          postalCode: hotel.postalCode,
-          description: hotel.description,
-          starRating: hotel.starRating,
-          numberOfRooms: hotel.numberOfRooms,
-          ownerId: hotel.ownerId,
-          location: hotel.location,
-          country: hotel.country,
-          state: hotel.state,
-          city: hotel.city,
-          createdAt: hotel.createdAt,
-          updatedAt: hotel.updatedAt,
-          // For dropdown display
-          badge: hotel.status || "active",
-          searchableText: `${hotel.name} ${hotel.city?.name || ""} ${
-            hotel.state?.name || ""
-          } ${hotel.country?.name || ""}`.toLowerCase(),
-        }));
+        const transformedHotels = response.data.hotels.map((hotel) => {
+          // Deep clone the hotel object to ensure all nested objects are plain objects
+          const serializedHotel = JSON.parse(JSON.stringify(hotel));
 
+          return {
+            id: serializedHotel.id,
+            name: serializedHotel.name,
+            status: serializedHotel.status || "active",
+            address: serializedHotel.address,
+            postalCode: serializedHotel.postalCode,
+            description: serializedHotel.description,
+            starRating: serializedHotel.starRating,
+            numberOfRooms: serializedHotel.numberOfRooms,
+            ownerId: serializedHotel.ownerId,
+            location: serializedHotel.location,
+            // Serialize nested objects to ensure they're plain objects
+            country: serializedHotel.country
+              ? {
+                  id: serializedHotel.country.id,
+                  name: serializedHotel.country.name,
+                }
+              : null,
+            state: serializedHotel.state
+              ? {
+                  id: serializedHotel.state.id,
+                  name: serializedHotel.state.name,
+                }
+              : null,
+            city: serializedHotel.city
+              ? {
+                  id: serializedHotel.city.id,
+                  name: serializedHotel.city.name,
+                }
+              : null,
+            createdAt: serializedHotel.createdAt
+              ? new Date(serializedHotel.createdAt).toISOString()
+              : null,
+            updatedAt: serializedHotel.updatedAt
+              ? new Date(serializedHotel.updatedAt).toISOString()
+              : null,
+            // For dropdown display
+            badge: serializedHotel.status || "active",
+            searchableText: `${serializedHotel.name} ${
+              serializedHotel.city?.name || ""
+            } ${serializedHotel.state?.name || ""} ${
+              serializedHotel.country?.name || ""
+            }`.toLowerCase(),
+          };
+        });
+
+        // Return only serializable data
         return {
-          ...response,
+          statusCode: response.statusCode,
           data: {
-            ...response.data,
             hotels: transformedHotels,
+            total: response.data.total || 0,
+            page: response.data.page || 1,
+            pageSize: response.data.pageSize || 100,
           },
+          message: response.message,
+          success: response.success,
         };
       }
 
-      return response;
+      // Return serializable response even if no hotels
+      return {
+        statusCode: response.statusCode,
+        data: {
+          hotels: [],
+          total: 0,
+          page: 1,
+          pageSize: 100,
+        },
+        message: response.message,
+        success: response.success,
+      };
     } catch (error) {
       return rejectWithValue(
         error.message || "Failed to fetch hotels for dropdown"
@@ -257,7 +340,21 @@ const hotelsSlice = createSlice({
         state.loading = false;
         // Ensure we store only serializable data
         const hotelsData = action.payload.data?.hotels || [];
-        state.hotels = JSON.parse(JSON.stringify(hotelsData));
+        console.log("fetchHotels.fulfilled - hotelsData:", hotelsData);
+        console.log("fetchHotels.fulfilled - first hotel:", hotelsData[0]);
+        console.log(
+          "fetchHotels.fulfilled - first hotel images:",
+          hotelsData[0]?.images
+        );
+
+        // Ensure each hotel has an images array (fallback for API that doesn't return images)
+        const hotelsWithImages = hotelsData.map((hotel) => ({
+          ...hotel,
+          images: hotel.images || [],
+          featuredImage: hotel.featuredImage || null,
+        }));
+
+        state.hotels = JSON.parse(JSON.stringify(hotelsWithImages));
         if (action.payload.data) {
           state.pagination.total = action.payload.data.total || 0;
           state.pagination.page = action.payload.data.page || 1;

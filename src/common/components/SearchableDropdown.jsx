@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +51,83 @@ const SearchableDropdown = ({
   const [searchValue, setSearchValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [localData, setLocalData] = useState(data);
+  const [dropdownPosition, setDropdownPosition] = useState("bottom");
+  const containerRef = useRef(null);
+
+  // Calculate dropdown position based on available space
+  const calculateDropdownPosition = () => {
+    if (!containerRef.current) return "bottom";
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const dropdownHeight = 240; // max-h-60 = 240px
+    const spaceBelow = viewportHeight - containerRect.bottom;
+    const spaceAbove = containerRect.top;
+
+    console.log("Position calculation:", {
+      containerTop: containerRect.top,
+      containerBottom: containerRect.bottom,
+      viewportHeight,
+      spaceAbove,
+      spaceBelow,
+      dropdownHeight,
+    });
+
+    // If there's not enough space below but enough space above, show above
+    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+      console.log("Positioning above: not enough space below");
+      return "top";
+    }
+
+    // If there's not enough space above but enough space below, show below
+    if (spaceAbove < dropdownHeight && spaceBelow > dropdownHeight) {
+      console.log("Positioning below: not enough space above");
+      return "bottom";
+    }
+
+    // If there's space both above and below, prefer below unless there's significantly more space above
+    if (spaceAbove > spaceBelow * 1.5) {
+      console.log("Positioning above: significantly more space above");
+      return "top";
+    }
+
+    console.log("Positioning below: default preference");
+    return "bottom";
+  };
+
+  // Update dropdown position when opening
+  useEffect(() => {
+    if (open) {
+      const position = calculateDropdownPosition();
+      setDropdownPosition(position);
+      console.log("SearchableDropdown position calculated:", position);
+    }
+  }, [open]);
+
+  // Recalculate position on window resize and scroll
+  useEffect(() => {
+    const handleResize = () => {
+      if (open) {
+        const position = calculateDropdownPosition();
+        setDropdownPosition(position);
+      }
+    };
+
+    const handleScroll = () => {
+      if (open) {
+        const position = calculateDropdownPosition();
+        setDropdownPosition(position);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("scroll", handleScroll, true);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [open]);
 
   // Fetch data when component mounts or dependencies change
   useEffect(() => {
@@ -172,7 +249,7 @@ const SearchableDropdown = ({
   };
 
   return (
-    <div className={cn("relative w-80", className)}>
+    <div ref={containerRef} className={cn("relative w-80", className)}>
       {/* Search Input Field */}
       <div className="relative">
         <input
@@ -211,7 +288,8 @@ const SearchableDropdown = ({
       {open && (
         <div
           className={cn(
-            "absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border rounded-md shadow-md max-h-60 overflow-auto",
+            "absolute left-0 right-0 z-50 bg-popover border border-border rounded-md shadow-md max-h-60 overflow-auto",
+            dropdownPosition === "top" ? "bottom-full mb-1" : "top-full mt-1",
             contentClassName
           )}
         >

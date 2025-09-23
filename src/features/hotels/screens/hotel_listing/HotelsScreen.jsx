@@ -1,7 +1,10 @@
-import React, { use, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback, memo } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useAuth } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import UpdateHotel from "../single_hotel/singleHotel";
-import { ChevronDown, Hand, Hotel, Plus, Upload } from "lucide-react";
+import { ChevronDown, Hand, Hotel, Plus, Upload, Search } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,18 +15,128 @@ import {
 } from "@/components/ui/dropdown-menu";
 import AddButton from "@/components/AddButton";
 import HotelCard from "@/features/hotels/components/hotelCard";
-import AllHotels from "./hotel_list";
 import AddNewHotel from "../add_new_hotel/addNewHotel";
+import { useApi } from "../../../../contexts/ApiContext";
+import {
+  fetchHotels,
+  setHotelFilters,
+  setHotelPagination,
+  clearHotelFilters,
+} from "../../hotelsSlice";
+import {
+  selectHotels,
+  selectHotelsLoading,
+  selectHotelsError,
+  selectHotelsFilters,
+  selectHotelsPagination,
+  selectCityOptions,
+  selectCountryOptions,
+  selectStatusOptions,
+} from "../../hotelsSelectors";
+import { showError } from "../../../../utils/toast";
 
-export default function HotelsScreen() {
-  const Hotels = AllHotels;
+// Memoized HotelCard component to prevent unnecessary re-renders
+const MemoizedHotelCard = memo(HotelCard);
 
-  const [hotellist, setHotellist] = useState(Hotels); // State to store the list of hotels
-  const [hotelIndex, setHotelIndex] = useState("0"); // State to store the index of the selected hotel
-  const [show, setShow] = useState(false); // State to control the visibility of the modal
-  const [addOpen, setAddOpen] = useState(false); // State to control the visibility of the add hotel form
+// Memoized filter dropdown component
+const FilterDropdown = memo(
+  ({ label, value, options, onSelect, placeholder }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="flex justify-center items-center gap-1 w-full border shadow p-1 rounded-md cursor-pointer">
+        {value === "" ? placeholder : value} <ChevronDown size={16} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56 h-56">
+        <DropdownMenuItem onClick={() => onSelect("")}>
+          All {placeholder}
+        </DropdownMenuItem>
+        {options.slice(1).map((option) => (
+          <DropdownMenuItem
+            key={option.value}
+            value={option.value}
+            onClick={() => onSelect(option.value)}
+          >
+            {option.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+);
+
+// Memoized pagination component
+const PaginationControls = memo(
+  ({ currentPage, totalPages, onPageChange, disabled }) => (
+    <div className="flex justify-center items-center gap-2 mt-6">
+      <Button
+        variant="outline"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={disabled || currentPage <= 1}
+      >
+        Previous
+      </Button>
+      <span className="text-sm text-muted-foreground">
+        Page {currentPage} of {totalPages}
+      </span>
+      <Button
+        variant="outline"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={disabled || currentPage >= totalPages}
+      >
+        Next
+      </Button>
+    </div>
+  )
+);
+
+// Memoized loading skeleton
+const LoadingSkeleton = memo(() => (
+  <div className="flex flex-col gap-4">
+    {[...Array(3)].map((_, index) => (
+      <div key={index} className="animate-pulse">
+        <div className="bg-gray-200 h-32 rounded-lg"></div>
+      </div>
+    ))}
+  </div>
+));
+
+// Memoized error state
+const ErrorState = memo(({ error, onRetry }) => (
+  <div className="flex flex-col gap-2 items-center justify-center h-50">
+    <p className="text-center text-red-500">Error loading hotels: {error}</p>
+    <Button onClick={onRetry}>Retry</Button>
+  </div>
+));
+
+// Memoized empty state
+const EmptyState = memo(() => (
+  <div className="flex flex-col gap-2 items-center justify-center h-50">
+    <p className="text-center text-muted-foreground">No hotels found</p>
+  </div>
+));
+
+function HotelsScreen() {
+  const dispatch = useDispatch();
+  const { isLoaded, isSignedIn } = useAuth();
+  const apiClient = useApi();
+
+  // Redux state - using memoized selectors
+  const hotels = useSelector(selectHotels);
+  const loading = useSelector(selectHotelsLoading);
+  const error = useSelector(selectHotelsError);
+  const filters = useSelector(selectHotelsFilters);
+  const pagination = useSelector(selectHotelsPagination);
+  const cityOptions = useSelector(selectCityOptions);
+  const countryOptions = useSelector(selectCountryOptions);
+  const statusOptions = useSelector(selectStatusOptions);
+
+  // Local UI state
+  const [hotelIndex, setHotelIndex] = useState("0");
+  const [show, setShow] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [checkform, setCheckform] = useState("Add Hotel");
+  const [searchTerm, setSearchTerm] = useState("");
   const [addHotel, setAddHotel] = useState({
-    // State to store the details of the new hotel
     id: Math.random().toString(),
     name: "",
     status: "approved",
@@ -59,81 +172,163 @@ export default function HotelsScreen() {
     totalReviews: 3,
   });
 
-  // Function to update a hotel
-  const updateNewHotel = (newHotel) => {
-    setHotellist((prevHotels) => {
-      const hotelExists = prevHotels.some((hotel) => hotel.id === newHotel.id);
+  // Memoized API call parameters to prevent unnecessary re-renders
+  const apiParams = useMemo(
+    () => ({
+      apiClient,
+      search: searchTerm,
+      ...filters,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }),
+    [apiClient, searchTerm, filters, pagination.page, pagination.pageSize]
+  );
 
-      if (hotelExists) {
-        // Replace the existing hotel with the new one
-        return prevHotels.map((hotel) =>
-          hotel.id === newHotel.id ? newHotel : hotel
-        );
-      } else {
-        // Add new hotel if ID doesn't exist
-        return [...prevHotels, newHotel];
-      }
-    });
-  };
+  // Memoized authentication check
+  const isAuthenticated = useMemo(
+    () => isLoaded && isSignedIn && apiClient,
+    [isLoaded, isSignedIn, apiClient]
+  );
 
-  // Function to add a new hotel
-  function HandleAddHotel(event) {
-    event.preventDefault();
-    setAddHotel({
-      ...addHotel,
-      id: Math.random().toString(),
-    });
-    if (addHotel.name === "") return;
-    if (addHotel.description === "") return;
-    if (addHotel.address === "") return;
-    if (addHotel.city === "") return;
-    if (addHotel.state === "") return;
-    if (addHotel.country === "") return;
-    if (addHotel.numberOfRooms === 0) return;
-    setHotellist((prevHotels) => [addHotel, ...prevHotels]);
-    setAddHotel({ images: [] });
-    setAddOpen(false);
-  }
-  // Add a state variable to store the filter text
-  const [filterText, setFilterText] = useState({
-    country: "",
-    city: "",
-    starRating: "",
-  });
-  const [checkform, setCheckform] = useState("Add Hotel");
-  const [filterOpen, setFilterOpen] = useState(false);
+  // Load hotels on mount and when dependencies change
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchHotels(apiParams));
+    }
+  }, [dispatch, isAuthenticated, apiParams]);
 
-  // Filter the hotel list based on the filter text
-  const filteredHotels = hotellist.filter((hotel) => {
-    return (
-      hotel.country.name
-        .toLowerCase()
-        .includes(filterText.country.toLowerCase()) &&
-      hotel.starRating.toString().includes(filterText.starRating) &&
-      hotel.city.name.toLowerCase().includes(filterText.city.toLowerCase())
-    );
-  });
+  // Handle search with debounce - memoized callback
+  const debouncedSearch = useCallback(() => {
+    if (searchTerm !== filters.search) {
+      dispatch(setHotelFilters({ search: searchTerm }));
+      dispatch(setHotelPagination({ page: 1 })); // Reset to first page
+    }
+  }, [searchTerm, filters.search, dispatch]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(debouncedSearch, 500);
+    return () => clearTimeout(timeoutId);
+  }, [debouncedSearch]);
+
+  // Handle errors - memoized callback
+  const handleError = useCallback((error) => {
+    if (error) {
+      showError(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    handleError(error);
+  }, [error, handleError]);
+
+  // Memoized callbacks for better performance
+  const updateNewHotel = useCallback((newHotel) => {
+    // This will be handled by Redux when we implement update functionality
+    console.log("Update hotel:", newHotel);
+  }, []);
+
+  const handleAddHotel = useCallback(
+    (event) => {
+      event.preventDefault();
+      setAddHotel({
+        ...addHotel,
+        id: Math.random().toString(),
+      });
+      if (addHotel.name === "") return;
+      if (addHotel.description === "") return;
+      if (addHotel.address === "") return;
+      if (addHotel.city === "") return;
+      if (addHotel.state === "") return;
+      if (addHotel.country === "") return;
+      if (addHotel.numberOfRooms === 0) return;
+      // This will be handled by Redux when we implement create functionality
+      console.log("Add hotel:", addHotel);
+      setAddHotel({ images: [] });
+      setAddOpen(false);
+    },
+    [addHotel]
+  );
+
+  const handleFilterChange = useCallback(
+    (filterType, value) => {
+      dispatch(setHotelFilters({ [filterType]: value }));
+      dispatch(setHotelPagination({ page: 1 })); // Reset to first page
+    },
+    [dispatch]
+  );
+
+  const handlePageChange = useCallback(
+    (newPage) => {
+      dispatch(setHotelPagination({ page: newPage }));
+    },
+    [dispatch]
+  );
+
+  const handleClearFilters = useCallback(() => {
+    dispatch(clearHotelFilters());
+    setSearchTerm("");
+    dispatch(setHotelPagination({ page: 1 }));
+  }, [dispatch]);
+
+  const handleSearchChange = useCallback((e) => {
+    setSearchTerm(e.target.value);
+  }, []);
+
+  const handleFilterToggle = useCallback(() => {
+    setFilterOpen(!filterOpen);
+    setCheckform("Filter");
+  }, [filterOpen]);
+
+  const handleAddToggle = useCallback(() => {
+    setAddOpen(true);
+    setCheckform("Add Hotel");
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    window.location.reload();
+  }, []);
+
+  // Memoized computed values
+  const totalPages = useMemo(
+    () => Math.ceil(pagination.total / pagination.pageSize),
+    [pagination.total, pagination.pageSize]
+  );
+
+  const shouldShowPagination = useMemo(
+    () => !show && !loading && !error && pagination.total > pagination.pageSize,
+    [show, loading, error, pagination.total, pagination.pageSize]
+  );
+
+  const shouldShowEmptyState = useMemo(
+    () => !hotels || hotels.length === 0,
+    [hotels]
+  );
 
   return (
     <div className="p-4 sm:p-8 w-full max-w-7xl mx-auto relative ">
       {/* Header */}
       {!show && (
-        <div className="mb-6 flex justify-between">
-          <h1 className="text-2xl font-bold ">Hotels</h1>
-          <div className="flex gap-2">
-            <AddButton
-              buttonValue="Filter"
-              onAdd={() => {
-                setFilterOpen(!filterOpen);
-                setCheckform("Filter");
-              }}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold">Hotels</h1>
+            <div className="flex gap-2">
+              <AddButton buttonValue="Filter" onAdd={handleFilterToggle} />
+              <AddButton buttonValue="Add Hotel" onAdd={handleAddToggle} />
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative">
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={20}
             />
-            <AddButton
-              buttonValue="Add Hotel"
-              onAdd={() => {
-                setAddOpen(true);
-                setCheckform("Add Hotel");
-              }}
+            <Input
+              type="text"
+              placeholder="Search hotels by name, city, or country..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="pl-10 pr-4 py-2 w-full max-w-md"
             />
           </div>
         </div>
@@ -147,129 +342,78 @@ export default function HotelsScreen() {
               : " h-0 overflow-hidden"
           }`}
         >
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex justify-center items-center gap-1 w-full border shadow p-1 rounded-md cursor-pointer">
-              {filterText.country === "" ? "Country" : filterText.country}{" "}
-              <ChevronDown size={16} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 h-56">
-              <DropdownMenuItem
-                onClick={() => setFilterText({ ...filterText, country: "" })}
-              >
-                All Country
-              </DropdownMenuItem>
-              {[...new Set(hotellist.map((hotel) => hotel.country.name))]
-                .sort()
-                .map((countryName) => (
-                  <DropdownMenuItem
-                    key={countryName}
-                    value={countryName}
-                    onClick={() => {
-                      setFilterText({ ...filterText, country: countryName });
-                    }}
-                  >
-                    {countryName}
-                  </DropdownMenuItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex justify-center items-center gap-1 w-full border shadow p-1 rounded-md cursor-pointer">
-              {filterText.city === "" ? "City" : filterText.city}{" "}
-              <ChevronDown size={16} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 h-56">
-              <DropdownMenuItem
-                onClick={() => setFilterText({ ...filterText, city: "" })}
-              >
-                All City
-              </DropdownMenuItem>
-              {[...new Set(hotellist.map((hotel) => hotel.city.name))]
-                .sort()
-                .map((cityName) => (
-                  <DropdownMenuItem
-                    key={cityName}
-                    value={cityName}
-                    onClick={() => {
-                      setFilterText({ ...filterText, city: cityName });
-                    }}
-                  >
-                    {cityName}
-                  </DropdownMenuItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex justify-center items-center gap-1 w-full border shadow p-1 rounded-md cursor-pointer">
-              {filterText.starRating === "" ? "Rating" : filterText.starRating}{" "}
-              <ChevronDown size={16} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 h-56">
-              <DropdownMenuItem
-                onClick={() => setFilterText({ ...filterText, starRating: "" })}
-              >
-                All Rating
-              </DropdownMenuItem>
-              {[...new Set(hotellist.map((hotel) => hotel.starRating))]
-                .sort((a, b) => a - b)
-                .map((starRating) => (
-                  <DropdownMenuItem
-                    key={starRating}
-                    value={starRating}
-                    onClick={() => {
-                      setFilterText({ ...filterText, starRating: starRating });
-                    }}
-                  >
-                    {starRating}
-                  </DropdownMenuItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            onClick={() => {
-              setFilterText({ country: "", city: "", starRating: "" });
-            }}
-          >
-            Clear
-          </Button>
+          <FilterDropdown
+            value={filters.country}
+            options={countryOptions}
+            onSelect={(value) => handleFilterChange("country", value)}
+            placeholder="Country"
+          />
+          <FilterDropdown
+            value={filters.city}
+            options={cityOptions}
+            onSelect={(value) => handleFilterChange("city", value)}
+            placeholder="City"
+          />
+          <FilterDropdown
+            value={filters.state}
+            options={statusOptions} // Using statusOptions as placeholder for state
+            onSelect={(value) => handleFilterChange("state", value)}
+            placeholder="State"
+          />
+          <Button onClick={handleClearFilters}>Clear</Button>
         </div>
       )}
 
       {/* Modal for updating a hotel */}
-      {show && (
+      {show && hotels[hotelIndex] && (
         <UpdateHotel
-          hotel={hotellist[hotelIndex]}
+          hotel={hotels[hotelIndex]}
           setShow={setShow}
-          defaultAmenities={Hotels[hotelIndex].amenities}
+          defaultAmenities={hotels[hotelIndex]?.amenities || []}
           onAddHotel={updateNewHotel}
         />
       )}
 
+      {/* Loading State */}
+      {loading && <LoadingSkeleton />}
+
+      {/* Error State */}
+      {error && !loading && <ErrorState error={error} onRetry={handleRetry} />}
+
       {/* List of hotels */}
-      {!show && (
-        <div className=" flex flex-col gap-4  ">
+      {!show && !loading && !error && (
+        <div className="flex flex-col gap-4">
           {/* Hotels List */}
-          {filteredHotels.length === 0 && (
-            <div className="flex flex-col gap-2 items-center justify-center h-50">
-              <p className="text-center text-muted-foreground">
-                No result found
-              </p>
-            </div>
-          )}
-          {filteredHotels.map((hotel) => (
-            <HotelCard
-              hotel={hotel}
-              key={hotel.id}
-              setIndex={() => {
-                setHotelIndex(hotellist.indexOf(hotel));
-              }}
-              showHotel={() => setShow(true)}
-              showAlert={() => {
-                setHotellist(hotellist.filter((item) => item.id !== hotel.id));
-              }}
-            />
-          ))}
+          {shouldShowEmptyState && <EmptyState />}
+          {hotels &&
+            hotels.length > 0 &&
+            hotels.map((hotel) =>
+              hotel && hotel.id ? (
+                <MemoizedHotelCard
+                  hotel={hotel}
+                  key={hotel.id}
+                  setIndex={() => {
+                    setHotelIndex(hotels.indexOf(hotel));
+                  }}
+                  showHotel={() => setShow(true)}
+                  showAlert={() => {
+                    // This will be handled by Redux when we implement delete functionality
+                    console.log("Delete hotel:", hotel.id);
+                  }}
+                />
+              ) : null
+            )}
         </div>
+      )}
+
+      {/* Pagination */}
+      {shouldShowPagination && (
+        <PaginationControls
+          currentPage={pagination.page}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          disabled={loading}
+        />
       )}
 
       {/* Add New Hotel */}
@@ -279,9 +423,12 @@ export default function HotelsScreen() {
         setAddHotel={setAddHotel}
         setShow={setShow}
         setAddOpen={setAddOpen}
-        HandleAddHotel={HandleAddHotel}
+        HandleAddHotel={handleAddHotel}
         checkform={checkform}
       />
     </div>
   );
 }
+
+// Export memoized component for better performance
+export default memo(HotelsScreen);

@@ -191,13 +191,13 @@ export default function AddNewHotel({
           </div>
 
           <SheetFooter className="flex flex-col gap-3 px-0">
-            <Button
+            {/* <Button
               type="submit"
               onClick={HandleAddHotel}
               className="w-full cursor-pointer"
             >
               Add Hotel
-            </Button>
+            </Button> */}
             <SheetClose asChild>
               <Button
                 type="button"
