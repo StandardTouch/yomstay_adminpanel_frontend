@@ -49,7 +49,16 @@ export const fetchUsers = createAsyncThunk(
         (key) => opts[key] === undefined && delete opts[key]
       );
 
-      const response = await apiClient.users.usersGet(opts);
+      const response = await apiClient.users.apiClient.callApi(
+        "/users",
+        "GET",
+        {}, // path params
+        opts, // query params
+        {}, // header params
+        {}, // form params
+        {}, // body
+        ["application/json"] // accepts
+      );
       console.log("Fetch Users Response:", response);
 
       // Return only serializable data to avoid Redux warnings
@@ -203,11 +212,15 @@ export const updateUser = createAsyncThunk(
       if (userData.role) formData.append("role", userData.role);
 
       // Add hotel associations based on role
-      if (userData.role === "hotelOwner" && userData.ownedHotels) {
+      // Handle ownedHotels for any role that can own hotels
+      if (userData.ownedHotels && Array.isArray(userData.ownedHotels)) {
         userData.ownedHotels.forEach((hotelId, index) => {
           formData.append(`ownedHotels[${index}]`, hotelId);
         });
-      } else if (userData.role === "hotelStaff" && userData.hotelStaffs) {
+      }
+
+      // Handle hotel staff associations
+      if (userData.hotelStaffs && Array.isArray(userData.hotelStaffs)) {
         userData.hotelStaffs.forEach((staff, index) => {
           formData.append(`hotelStaffs[${index}][hotelId]`, staff.hotelId);
           formData.append(`hotelStaffs[${index}][role]`, staff.role || "staff");
@@ -236,14 +249,18 @@ export const updateUser = createAsyncThunk(
       console.log("ID is null?", id === null);
       console.log("ID is empty string?", id === "");
 
-      // According to the documentation, usersIdPut expects (id, opts)
-      // Let's try wrapping FormData in an options object
-      const opts = {
-        body: formData,
-      };
-
-      console.log("Calling with opts:", opts);
-      const response = await apiClient.users.usersIdPut(id, opts);
+      // Use the raw API client to make the request directly
+      // This bypasses the missing UsersIdPutRequest model
+      const response = await apiClient.users.apiClient.callApi(
+        `/users/${id}`,
+        "PUT",
+        {}, // path params
+        {}, // query params
+        {}, // header params
+        {}, // form params
+        formData, // body
+        ["application/json", "multipart/form-data"] // accepts
+      );
 
       // Return only serializable data to avoid Redux warnings
       return {
@@ -294,8 +311,17 @@ export const deleteUser = createAsyncThunk(
         throw new Error("API client is required");
       }
 
-      // Use the StandardTouch UserApi usersIdDelete method
-      await apiClient.users.usersIdDelete(userId);
+      // Use the raw API client for delete user
+      await apiClient.users.apiClient.callApi(
+        `/users/${userId}`,
+        "DELETE",
+        {}, // path params
+        {}, // query params
+        {}, // header params
+        {}, // form params
+        {}, // body
+        ["application/json"] // accepts
+      );
       return userId; // Return the deleted user ID
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -316,11 +342,17 @@ export const syncUsers = createAsyncThunk(
 
       const { forceUpdate = false, dryRun = false } = syncOptions;
 
-      // Use the StandardTouch UserApi usersSyncPost method
-      const response = await apiClient.users.usersSyncPost({
-        forceUpdate,
-        dryRun,
-      });
+      // Use the raw API client for sync users
+      const response = await apiClient.users.apiClient.callApi(
+        "/users/sync",
+        "POST",
+        {}, // path params
+        {}, // query params
+        {}, // header params
+        {}, // form params
+        { forceUpdate, dryRun }, // body
+        ["application/json"] // accepts
+      );
 
       // Return only serializable data to avoid Redux warnings
       return {

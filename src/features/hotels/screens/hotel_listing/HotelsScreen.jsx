@@ -356,9 +356,15 @@ function HotelsScreen() {
           />
           <FilterDropdown
             value={filters.state}
-            options={statusOptions} // Using statusOptions as placeholder for state
+            options={cityOptions} // Using cityOptions as placeholder for state
             onSelect={(value) => handleFilterChange("state", value)}
             placeholder="State"
+          />
+          <FilterDropdown
+            value={filters.status}
+            options={statusOptions}
+            onSelect={(value) => handleFilterChange("status", value)}
+            placeholder="Status"
           />
           <Button onClick={handleClearFilters}>Clear</Button>
         </div>

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useMemo } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import {
   ApiClient,
-  UserApi,
+  // UserApi, // Temporarily disabled due to missing UsersIdPutRequest model
   HotelApi,
   HotelAmenityApi,
   LocationApi,
@@ -76,7 +76,8 @@ export const ApiProvider = ({ children }) => {
 
     // Return all available API instances
     return {
-      users: new UserApi(apiClient),
+      // users: new UserApi(apiClient), // Temporarily disabled due to missing UsersIdPutRequest model
+      users: { apiClient }, // Provide raw API client for users
       hotels: new HotelApi(apiClient),
       hotelAmenities: new HotelAmenityApi(apiClient),
       locations: new LocationApi(apiClient),

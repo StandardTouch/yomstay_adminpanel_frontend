@@ -24,6 +24,7 @@ export const selectHotelsCityFilter = (state) => state.hotels.filters.city;
 export const selectHotelsStateFilter = (state) => state.hotels.filters.state;
 export const selectHotelsCountryFilter = (state) =>
   state.hotels.filters.country;
+export const selectHotelsStatusFilter = (state) => state.hotels.filters.status;
 export const selectHotelsLatFilter = (state) => state.hotels.filters.lat;
 export const selectHotelsLngFilter = (state) => state.hotels.filters.lng;
 
@@ -238,10 +239,20 @@ export const selectHotelsByLocation = createSelector(
 
 // Search options for dropdowns
 export const selectStatusOptions = createSelector([selectHotels], (hotels) => {
-  const statuses = [...new Set(hotels.map((h) => h.status).filter(Boolean))];
+  // Standard status options from API specification
+  const standardStatuses = ["pending", "approved", "rejected", "suspended"];
+
+  // Get statuses from actual hotel data
+  const dataStatuses = [
+    ...new Set(hotels.map((h) => h.status).filter(Boolean)),
+  ];
+
+  // Combine and deduplicate
+  const allStatuses = [...new Set([...standardStatuses, ...dataStatuses])];
+
   return [
-    { value: "all", label: "All Statuses" },
-    ...statuses.map((status) => ({
+    { value: "", label: "All Statuses" },
+    ...allStatuses.map((status) => ({
       value: status,
       label: status.charAt(0).toUpperCase() + status.slice(1),
     })),

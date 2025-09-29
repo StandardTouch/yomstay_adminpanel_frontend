@@ -17,6 +17,7 @@ export const fetchHotels = createAsyncThunk(
         city,
         state,
         country,
+        status,
         lat,
         lng,
         page = 1,
@@ -29,6 +30,7 @@ export const fetchHotels = createAsyncThunk(
         city,
         state,
         country,
+        status,
         lat,
         lng,
         page,
@@ -37,9 +39,10 @@ export const fetchHotels = createAsyncThunk(
         include: "images",
       };
 
-      // Remove undefined values
+      // Remove undefined and empty string values
       Object.keys(opts).forEach(
-        (key) => opts[key] === undefined && delete opts[key]
+        (key) =>
+          (opts[key] === undefined || opts[key] === "") && delete opts[key]
       );
 
       const response = await apiClient.hotels.hotelsGet(opts);
@@ -168,9 +171,10 @@ export const fetchHotelsForDropdown = createAsyncThunk(
         pageSize,
       };
 
-      // Remove undefined values
+      // Remove undefined and empty string values
       Object.keys(opts).forEach(
-        (key) => opts[key] === undefined && delete opts[key]
+        (key) =>
+          (opts[key] === undefined || opts[key] === "") && delete opts[key]
       );
 
       const response = await apiClient.hotels.hotelsGet(opts);
@@ -282,6 +286,7 @@ const hotelsSlice = createSlice({
       city: "",
       state: "",
       country: "",
+      status: "",
       lat: null,
       lng: null,
     },
@@ -314,6 +319,7 @@ const hotelsSlice = createSlice({
         city: "",
         state: "",
         country: "",
+        status: "",
         lat: null,
         lng: null,
       };
