@@ -40,19 +40,19 @@ import DragDrop from "../../../../common/components/hotel/DragDrop";
 
 function SingleHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
   const [fields, setFields] = useState({
-    name: hotel.name,
-    description: hotel.description,
-    address: hotel.address,
-    state: hotel.state.name,
-    city: hotel.city.name,
-    country: hotel.country.name,
-    images: hotel.images,
-    starRating: hotel.starRating,
-    numberOfRooms: hotel.numberOfRooms,
-    postalCode: hotel.postalCode,
-    amenities: hotel.amenities,
-    faq: hotel.faq,
-    reviews: hotel.reviews,
+    name: hotel?.name || "",
+    description: hotel?.description || "",
+    address: hotel?.address || "",
+    state: hotel?.state?.name || "",
+    city: hotel?.city?.name || "",
+    country: hotel?.country?.name || "",
+    images: hotel?.images || [],
+    starRating: hotel?.starRating || 0,
+    numberOfRooms: hotel?.numberOfRooms || 0,
+    postalCode: hotel?.postalCode || "",
+    amenities: hotel?.amenities || [],
+    faq: hotel?.faq || [],
+    reviews: hotel?.reviews || [],
   });
 
   const [modal, setModal] = useState({ open: false, type: "amenity" });
@@ -62,7 +62,7 @@ function SingleHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
     name: "",
     icon: "",
   });
-  const [amenitiesList, setAmenitiesList] = useState(hotel.amenities);
+  const [amenitiesList, setAmenitiesList] = useState(hotel?.amenities || []);
 
   const handleField = (key, value) =>
     setFields((f) => ({ ...f, [key]: value }));
@@ -503,7 +503,7 @@ function SingleHotel({ hotel, setShow, onAddHotel, defaultAmenities }) {
                         </div>
                       </DialogContent>
                     </Dialog>
-                    {defaultAmenities.map((amenity, idx) => (
+                    {(defaultAmenities || []).map((amenity, idx) => (
                       <DropdownMenuItem
                         key={idx}
                         onClick={() => {

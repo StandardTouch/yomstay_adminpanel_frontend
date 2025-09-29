@@ -2,13 +2,13 @@ import React, { createContext, useContext, useMemo } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import {
   ApiClient,
-  // UserApi, // Temporarily disabled due to missing UsersIdPutRequest model
   HotelApi,
   HotelAmenityApi,
   LocationApi,
   CurrenciesApi,
   WebhooksApi,
   HotelRequestApi,
+  AdminApi,
 } from "@StandardTouch/yomstay_api";
 
 // Create the API Context
@@ -84,6 +84,7 @@ export const ApiProvider = ({ children }) => {
       currencies: new CurrenciesApi(apiClient),
       webhooks: new WebhooksApi(apiClient),
       hotelRequests: new HotelRequestApi(apiClient),
+      admin: new AdminApi(apiClient),
       // Add other APIs as needed
     };
   }, [getToken, isSignedIn, isLoaded]);

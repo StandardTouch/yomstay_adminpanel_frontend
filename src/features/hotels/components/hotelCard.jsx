@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import AlertBox from "@/components/AlertBox";
 import { Button } from "@/components/ui/button";
 
-function HotelCard({ hotel, setIndex, showHotel, showAlert }) {
+function HotelCard({ hotel, showHotel, showAlert }) {
   // Debug logging to see the actual hotel data structure
   console.log("HotelCard - hotel data:", hotel);
   console.log("HotelCard - hotel.images:", hotel?.images);
@@ -57,8 +57,9 @@ function HotelCard({ hotel, setIndex, showHotel, showAlert }) {
 
   // Memoized callbacks for event handlers
   const handleCardClick = useCallback(() => {
-    setIndex(hotel.id);
-  }, [setIndex, hotel.id]);
+    // Card click now handled by showHotel function
+    showHotel();
+  }, [showHotel]);
 
   const handleHeaderClick = useCallback(() => {
     showHotel();

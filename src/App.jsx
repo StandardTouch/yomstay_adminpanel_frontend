@@ -7,6 +7,7 @@ import AuthGuard from "./features/auth/components/AuthGuard";
 import { Spinner } from "./common/components/spinner";
 import UsersScreen from "./features/users/screens/UsersScreen";
 import HotelsScreen from "./features/hotels/screens/hotel_listing/HotelsScreen";
+import SingleHotelScreen from "./features/hotels/screens/single_hotel/SingleHotelScreen";
 import HotelRequestsScreen from "./features/hotel_requests/screens/HotelRequestsScreen";
 import DashboardScreen from "./features/dashboard/screens/DashboardScreen";
 import GlobalAmenities from "./features/global_amenities/screens/GlobalAmenities";
@@ -50,6 +51,7 @@ function App() {
           <Route index element={<DashboardScreen />} />
           <Route path="users" element={<UsersScreen />} />
           <Route path="hotels" element={<HotelsScreen />} />
+          <Route path="hotels/:hotelId" element={<SingleHotelScreen />} />
           <Route path="hotel_requests" element={<HotelRequestsScreen />} />
           <Route path="amenities" element={<GlobalAmenities />} />
           <Route path="filter" element={<Filter />} />

@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import UpdateHotel from "../single_hotel/singleHotel";
+// import UpdateHotel from "../single_hotel/singleHotel"; // No longer needed - using navigation
 import { ChevronDown, Hand, Hotel, Plus, Upload, Search } from "lucide-react";
 import {
   DropdownMenu,
@@ -116,6 +117,7 @@ const EmptyState = memo(() => (
 
 function HotelsScreen() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { isLoaded, isSignedIn } = useAuth();
   const apiClient = useApi();
 
@@ -130,8 +132,6 @@ function HotelsScreen() {
   const statusOptions = useSelector(selectStatusOptions);
 
   // Local UI state
-  const [hotelIndex, setHotelIndex] = useState("0");
-  const [show, setShow] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [checkform, setCheckform] = useState("Add Hotel");
@@ -222,10 +222,6 @@ function HotelsScreen() {
   }, [error, handleError]);
 
   // Memoized callbacks for better performance
-  const updateNewHotel = useCallback((newHotel) => {
-    // This will be handled by Redux when we implement update functionality
-    console.log("Update hotel:", newHotel);
-  }, []);
 
   const handleAddHotel = useCallback(
     (event) => {
@@ -295,8 +291,8 @@ function HotelsScreen() {
   );
 
   const shouldShowPagination = useMemo(
-    () => !show && !loading && !error && pagination.total > pagination.pageSize,
-    [show, loading, error, pagination.total, pagination.pageSize]
+    () => !loading && !error && pagination.total > pagination.pageSize,
+    [loading, error, pagination.total, pagination.pageSize]
   );
 
   const shouldShowEmptyState = useMemo(
@@ -307,78 +303,66 @@ function HotelsScreen() {
   return (
     <div className="p-4 sm:p-8 w-full max-w-7xl mx-auto relative ">
       {/* Header */}
-      {!show && (
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold">Hotels</h1>
-            <div className="flex gap-2">
-              <AddButton buttonValue="Filter" onAdd={handleFilterToggle} />
-              <AddButton buttonValue="Add Hotel" onAdd={handleAddToggle} />
-            </div>
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={20}
-            />
-            <Input
-              type="text"
-              placeholder="Search hotels by name, city, or country..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="pl-10 pr-4 py-2 w-full max-w-md"
-            />
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Hotels</h1>
+          <div className="flex gap-2">
+            <AddButton buttonValue="Filter" onAdd={handleFilterToggle} />
+            <AddButton buttonValue="Add Hotel" onAdd={handleAddToggle} />
           </div>
         </div>
-      )}
 
-      {!show && (
-        <div
-          className={`${
-            filterOpen
-              ? "p-2 flex gap-2 border shadow rounded-md mb-3 transition-hight duration-300 h-fit"
-              : " h-0 overflow-hidden"
-          }`}
-        >
-          <FilterDropdown
-            value={filters.country}
-            options={countryOptions}
-            onSelect={(value) => handleFilterChange("country", value)}
-            placeholder="Country"
+        {/* Search Bar */}
+        <div className="relative">
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            size={20}
           />
-          <FilterDropdown
-            value={filters.city}
-            options={cityOptions}
-            onSelect={(value) => handleFilterChange("city", value)}
-            placeholder="City"
+          <Input
+            type="text"
+            placeholder="Search hotels by name, city, or country..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="pl-10 pr-4 py-2 w-full max-w-md"
           />
-          <FilterDropdown
-            value={filters.state}
-            options={cityOptions} // Using cityOptions as placeholder for state
-            onSelect={(value) => handleFilterChange("state", value)}
-            placeholder="State"
-          />
-          <FilterDropdown
-            value={filters.status}
-            options={statusOptions}
-            onSelect={(value) => handleFilterChange("status", value)}
-            placeholder="Status"
-          />
-          <Button onClick={handleClearFilters}>Clear</Button>
         </div>
-      )}
+      </div>
 
-      {/* Modal for updating a hotel */}
-      {show && hotels[hotelIndex] && (
-        <UpdateHotel
-          hotel={hotels[hotelIndex]}
-          setShow={setShow}
-          defaultAmenities={hotels[hotelIndex]?.amenities || []}
-          onAddHotel={updateNewHotel}
+      <div
+        className={`${
+          filterOpen
+            ? "p-2 flex gap-2 border shadow rounded-md mb-3 transition-hight duration-300 h-fit"
+            : " h-0 overflow-hidden"
+        }`}
+      >
+        <FilterDropdown
+          value={filters.country}
+          options={countryOptions}
+          onSelect={(value) => handleFilterChange("country", value)}
+          placeholder="Country"
         />
-      )}
+        <FilterDropdown
+          value={filters.city}
+          options={cityOptions}
+          onSelect={(value) => handleFilterChange("city", value)}
+          placeholder="City"
+        />
+        <FilterDropdown
+          value={filters.state}
+          options={cityOptions} // Using cityOptions as placeholder for state
+          onSelect={(value) => handleFilterChange("state", value)}
+          placeholder="State"
+        />
+        <FilterDropdown
+          value={filters.status}
+          options={statusOptions}
+          onSelect={(value) => handleFilterChange("status", value)}
+          placeholder="Status"
+        />
+        <Button onClick={handleClearFilters}>Clear</Button>
+      </div>
+
+      {/* Modal for updating a hotel - Now handled by navigation */}
 
       {/* Loading State */}
       {loading && <LoadingSkeleton />}
@@ -387,7 +371,7 @@ function HotelsScreen() {
       {error && !loading && <ErrorState error={error} onRetry={handleRetry} />}
 
       {/* List of hotels */}
-      {!show && !loading && !error && (
+      {!loading && !error && (
         <div className="flex flex-col gap-4">
           {/* Hotels List */}
           {shouldShowEmptyState && <EmptyState />}
@@ -398,10 +382,7 @@ function HotelsScreen() {
                 <MemoizedHotelCard
                   hotel={hotel}
                   key={hotel.id}
-                  setIndex={() => {
-                    setHotelIndex(hotels.indexOf(hotel));
-                  }}
-                  showHotel={() => setShow(true)}
+                  showHotel={() => navigate(`/dashboard/hotels/${hotel.id}`)}
                   showAlert={() => {
                     // This will be handled by Redux when we implement delete functionality
                     console.log("Delete hotel:", hotel.id);
@@ -427,7 +408,6 @@ function HotelsScreen() {
         addOpen={addOpen}
         addHotel={addHotel}
         setAddHotel={setAddHotel}
-        setShow={setShow}
         setAddOpen={setAddOpen}
         HandleAddHotel={handleAddHotel}
         checkform={checkform}
