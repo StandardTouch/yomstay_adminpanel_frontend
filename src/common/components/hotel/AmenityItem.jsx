@@ -1,21 +1,31 @@
 import React from "react";
 import { X } from "lucide-react";
-import AlertBox from "../../../components/AlertBox";
+import AlertBox from "@/components/AlertBox";
 
 export const AmenityItem = ({ amenity, onDelete, onAdd, CheckSheet }) => (
   <div className="relative">
     <div
-      className=" cursor-pointer flex items-center gap-2 p-2 border rounded-md h-full min-h-18"
+      className=" cursor-pointer flex items-center gap-2 p-4 border rounded-md h-full min-h-18 hover:shadow-lg dark:hover:border-accent-foreground"
       onClick={onAdd}
     >
       {amenity.icon && (
         <img
           src={amenity.icon}
           alt={amenity.name}
-          className="w-15 h-15 rounded"
+          className="w-10 h-10 rounded"
         />
+        // <span className="text-3xl">{amenity.icon}</span>
       )}
-      <p>{amenity.name}</p>
+      <div>
+        <p>
+          {amenity.name.slice(0, 15)}
+          {amenity.name.length > 15 && "..."}
+        </p>
+        <p className="text-sm text-accent-foreground">
+          {amenity.describation.slice(0, 15)}
+          {amenity.describation.length > 15 && "..."}
+        </p>
+      </div>
     </div>
     <div className=" absolute top-0 right-2 flex flex-col justify-evenly gap-1 h-full ">
       {CheckSheet === "amenitySheet" ? (
