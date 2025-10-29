@@ -11,6 +11,10 @@ import {
   User,
   Building2,
   FileText,
+  ListTodo,
+  Newspaper,
+  SwatchBook,
+  Contact,
 } from "lucide-react";
 import { FaHotel } from "react-icons/fa6";
 import { useTheme } from "next-themes";
@@ -44,6 +48,10 @@ const sidebarGroups = [
 
       { title: "Amenities", url: "amenities", icon: Inbox },
       { title: "Filter", url: "filter", icon: SlidersHorizontal },
+      { title: "Conditions", url: "conditions", icon: ListTodo },
+      { title: "Themes", url: "theme", icon: SwatchBook },
+      { title: "Newsletter", url: "newsletter", icon: Newspaper },
+      { title: "Contact Request", url: "contact_request", icon: Contact },
     ],
   },
   {

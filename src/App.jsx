@@ -12,11 +12,16 @@ import HotelRequestsScreen from "./features/hotel_requests/screens/HotelRequests
 import DashboardScreen from "./features/dashboard/screens/DashboardScreen";
 import GlobalAmenities from "./features/global_amenities/screens/GlobalAmenities";
 import Filter from "./features/filters/screens/Filter";
+import Conditions from "./features/conditions/screens/conditions";
+import Newsletter from "./features/newsletter/screens/newsletter";
+import Theme from "./features/theme/screens/theme";
+import ContactRequest from "./features/contact_request/screens/contactRequest";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import VerifyMagicLinkWithPasswordReset from "./features/auth/test";
 import Settings from "./features/settings/screens/settings";
+import { Contact } from "lucide-react";
 
 function App() {
   const { isSignedIn, user, isLoaded } = useUser();
@@ -55,7 +60,11 @@ function App() {
           <Route path="hotel_requests" element={<HotelRequestsScreen />} />
           <Route path="amenities" element={<GlobalAmenities />} />
           <Route path="filter" element={<Filter />} />
+          <Route path="conditions" element={<Conditions />} />
+          <Route path="newsletter" element={<Newsletter />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="theme" element={<Theme />} />
+          <Route path="contact_request" element={<ContactRequest />} />
           {/* <Route path="request_hotels" element={<RequestHotels />} /> */}
         </Route>
 
