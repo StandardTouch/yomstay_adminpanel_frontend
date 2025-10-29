@@ -4,6 +4,7 @@ import hotelsReducer from "../features/hotels/hotelsSlice";
 import singleHotelReducer from "../features/hotels/singleHotelSlice";
 import hotelRequestsReducer from "../features/hotel_requests/hotelRequestsSlice";
 import locationReducer from "../features/locations/locationSlice";
+import settingsReducer from "../features/settings/settingsSlice";
 // import authReducer from '../features/auth/authSlice';
 // import dashboardReducer from '../features/dashboard/dashboardSlice';
 // import globalAmenitiesReducer from '../features/global_amenities/globalAmenitiesSlice';
@@ -15,6 +16,7 @@ const rootReducer = combineReducers({
   singleHotel: singleHotelReducer,
   hotelRequests: hotelRequestsReducer,
   locations: locationReducer,
+  settings: settingsReducer,
   // auth: authReducer,
   // dashboard: dashboardReducer,
   // globalAmenities: globalAmenitiesReducer,
