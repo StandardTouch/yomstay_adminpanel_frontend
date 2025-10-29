@@ -223,84 +223,6 @@ const RejectModal = memo(
   }
 );
 
-// Confirmation Modal for Delete Action
-const DeleteModal = memo(
-  ({ isOpen, onClose, onConfirm, request, isDeleting = false }) => {
-    const handleConfirm = useCallback(() => {
-      if (request?.id) {
-        onConfirm(request.id);
-      }
-    }, [onConfirm, request?.id]);
-
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              Delete Hotel Request
-            </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to permanently delete this hotel request?
-              This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Request Details */}
-            <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg space-y-2">
-              <h4 className="font-medium text-sm text-red-900 dark:text-red-200">
-                Request to be deleted:
-              </h4>
-              <div className="space-y-1 text-sm text-red-800 dark:text-red-300">
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4" />
-                  <span className="font-medium">Hotel:</span>
-                  <span>{request?.hotel?.name || "Unknown"}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  <span className="font-medium">Requester:</span>
-                  <span>
-                    {request?.firstName || ""} {request?.lastName || ""}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span className="font-medium">Requested:</span>
-                  <span>
-                    {request?.createdAt
-                      ? new Date(request.createdAt).toLocaleDateString()
-                      : "Not available"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
-              <AlertTriangle className="w-4 h-4" />
-              <span>This action cannot be undone.</span>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose} disabled={isDeleting}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirm}
-              disabled={isDeleting}
-              variant="destructive"
-            >
-              {isDeleting ? "Deleting..." : "Delete Request"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-);
-
 // Details Modal for Viewing Request
 const DetailsModal = memo(({ isOpen, onClose, request }) => {
   const formattedDate = useCallback((dateString) => {
@@ -534,7 +456,6 @@ function HotelRequestModals({
   // Modal states
   showRejectModal,
   showNeedsCompletionModal,
-  showDeleteModal,
   showDetailsModal,
 
   // Current request
@@ -542,16 +463,13 @@ function HotelRequestModals({
 
   // Loading states
   isHandling,
-  isDeleting,
 
   // Handlers
   onCloseReject,
   onCloseNeedsCompletion,
-  onCloseDelete,
   onCloseDetails,
   onConfirmReject,
   onConfirmNeedsCompletion,
-  onConfirmDelete,
 }) {
   return (
     <>
@@ -569,14 +487,6 @@ function HotelRequestModals({
         onConfirm={onConfirmNeedsCompletion}
         request={currentRequest}
         isHandling={isHandling}
-      />
-
-      <DeleteModal
-        isOpen={showDeleteModal && !!currentRequest}
-        onClose={onCloseDelete}
-        onConfirm={onConfirmDelete}
-        request={currentRequest}
-        isDeleting={isDeleting}
       />
 
       <DetailsModal

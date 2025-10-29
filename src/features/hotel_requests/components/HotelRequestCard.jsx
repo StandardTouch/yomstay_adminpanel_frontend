@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import {
   CheckCircle,
   XCircle,
-  Trash2,
   Mail,
   Phone,
   Building2,
@@ -26,10 +25,8 @@ function HotelRequestCard({
   request,
   onReject,
   onNeedsCompletion,
-  onDelete,
   onViewDetails,
   isHandling = false,
-  isDeleting = false,
 }) {
   // Memoized status badge configuration
   const statusConfig = useMemo(() => {
@@ -101,10 +98,6 @@ function HotelRequestCard({
   const handleNeedsCompletion = useCallback(() => {
     onNeedsCompletion?.(request.id);
   }, [onNeedsCompletion, request.id]);
-
-  const handleDelete = useCallback(() => {
-    onDelete?.(request.id);
-  }, [onDelete, request.id]);
 
   const handleViewDetails = useCallback(() => {
     onViewDetails?.(request);
@@ -239,30 +232,20 @@ function HotelRequestCard({
                 size="sm"
                 variant="destructive"
                 onClick={handleReject}
-                disabled={isHandling || isDeleting}
+                disabled={isHandling}
               >
                 {isHandling ? "Processing..." : "Reject"}
               </Button>
               <Button
                 size="sm"
                 onClick={handleNeedsCompletion}
-                disabled={isHandling || isDeleting}
+                disabled={isHandling}
                 className="bg-orange-600 hover:bg-orange-700 text-white"
               >
                 {isHandling ? "Processing..." : "Mark Incomplete"}
               </Button>
             </div>
           )}
-
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleDelete}
-            disabled={isHandling || isDeleting}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
         </div>
       </CardFooter>
     </Card>

@@ -13,7 +13,6 @@ import {
 import {
   fetchHotelRequests,
   handleHotelRequest,
-  deleteHotelRequest,
   clearAllErrors,
 } from "../hotelRequestsSlice";
 import {
@@ -21,9 +20,7 @@ import {
   selectHotelRequestsLoading,
   selectHotelRequestsError,
   selectHandling,
-  selectDeleting,
   selectHandleError,
-  selectDeleteError,
   selectHotelRequestsByStatus,
   selectHotelRequestsStats,
   selectProcessedHotelRequests,
@@ -172,9 +169,7 @@ function HotelRequestsScreen() {
   const loading = useSelector(selectHotelRequestsLoading);
   const error = useSelector(selectHotelRequestsError);
   const handling = useSelector(selectHandling);
-  const deleting = useSelector(selectDeleting);
   const handleError = useSelector(selectHandleError);
-  const deleteError = useSelector(selectDeleteError);
   const anyLoading = useSelector(selectAnyLoading);
   const anyError = useSelector(selectAnyError);
 
@@ -189,7 +184,6 @@ function HotelRequestsScreen() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showNeedsCompletionModal, setShowNeedsCompletionModal] =
     useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [currentRequest, setCurrentRequest] = useState(null);
 
@@ -244,10 +238,7 @@ function HotelRequestsScreen() {
     if (handleError) {
       showError(handleError);
     }
-    if (deleteError) {
-      showError(deleteError);
-    }
-  }, [error, handleError, deleteError]);
+  }, [error, handleError]);
 
   // Memoized callbacks
   const handleRetry = useCallback(() => {
@@ -272,17 +263,6 @@ function HotelRequestsScreen() {
       if (request) {
         setCurrentRequest(request);
         setShowNeedsCompletionModal(true);
-      }
-    },
-    [hotelRequests]
-  );
-
-  const handleDelete = useCallback(
-    (requestId) => {
-      const request = hotelRequests.find((req) => req.id === requestId);
-      if (request) {
-        setCurrentRequest(request);
-        setShowDeleteModal(true);
       }
     },
     [hotelRequests]
@@ -329,22 +309,6 @@ function HotelRequestsScreen() {
     [dispatch, apiClient]
   );
 
-  const handleConfirmDelete = useCallback(
-    (requestId) => {
-      dispatch(deleteHotelRequest({ requestId, apiClient }))
-        .unwrap()
-        .then(() => {
-          showSuccess("Hotel request deleted successfully!");
-          setShowDeleteModal(false);
-          setCurrentRequest(null);
-        })
-        .catch((error) => {
-          showError(error || "Failed to delete hotel request");
-        });
-    },
-    [dispatch, apiClient]
-  );
-
   const handleFilterChange = useCallback((filter) => {
     setActiveFilter(filter);
     setCurrentPage(1);
@@ -368,11 +332,6 @@ function HotelRequestsScreen() {
 
   const handleCloseNeedsCompletion = useCallback(() => {
     setShowNeedsCompletionModal(false);
-    setCurrentRequest(null);
-  }, []);
-
-  const handleCloseDelete = useCallback(() => {
-    setShowDeleteModal(false);
     setCurrentRequest(null);
   }, []);
 
@@ -502,10 +461,8 @@ function HotelRequestsScreen() {
               request={request}
               onReject={handleReject}
               onNeedsCompletion={handleNeedsCompletion}
-              onDelete={handleDelete}
               onViewDetails={handleViewDetails}
               isHandling={handling}
-              isDeleting={deleting}
             />
           ))}
         </div>
@@ -538,18 +495,14 @@ function HotelRequestsScreen() {
       <HotelRequestModals
         showRejectModal={showRejectModal}
         showNeedsCompletionModal={showNeedsCompletionModal}
-        showDeleteModal={showDeleteModal}
         showDetailsModal={showDetailsModal}
         currentRequest={currentRequest}
         isHandling={handling}
-        isDeleting={deleting}
         onCloseReject={handleCloseReject}
         onCloseNeedsCompletion={handleCloseNeedsCompletion}
-        onCloseDelete={handleCloseDelete}
         onCloseDetails={handleCloseDetails}
         onConfirmReject={handleConfirmReject}
         onConfirmNeedsCompletion={handleConfirmNeedsCompletion}
-        onConfirmDelete={handleConfirmDelete}
       />
     </div>
   );

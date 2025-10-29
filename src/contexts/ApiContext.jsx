@@ -1,15 +1,11 @@
 import React, { createContext, useContext, useMemo } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import {
-  ApiClient,
-  HotelApi,
-  HotelAmenityApi,
-  LocationApi,
-  CurrenciesApi,
-  WebhooksApi,
-  HotelRequestApi,
-  AdminApi,
-} from "@StandardTouch/yomstay_api";
+import { createApiClient } from "../services/config";
+import { UsersService } from "../features/users/services/usersService";
+import { HotelsService } from "../features/hotels/services/hotelsService";
+import { AdminService } from "../features/hotels/services/adminService";
+import { LocationsService } from "../features/locations/services/locationsService";
+import { HotelRequestsService } from "../features/hotel_requests/services/hotelRequestsService";
 
 // Create the API Context
 const ApiContext = createContext(null);
@@ -32,60 +28,27 @@ export const ApiProvider = ({ children }) => {
       return null;
     }
 
-    // Create API client with base URL
-    const basePath =
+    // Create authenticated axios instance
+    const baseURL =
       import.meta.env.VITE_API_BASE_URL || "https://api.yomstay.com/api/v1";
-    const apiClient = new ApiClient(basePath);
+    const apiClient = createApiClient(baseURL, getToken);
 
-    // Override callApi to refresh token on each request
-    const originalCallApi = apiClient.callApi;
-    apiClient.callApi = async function (...args) {
-      try {
-        // Refresh token before each API call
-        const token = await getToken();
-        if (token) {
-          this.authentications.bearerAuth.accessToken = token;
-        }
-
-        return await originalCallApi.apply(this, args);
-      } catch (error) {
-        console.error("API call failed:", {
-          error,
-          message: error?.message,
-          response: error?.response,
-          status: error?.response?.status || error?.status,
-          data: error?.response?.data || error?.body,
-        });
-
-        // Try to extract more error details
-        if (error?.body) {
-          try {
-            const errorData =
-              typeof error.body === "string"
-                ? JSON.parse(error.body)
-                : error.body;
-            console.error("Parsed error body:", errorData);
-          } catch (e) {
-            console.error("Raw error body:", error.body);
-          }
-        }
-
-        throw error;
-      }
-    };
-
-    // Return all available API instances
+    // Return all service instances
     return {
-      // users: new UserApi(apiClient), // Temporarily disabled due to missing UsersIdPutRequest model
-      users: { apiClient }, // Provide raw API client for users
-      hotels: new HotelApi(apiClient),
-      hotelAmenities: new HotelAmenityApi(apiClient),
-      locations: new LocationApi(apiClient),
-      currencies: new CurrenciesApi(apiClient),
-      webhooks: new WebhooksApi(apiClient),
-      hotelRequests: new HotelRequestApi(apiClient),
-      admin: new AdminApi(apiClient),
-      // Add other APIs as needed
+      // Core services
+      users: new UsersService(apiClient),
+      hotels: new HotelsService(apiClient),
+      admin: new AdminService(apiClient),
+      locations: new LocationsService(apiClient),
+      hotelRequests: new HotelRequestsService(apiClient),
+
+      // Legacy support - keep apiClient for any remaining direct calls
+      apiClient,
+
+      // TODO: Add other services as needed
+      // hotelAmenities: new HotelAmenitiesService(apiClient),
+      // currencies: new CurrenciesService(apiClient),
+      // webhooks: new WebhooksService(apiClient),
     };
   }, [getToken, isSignedIn, isLoaded]);
 

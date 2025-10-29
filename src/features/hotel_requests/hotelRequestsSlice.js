@@ -11,30 +11,11 @@ export const fetchHotelRequests = createAsyncThunk(
         throw new Error("API client is required");
       }
 
-      // Build opts object for StandardTouch API
-      const opts = {
-        // Add any filter parameters if needed in the future
-        ...filters,
-      };
-
-      // Remove undefined values
-      Object.keys(opts).forEach(
-        (key) => opts[key] === undefined && delete opts[key]
-      );
-
-      const response = await apiClient.hotelRequests.hotelRequestsGet(opts);
+      const response = await apiClient.hotelRequests.listRequests(filters);
 
       // Debug logging to see the actual API response
       console.log("fetchHotelRequests - API response:", response);
       console.log("fetchHotelRequests - response.data:", response.data);
-      console.log(
-        "fetchHotelRequests - response.data type:",
-        typeof response.data
-      );
-      console.log(
-        "fetchHotelRequests - response.data is array:",
-        Array.isArray(response.data)
-      );
 
       // Return only serializable data to avoid Redux warnings
       return {
@@ -58,11 +39,10 @@ export const handleHotelRequest = createAsyncThunk(
         throw new Error("API client is required");
       }
 
-      const response =
-        await apiClient.hotelRequests.hotelRequestsIdApproveOrRejectPatch(
-          requestId,
-          { status }
-        );
+      const response = await apiClient.hotelRequests.handleRequest(
+        requestId,
+        status
+      );
 
       return {
         statusCode: response.statusCode,
@@ -80,32 +60,6 @@ export const handleHotelRequest = createAsyncThunk(
   }
 );
 
-// Async thunk for deleting a hotel request
-export const deleteHotelRequest = createAsyncThunk(
-  "hotelRequests/deleteHotelRequest",
-  async ({ requestId, apiClient }, { rejectWithValue }) => {
-    try {
-      if (!apiClient?.hotelRequests) {
-        throw new Error("API client is required");
-      }
-
-      const response = await apiClient.hotelRequests.hotelRequestsIdDelete(
-        requestId
-      );
-
-      return {
-        statusCode: response.statusCode,
-        data: response.data ? JSON.parse(JSON.stringify(response.data)) : null,
-        message: response.message,
-        success: response.success,
-        requestId,
-      };
-    } catch (error) {
-      return rejectWithValue(error.message || "Failed to delete hotel request");
-    }
-  }
-);
-
 const hotelRequestsSlice = createSlice({
   name: "hotelRequests",
   initialState: {
@@ -116,11 +70,9 @@ const hotelRequestsSlice = createSlice({
 
     // CRUD operations
     handling: false,
-    deleting: false,
 
     // Action errors
     handleError: null,
-    deleteError: null,
   },
   reducers: {
     // Clear errors
@@ -133,15 +85,10 @@ const hotelRequestsSlice = createSlice({
       state.handleError = null;
     },
 
-    clearDeleteError: (state) => {
-      state.deleteError = null;
-    },
-
     // Clear all errors
     clearAllErrors: (state) => {
       state.error = null;
       state.handleError = null;
-      state.deleteError = null;
     },
   },
   extraReducers: (builder) => {
@@ -201,34 +148,11 @@ const hotelRequestsSlice = createSlice({
       .addCase(handleHotelRequest.rejected, (state, action) => {
         state.handling = false;
         state.handleError = action.payload;
-      })
-
-      // Delete hotel request
-      .addCase(deleteHotelRequest.pending, (state) => {
-        state.deleting = true;
-        state.deleteError = null;
-      })
-      .addCase(deleteHotelRequest.fulfilled, (state, action) => {
-        state.deleting = false;
-        if (action.payload.success) {
-          // Remove the request from the list
-          state.hotelRequests = state.hotelRequests.filter(
-            (req) => req.id !== action.payload.requestId
-          );
-        }
-      })
-      .addCase(deleteHotelRequest.rejected, (state, action) => {
-        state.deleting = false;
-        state.deleteError = action.payload;
       });
   },
 });
 
-export const {
-  clearHotelRequestError,
-  clearHandleError,
-  clearDeleteError,
-  clearAllErrors,
-} = hotelRequestsSlice.actions;
+export const { clearHotelRequestError, clearHandleError, clearAllErrors } =
+  hotelRequestsSlice.actions;
 
 export default hotelRequestsSlice.reducer;

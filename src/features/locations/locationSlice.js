@@ -9,40 +9,8 @@ export const fetchCountries = createAsyncThunk(
         throw new Error("API client is required");
       }
 
-      const opts = {};
-      if (search) {
-        opts.search = search;
-      }
-
-      Object.keys(opts).forEach(
-        (key) => opts[key] === undefined && delete opts[key]
-      );
-
-      // Use raw fetch with correct endpoint
-      const baseUrl =
-        apiClient.locations.apiClient.basePath || "https://api.yomstay.com";
-      const token =
-        apiClient.locations.apiClient.authentications.bearerAuth.accessToken;
-
-      const url = new URL("/api/v1/location/countries", baseUrl);
-      if (opts.search) {
-        url.searchParams.set("search", opts.search);
-      }
-
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data;
+      const response = await apiClient.locations.listCountries(search);
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch countries");
     }
@@ -58,42 +26,11 @@ export const fetchStates = createAsyncThunk(
         throw new Error("API client is required");
       }
 
-      const opts = {};
-      if (countryId) opts.countryId = countryId;
-      if (search) opts.search = search;
-
-      Object.keys(opts).forEach(
-        (key) => opts[key] === undefined && delete opts[key]
+      const response = await apiClient.locations.listStates(
+        countryId || "",
+        search
       );
-
-      // Use raw fetch with correct endpoint
-      const baseUrl =
-        apiClient.locations.apiClient.basePath || "https://api.yomstay.com";
-      const token =
-        apiClient.locations.apiClient.authentications.bearerAuth.accessToken;
-
-      const url = new URL("/api/v1/location/states", baseUrl);
-      if (opts.countryId) {
-        url.searchParams.set("countryId", opts.countryId);
-      }
-      if (opts.search) {
-        url.searchParams.set("search", opts.search);
-      }
-
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data;
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch states");
     }
@@ -112,50 +49,13 @@ export const fetchCities = createAsyncThunk(
         throw new Error("API client is required");
       }
 
-      const opts = {};
-      if (countryId) opts.countryId = countryId;
-      if (stateId) opts.stateId = stateId;
-      if (search) opts.search = search;
-      if (limit) opts.limit = limit;
-
-      Object.keys(opts).forEach(
-        (key) => opts[key] === undefined && delete opts[key]
-      );
-
-      // Use raw fetch with correct endpoint
-      const baseUrl =
-        apiClient.locations.apiClient.basePath || "https://api.yomstay.com";
-      const token =
-        apiClient.locations.apiClient.authentications.bearerAuth.accessToken;
-
-      const url = new URL("/api/v1/location/cities", baseUrl);
-      if (opts.countryId) {
-        url.searchParams.set("countryId", opts.countryId);
-      }
-      if (opts.stateId) {
-        url.searchParams.set("stateId", opts.stateId);
-      }
-      if (opts.search) {
-        url.searchParams.set("search", opts.search);
-      }
-      if (opts.limit) {
-        url.searchParams.set("limit", opts.limit);
-      }
-
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+      const response = await apiClient.locations.listCities({
+        countryId,
+        stateId,
+        search,
+        limit,
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data;
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch cities");
     }
