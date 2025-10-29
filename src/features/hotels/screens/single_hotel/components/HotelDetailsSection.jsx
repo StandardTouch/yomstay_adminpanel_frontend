@@ -1,7 +1,7 @@
 import React, { memo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
+import HtmlEditor from "@/components/ui/html-editor";
 
 const HotelDetailsSection = memo(({ fields, onFieldChange }) => {
   const handleFieldChange = useCallback(
@@ -88,11 +88,10 @@ const HotelDetailsSection = memo(({ fields, onFieldChange }) => {
       {/* Description */}
       <div className="flex flex-col gap-2">
         <label className="text-lg">Description</label>
-        <Textarea
-          value={fields.description}
-          onChange={(e) => handleFieldChange("description", e.target.value)}
+        <HtmlEditor
+          value={fields.description || ""}
+          onChange={(content) => handleFieldChange("description", content)}
           placeholder="Enter hotel description"
-          rows={4}
         />
       </div>
     </div>

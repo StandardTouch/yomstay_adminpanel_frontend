@@ -468,9 +468,9 @@ const OptimizedSingleHotel = ({
   return (
     <div className="w-full bg-inherit flex flex-col gap-4 pb-10 relative">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between w-full">
-        <h1 className="text-2xl font-bold mb-6">Update Hotel</h1>
-        <div className="text-sm text-gray-600">
+      <div className="flex flex-col md:flex-row justify-between w-full gap-3 md:gap-0">
+        <h1 className="text-xl sm:text-2xl font-bold">Update Hotel</h1>
+        <div className="text-xs sm:text-sm text-gray-600">
           {Object.values(sectionHasChanges).some((v) => v) && (
             <span className="flex items-center gap-2 text-yellow-600">
               <AlertTriangle className="w-4 h-4" />
@@ -486,25 +486,70 @@ const OptimizedSingleHotel = ({
         onValueChange={handleTabChange}
         className="w-full"
       >
-        <div className="w-full overflow-scroll md:overflow-hidden rounded-md">
-          <TabsList className="flex gap-2 *:cursor-pointer z-20">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="images">Images & Media</TabsTrigger>
-            <TabsTrigger value="rooms">Rooms & Pricing</TabsTrigger>
-            <TabsTrigger value="amenities">Amenities & Policies</TabsTrigger>
-            <TabsTrigger value="thematics">Thematics</TabsTrigger>
-            <TabsTrigger value="conditions">Conditions</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews & Ratings</TabsTrigger>
-            <TabsTrigger value="financial">Financial Settings</TabsTrigger>
+        <div className="w-full overflow-x-auto md:overflow-hidden rounded-md">
+          <TabsList className="flex gap-1 sm:gap-2 *:cursor-pointer z-20 min-w-max md:min-w-0">
+            <TabsTrigger
+              value="overview"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="images"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Images & Media
+            </TabsTrigger>
+            <TabsTrigger
+              value="rooms"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Rooms & Pricing
+            </TabsTrigger>
+            <TabsTrigger
+              value="amenities"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Amenities & Policies
+            </TabsTrigger>
+            <TabsTrigger
+              value="thematics"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Thematics
+            </TabsTrigger>
+            <TabsTrigger
+              value="conditions"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Conditions
+            </TabsTrigger>
+            <TabsTrigger
+              value="documents"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Documents
+            </TabsTrigger>
+            <TabsTrigger
+              value="reviews"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Reviews & Ratings
+            </TabsTrigger>
+            <TabsTrigger
+              value="financial"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Financial Settings
+            </TabsTrigger>
           </TabsList>
         </div>
 
         {/* Tab Contents */}
-        <TabsContent value="overview" className="border rounded-md p-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Hotel Overview</h2>
-            <div className="flex gap-2">
+        <TabsContent value="overview" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">Hotel Overview</h2>
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 onClick={() => handleResetSection("overview")}
@@ -534,9 +579,9 @@ const OptimizedSingleHotel = ({
           {tabSections.overview}
         </TabsContent>
 
-        <TabsContent value="images" className="border rounded-md p-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Images & Media</h2>
+        <TabsContent value="images" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">Images & Media</h2>
             <div className="text-sm text-gray-500">
               Separate endpoint required (Coming soon)
             </div>
@@ -544,9 +589,11 @@ const OptimizedSingleHotel = ({
           {tabSections.images}
         </TabsContent>
 
-        <TabsContent value="rooms" className="border rounded-md p-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Rooms & Pricing</h2>
+        <TabsContent value="rooms" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">
+              Rooms & Pricing
+            </h2>
             <div className="text-sm text-gray-500">
               Separate endpoint required (Coming soon)
             </div>
@@ -554,10 +601,12 @@ const OptimizedSingleHotel = ({
           {tabSections.rooms}
         </TabsContent>
 
-        <TabsContent value="amenities" className="border rounded-md p-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Amenities & FAQs</h2>
-            <div className="flex gap-2">
+        <TabsContent value="amenities" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">
+              Amenities & FAQs
+            </h2>
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 onClick={() => handleResetSection("amenities")}
@@ -587,10 +636,10 @@ const OptimizedSingleHotel = ({
           {tabSections.amenities}
         </TabsContent>
 
-        <TabsContent value="thematics" className="border rounded-md p-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Thematics</h2>
-            <div className="flex gap-2">
+        <TabsContent value="thematics" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">Thematics</h2>
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 onClick={() => handleResetSection("thematics")}
@@ -620,10 +669,13 @@ const OptimizedSingleHotel = ({
           {tabSections.thematics}
         </TabsContent>
 
-        <TabsContent value="conditions" className="border rounded-md p-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Conditions</h2>
-            <div className="flex gap-2">
+        <TabsContent
+          value="conditions"
+          className="border rounded-md p-3 sm:p-4"
+        >
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">Conditions</h2>
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 onClick={() => handleResetSection("conditions")}
@@ -653,9 +705,9 @@ const OptimizedSingleHotel = ({
           {tabSections.conditions}
         </TabsContent>
 
-        <TabsContent value="documents" className="border rounded-md p-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Documents</h2>
+        <TabsContent value="documents" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">Documents</h2>
             <div className="text-sm text-gray-500">
               Separate endpoint required (Coming soon)
             </div>
@@ -663,20 +715,22 @@ const OptimizedSingleHotel = ({
           {tabSections.documents}
         </TabsContent>
 
-        <TabsContent value="reviews" className="border rounded-md p-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Reviews & Ratings</h2>
+        <TabsContent value="reviews" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">
+              Reviews & Ratings
+            </h2>
             <div className="text-sm text-gray-500">Read-only</div>
           </div>
           {tabSections.reviews}
         </TabsContent>
 
-        <TabsContent value="financial" className="border rounded-md p-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">
+        <TabsContent value="financial" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">
               Financial Settings (Taxes)
             </h2>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 onClick={() => handleResetSection("taxes")}

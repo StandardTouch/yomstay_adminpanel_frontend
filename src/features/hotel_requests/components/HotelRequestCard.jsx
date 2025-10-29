@@ -120,24 +120,29 @@ const HotelRequestCard = ({
 
   return (
     <Card className="hover:shadow-lg transition-shadow duration-200">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+      <CardHeader className="pb-3 px-4 sm:px-6">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
               {hotelName}
             </CardTitle>
-            <CardDescription className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <CardDescription className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Requested by {requesterName}
             </CardDescription>
           </div>
-          <Badge className={statusConfig.className}>
+          <Badge className={`${statusConfig.className} flex-shrink-0 text-xs`}>
             <StatusIcon className="w-3 h-3 mr-1" />
-            {statusConfig.text}
+            <span className="hidden sm:inline">{statusConfig.text}</span>
+            <span className="sm:hidden">
+              {statusConfig.text.length > 8
+                ? statusConfig.text.split(" ")[0]
+                : statusConfig.text}
+            </span>
           </Badge>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6">
         {/* Hotel Information */}
         <div className="space-y-2">
           <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
@@ -252,25 +257,26 @@ const HotelRequestCard = ({
         </div>
       </CardContent>
 
-      <CardFooter className="pt-4 border-t">
-        <div className="flex items-center justify-between w-full">
+      <CardFooter className="pt-4 border-t px-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between w-full gap-3 sm:gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handleViewDetails}
-            className="flex-1 mr-2"
+            className="w-full sm:flex-1 sm:mr-2"
           >
             View Details
           </Button>
 
           {(request.status === "pending" ||
             request.status === "needs_completion") && (
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2 w-full sm:w-auto">
               <Button
                 size="sm"
                 variant="destructive"
                 onClick={handleReject}
                 disabled={isHandling}
+                className="w-full sm:w-auto"
               >
                 {isHandling ? "Processing..." : "Reject"}
               </Button>
@@ -278,9 +284,14 @@ const HotelRequestCard = ({
                 size="sm"
                 onClick={handleNeedsCompletion}
                 disabled={isHandling}
-                className="bg-orange-600 hover:bg-orange-700 text-white"
+                className="bg-orange-600 hover:bg-orange-700 text-white w-full sm:w-auto"
               >
-                {isHandling ? "Processing..." : "Request More Info"}
+                <span className="hidden sm:inline">
+                  {isHandling ? "Processing..." : "Request More Info"}
+                </span>
+                <span className="sm:hidden">
+                  {isHandling ? "Processing..." : "Request Info"}
+                </span>
               </Button>
             </div>
           )}

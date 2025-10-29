@@ -275,24 +275,26 @@ const SingleHotelScreen = () => {
   return (
     <div className="space-y-6">
       {/* Header with back button */}
-      <div className="flex items-center gap-4">
-        <Button
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        {/* <Button
           onClick={handleBack}
           variant="outline"
           size="sm"
           disabled={isAnyUpdateInProgress}
+          className="w-full sm:w-auto"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Hotels
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {hotel.name}
+          <span className="hidden sm:inline">Back to Hotels</span>
+          <span className="sm:hidden">Back</span>
+        </Button> */}
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate flex items-center gap-2">
+            <span className="truncate">{hotel.name}</span>
             {isAnyUpdateInProgress && (
-              <Loader2 className="inline-block h-5 w-5 animate-spin ml-2" />
+              <Loader2 className="h-5 w-5 animate-spin flex-shrink-0" />
             )}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 truncate">
             {hotel.city?.name}, {hotel.country?.name}
           </p>
         </div>
