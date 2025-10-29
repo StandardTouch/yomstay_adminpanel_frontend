@@ -13,7 +13,6 @@ import {
 import {
   fetchHotelRequests,
   handleHotelRequest,
-  deleteHotelRequest,
   clearAllErrors,
 } from "../hotelRequestsSlice";
 import {
@@ -21,9 +20,7 @@ import {
   selectHotelRequestsLoading,
   selectHotelRequestsError,
   selectHandling,
-  selectDeleting,
   selectHandleError,
-  selectDeleteError,
   selectHotelRequestsByStatus,
   selectHotelRequestsStats,
   selectProcessedHotelRequests,
@@ -52,25 +49,82 @@ import {
 
 // Memoized components for better performance
 const LoadingSkeleton = memo(() => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    {Array.from({ length: 4 }).map((_, index) => (
-      <Card key={index} className="animate-pulse">
-        <CardHeader>
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="h-3 bg-gray-200 rounded"></div>
-            <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-            <div className="h-3 bg-gray-200 rounded w-4/6"></div>
+  <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
+    {/* Header Skeleton */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+      <div className="flex-1">
+        <div className="h-8 sm:h-9 bg-gray-200 dark:bg-gray-700 rounded w-48 animate-pulse"></div>
+        <div className="h-4 sm:h-5 bg-gray-200 dark:bg-gray-700 rounded w-80 mt-2 animate-pulse"></div>
+      </div>
+      <div className="h-9 sm:h-10 bg-gray-200 dark:bg-gray-700 rounded w-24 sm:w-28 animate-pulse"></div>
+    </div>
+
+    {/* Stats Cards Skeleton */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <Card key={index} className="animate-pulse">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+            <div className="h-5 w-5 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <div className="h-8 sm:h-9 bg-gray-200 dark:bg-gray-700 rounded w-16 mb-2"></div>
+            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+
+    {/* Search and Filter Skeleton */}
+    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+      <div className="flex-1">
+        <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+      </div>
+      <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-full sm:w-32 animate-pulse"></div>
+    </div>
+
+    {/* Filter Tabs Skeleton */}
+    <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+      <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:space-x-1">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div
+            key={index}
+            className="h-9 bg-gray-200 dark:bg-gray-700 rounded px-3 sm:px-4 flex-shrink-0 animate-pulse"
+            style={{
+              width: index === 2 ? "140px" : index === 0 ? "70px" : "100px",
+            }}
+          ></div>
+        ))}
+      </div>
+    </div>
+
+    {/* Hotel Request Cards Skeleton */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <Card key={index} className="animate-pulse">
+          <CardHeader>
+            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 mb-4">
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-4">
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+            </div>
+          </CardContent>
+          <div className="p-4 border-t flex gap-2">
+            <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded flex-1"></div>
+            <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded flex-1"></div>
+            <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded flex-1"></div>
           </div>
-        </CardContent>
-        <div className="p-4 border-t">
-          <div className="h-8 bg-gray-200 rounded"></div>
-        </div>
-      </Card>
-    ))}
+        </Card>
+      ))}
+    </div>
   </div>
 ));
 
@@ -104,16 +158,18 @@ const EmptyState = memo(() => (
 ));
 
 const StatsCard = memo(({ title, value, icon: Icon, color, percentage }) => (
-  <Card>
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      <Icon className={`h-4 w-4 ${color}`} />
+  <Card className="hover:shadow-md transition-shadow duration-200">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+      <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
+        {title}
+      </CardTitle>
+      <Icon className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${color}`} />
     </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
+    <CardContent className="px-4 pb-4">
+      <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{value}</div>
       {percentage !== undefined && (
-        <p className="text-xs text-muted-foreground">
-          {percentage}% of total requests
+        <p className="text-xs text-muted-foreground mt-1">
+          {percentage}% of total
         </p>
       )}
     </CardContent>
@@ -121,13 +177,13 @@ const StatsCard = memo(({ title, value, icon: Icon, color, percentage }) => (
 ));
 
 const FilterTabs = memo(({ activeFilter, onFilterChange, stats }) => (
-  <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+  <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg overflow-x-auto">
     {[
       { key: "all", label: "All", count: stats.total, icon: Building2 },
       { key: "pending", label: "Pending", count: stats.pending, icon: Clock },
       {
         key: "needs_completion",
-        label: "Incomplete",
+        label: "Needs More Info",
         count: stats.needs_completion,
         icon: Clock,
       },
@@ -149,11 +205,18 @@ const FilterTabs = memo(({ activeFilter, onFilterChange, stats }) => (
         variant={activeFilter === key ? "default" : "ghost"}
         size="sm"
         onClick={() => onFilterChange(key)}
-        className="flex items-center gap-2"
+        className="flex items-center gap-1 sm:gap-2 flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3"
       >
-        <Icon className="w-4 h-4" />
-        {label}
-        <Badge variant="secondary" className="ml-1">
+        <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
+        <span className="hidden sm:inline">{label}</span>
+        <span className="sm:hidden">
+          {key === "needs_completion"
+            ? "Info"
+            : key === "pending"
+            ? "Pending"
+            : label.substring(0, 4)}
+        </span>
+        <Badge variant="secondary" className="ml-1 text-xs px-1.5">
           {count}
         </Badge>
       </Button>
@@ -172,9 +235,7 @@ function HotelRequestsScreen() {
   const loading = useSelector(selectHotelRequestsLoading);
   const error = useSelector(selectHotelRequestsError);
   const handling = useSelector(selectHandling);
-  const deleting = useSelector(selectDeleting);
   const handleError = useSelector(selectHandleError);
-  const deleteError = useSelector(selectDeleteError);
   const anyLoading = useSelector(selectAnyLoading);
   const anyError = useSelector(selectAnyError);
 
@@ -189,7 +250,6 @@ function HotelRequestsScreen() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showNeedsCompletionModal, setShowNeedsCompletionModal] =
     useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [currentRequest, setCurrentRequest] = useState(null);
 
@@ -244,10 +304,7 @@ function HotelRequestsScreen() {
     if (handleError) {
       showError(handleError);
     }
-    if (deleteError) {
-      showError(deleteError);
-    }
-  }, [error, handleError, deleteError]);
+  }, [error, handleError]);
 
   // Memoized callbacks
   const handleRetry = useCallback(() => {
@@ -272,17 +329,6 @@ function HotelRequestsScreen() {
       if (request) {
         setCurrentRequest(request);
         setShowNeedsCompletionModal(true);
-      }
-    },
-    [hotelRequests]
-  );
-
-  const handleDelete = useCallback(
-    (requestId) => {
-      const request = hotelRequests.find((req) => req.id === requestId);
-      if (request) {
-        setCurrentRequest(request);
-        setShowDeleteModal(true);
       }
     },
     [hotelRequests]
@@ -318,28 +364,14 @@ function HotelRequestsScreen() {
       )
         .unwrap()
         .then(() => {
-          showSuccess("Hotel request marked as incomplete successfully!");
+          showSuccess(
+            "Request for more information sent to partner successfully!"
+          );
           setShowNeedsCompletionModal(false);
           setCurrentRequest(null);
         })
         .catch((error) => {
-          showError(error || "Failed to mark hotel request as incomplete");
-        });
-    },
-    [dispatch, apiClient]
-  );
-
-  const handleConfirmDelete = useCallback(
-    (requestId) => {
-      dispatch(deleteHotelRequest({ requestId, apiClient }))
-        .unwrap()
-        .then(() => {
-          showSuccess("Hotel request deleted successfully!");
-          setShowDeleteModal(false);
-          setCurrentRequest(null);
-        })
-        .catch((error) => {
-          showError(error || "Failed to delete hotel request");
+          showError(error || "Failed to request more information");
         });
     },
     [dispatch, apiClient]
@@ -371,11 +403,6 @@ function HotelRequestsScreen() {
     setCurrentRequest(null);
   }, []);
 
-  const handleCloseDelete = useCallback(() => {
-    setShowDeleteModal(false);
-    setCurrentRequest(null);
-  }, []);
-
   const handleCloseDetails = useCallback(() => {
     setShowDetailsModal(false);
     setCurrentRequest(null);
@@ -383,16 +410,7 @@ function HotelRequestsScreen() {
 
   // Render loading state
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Hotel Requests
-          </h1>
-        </div>
-        <LoadingSkeleton />
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
 
   // Render error state
@@ -410,27 +428,33 @@ function HotelRequestsScreen() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Hotel Requests
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
             Review and manage hotel requests from property owners
           </p>
         </div>
-        <Button onClick={handleRetry} variant="outline" disabled={anyLoading}>
+        <Button
+          onClick={handleRetry}
+          variant="outline"
+          disabled={anyLoading}
+          size="sm"
+          className="sm:size-default w-full sm:w-auto"
+        >
           <RefreshCw
-            className={`w-4 h-4 mr-2 ${anyLoading ? "animate-spin" : ""}`}
+            className={`w-4 h-4 sm:mr-2 ${anyLoading ? "animate-spin" : ""}`}
           />
-          Refresh
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         <StatsCard
           title="Total Requests"
           value={stats.total}
@@ -443,6 +467,13 @@ function HotelRequestsScreen() {
           icon={Clock}
           color="text-yellow-600"
           percentage={stats.pendingPercentage}
+        />
+        <StatsCard
+          title="Needs More Info"
+          value={stats.needs_completion}
+          icon={AlertCircle}
+          color="text-orange-600"
+          percentage={stats.needs_completionPercentage}
         />
         <StatsCard
           title="Approved"
@@ -461,7 +492,7 @@ function HotelRequestsScreen() {
       </div>
 
       {/* Filters and Search */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="flex-1">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -469,7 +500,7 @@ function HotelRequestsScreen() {
               placeholder="Search requests..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="pl-10"
+              className="pl-10 text-sm sm:text-base"
             />
           </div>
         </div>
@@ -477,9 +508,14 @@ function HotelRequestsScreen() {
           <Button
             variant="outline"
             onClick={() => setSortBy(sortBy === "newest" ? "oldest" : "newest")}
+            size="sm"
+            className="sm:size-default w-full sm:w-auto"
           >
-            <Filter className="w-4 h-4 mr-2" />
-            {sortBy === "newest" ? "Newest First" : "Oldest First"}
+            <Filter className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">
+              {sortBy === "newest" ? "Newest First" : "Oldest First"}
+            </span>
+            <span className="sm:hidden">Sort</span>
           </Button>
         </div>
       </div>
@@ -495,17 +531,15 @@ function HotelRequestsScreen() {
       {processedRequests.data.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {processedRequests.data.map((request) => (
             <HotelRequestCard
               key={request.id}
               request={request}
               onReject={handleReject}
               onNeedsCompletion={handleNeedsCompletion}
-              onDelete={handleDelete}
               onViewDetails={handleViewDetails}
               isHandling={handling}
-              isDeleting={deleting}
             />
           ))}
         </div>
@@ -513,21 +547,25 @@ function HotelRequestsScreen() {
 
       {/* Pagination */}
       {processedRequests.totalPages > 1 && (
-        <div className="flex items-center justify-center space-x-2">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2 py-4">
           <Button
             variant="outline"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
+            size="sm"
+            className="w-full sm:w-auto"
           >
             Previous
           </Button>
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+          <span className="text-sm text-gray-600 dark:text-gray-400 px-2">
             Page {currentPage} of {processedRequests.totalPages}
           </span>
           <Button
             variant="outline"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === processedRequests.totalPages}
+            size="sm"
+            className="w-full sm:w-auto"
           >
             Next
           </Button>
@@ -538,18 +576,14 @@ function HotelRequestsScreen() {
       <HotelRequestModals
         showRejectModal={showRejectModal}
         showNeedsCompletionModal={showNeedsCompletionModal}
-        showDeleteModal={showDeleteModal}
         showDetailsModal={showDetailsModal}
         currentRequest={currentRequest}
         isHandling={handling}
-        isDeleting={deleting}
         onCloseReject={handleCloseReject}
         onCloseNeedsCompletion={handleCloseNeedsCompletion}
-        onCloseDelete={handleCloseDelete}
         onCloseDetails={handleCloseDetails}
         onConfirmReject={handleConfirmReject}
         onConfirmNeedsCompletion={handleConfirmNeedsCompletion}
-        onConfirmDelete={handleConfirmDelete}
       />
     </div>
   );

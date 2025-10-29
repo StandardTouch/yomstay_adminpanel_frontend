@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import AlertBox from "@/components/AlertBox";
 import { Button } from "@/components/ui/button";
+import HtmlContent from "@/components/ui/html-content";
 
 function HotelCard({ hotel, showHotel, showAlert }) {
   // Debug logging to see the actual hotel data structure
@@ -121,9 +122,10 @@ function HotelCard({ hotel, showHotel, showAlert }) {
           </div>
           <div className="border-t-2 pt-1 ">
             <p className="font-medium">Description</p>
-            <p className="text-sm text-muted-foreground">
-              {hotel.description || "No description available"}
-            </p>
+            <HtmlContent
+              content={hotel.description}
+              className="text-sm text-muted-foreground line-clamp-3"
+            />
           </div>
           <div className="border-t-2 pt-1">
             <p className="font-medium">

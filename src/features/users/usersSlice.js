@@ -12,54 +12,7 @@ export const fetchUsers = createAsyncThunk(
         throw new Error("API client is required");
       }
 
-      // Extract filter parameters
-      const {
-        search,
-        role,
-        hasProfileImage,
-        createdAfter,
-        createdBefore,
-        updatedAfter,
-        updatedBefore,
-        page = 1,
-        pageSize = 20,
-        sortBy = "createdAt",
-        sortOrder = "desc",
-        syncStatus,
-      } = filters;
-
-      // Use the StandardTouch UserApi usersGet method with options object
-      const opts = {
-        search,
-        role,
-        hasProfileImage,
-        createdAfter,
-        createdBefore,
-        updatedAfter,
-        updatedBefore,
-        page,
-        pageSize,
-        sortBy,
-        sortOrder,
-        syncStatus: syncStatus && syncStatus !== "all" ? syncStatus : undefined,
-      };
-
-      // Remove undefined values
-      Object.keys(opts).forEach(
-        (key) => opts[key] === undefined && delete opts[key]
-      );
-
-      const response = await apiClient.users.apiClient.callApi(
-        "/users",
-        "GET",
-        {}, // path params
-        opts, // query params
-        {}, // header params
-        {}, // form params
-        {}, // body
-        ["application/json"] // accepts
-      );
-      console.log("Fetch Users Response:", response);
+      const response = await apiClient.users.listUsers(filters);
 
       // Return only serializable data to avoid Redux warnings
       return {
@@ -80,61 +33,15 @@ export const createUser = createAsyncThunk(
   "users/createUser",
   async ({ userData, apiClient }, { rejectWithValue }) => {
     try {
-      if (!apiClient) {
+      if (!apiClient?.users) {
         throw new Error("API client is required");
       }
 
-      const {
-        email,
-        firstName,
-        lastName,
-        password,
-        role,
-        phone,
-        profileImage,
-        hotelId,
-      } = userData;
+      const { profileImage, ...userDataWithoutFile } = userData;
 
-      // Validate required fields
-      if (!email || !firstName || !lastName || !password || !role) {
-        throw new Error(
-          "Missing required fields: email, firstName, lastName, password, role"
-        );
-      }
-
-      // Debug logging
-      // console.log("Creating user with data:", {
-      //   email,
-      //   firstName,
-      //   lastName,
-      //   role,
-      //   phone,
-      //   hotelId,
-      //   hasProfileImage: profileImage instanceof File,
-      // });
-
-      // Use the StandardTouch generated client correctly as per backend guidance
-      const opts = {};
-
-      // Add optional fields to opts
-      if (phone) opts.phone = phone;
-      if (hotelId) opts.hotelId = hotelId;
-      if (profileImage && profileImage instanceof File) {
-        opts.profileImage = profileImage; // Pass File object directly
-      }
-
-      // Remove undefined values from opts
-      Object.keys(opts).forEach(
-        (key) => opts[key] === undefined && delete opts[key]
-      );
-
-      const response = await apiClient.users.usersPost(
-        email, // email (required)
-        firstName, // firstName (required)
-        lastName, // lastName (required)
-        password, // password (required)
-        role, // role (required)
-        opts // options object with optional fields
+      const response = await apiClient.users.createUser(
+        userDataWithoutFile,
+        profileImage
       );
 
       // Return only serializable data to avoid Redux warnings
@@ -147,24 +54,9 @@ export const createUser = createAsyncThunk(
     } catch (error) {
       console.error("Error creating user:", error);
 
-      // Log detailed error information for debugging
-      if (error?.response) {
-        console.error("API Error Response:", {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          data: error.response.data || error.body,
-        });
-
-        // Try to get response text for more details
-        if (error.response.data) {
-          console.error("Response data:", error.response.data);
-        }
-      } else if (error?.body) {
-        console.error("Error body:", error.body);
-      }
-
       // Handle specific error types
       if (
+        error.statusCode === 400 ||
         error.status === 400 ||
         error.message?.includes("400") ||
         error.message?.includes("Bad request")
@@ -173,6 +65,7 @@ export const createUser = createAsyncThunk(
       }
 
       if (
+        error.statusCode === 401 ||
         error.status === 401 ||
         error.message?.includes("401") ||
         error.message?.includes("Unauthorized")
@@ -194,72 +87,14 @@ export const updateUser = createAsyncThunk(
   "users/updateUser",
   async ({ id, userData, profileImage, apiClient }, { rejectWithValue }) => {
     try {
-      if (!apiClient) {
+      if (!apiClient?.users) {
         throw new Error("API client is required");
       }
 
-      console.log("updateUser thunk - Received ID:", id, "Type:", typeof id);
-      console.log("User data:", userData);
-
-      // Create FormData for multipart/form-data request
-      const formData = new FormData();
-
-      // Add user data fields
-      if (userData.email) formData.append("email", userData.email);
-      if (userData.firstName) formData.append("firstName", userData.firstName);
-      if (userData.lastName) formData.append("lastName", userData.lastName);
-      if (userData.phone) formData.append("phone", userData.phone);
-      if (userData.role) formData.append("role", userData.role);
-
-      // Add hotel associations based on role
-      // Handle ownedHotels for any role that can own hotels
-      if (userData.ownedHotels && Array.isArray(userData.ownedHotels)) {
-        userData.ownedHotels.forEach((hotelId, index) => {
-          formData.append(`ownedHotels[${index}]`, hotelId);
-        });
-      }
-
-      // Handle hotel staff associations
-      if (userData.hotelStaffs && Array.isArray(userData.hotelStaffs)) {
-        userData.hotelStaffs.forEach((staff, index) => {
-          formData.append(`hotelStaffs[${index}][hotelId]`, staff.hotelId);
-          formData.append(`hotelStaffs[${index}][role]`, staff.role || "staff");
-          formData.append(
-            `hotelStaffs[${index}][isActive]`,
-            staff.isActive !== undefined ? staff.isActive : true
-          );
-        });
-      }
-
-      // Add profile image if provided
-      if (profileImage && profileImage instanceof File) {
-        formData.append("profileImage", profileImage);
-      }
-
-      // Log FormData contents for debugging
-      console.log("Calling API with ID:", id, "and FormData entries:");
-      for (let [key, value] of formData.entries()) {
-        console.log(key, ":", value);
-      }
-
-      // Use the StandardTouch UserApi usersIdPut method
-      // The ID is passed as a path parameter, not in FormData
-      console.log("About to call usersIdPut with ID:", id, "Type:", typeof id);
-      console.log("ID is undefined?", id === undefined);
-      console.log("ID is null?", id === null);
-      console.log("ID is empty string?", id === "");
-
-      // Use the raw API client to make the request directly
-      // This bypasses the missing UsersIdPutRequest model
-      const response = await apiClient.users.apiClient.callApi(
-        `/users/${id}`,
-        "PUT",
-        {}, // path params
-        {}, // query params
-        {}, // header params
-        {}, // form params
-        formData, // body
-        ["application/json", "multipart/form-data"] // accepts
+      const response = await apiClient.users.updateUser(
+        id,
+        userData,
+        profileImage
       );
 
       // Return only serializable data to avoid Redux warnings
@@ -274,6 +109,8 @@ export const updateUser = createAsyncThunk(
 
       // Handle specific error types
       if (
+        error.statusCode === 400 ||
+        error.status === 400 ||
         error.message?.includes("400") ||
         error.message?.includes("Bad request")
       ) {
@@ -281,6 +118,8 @@ export const updateUser = createAsyncThunk(
       }
 
       if (
+        error.statusCode === 404 ||
+        error.status === 404 ||
         error.message?.includes("404") ||
         error.message?.includes("not found")
       ) {
@@ -288,6 +127,8 @@ export const updateUser = createAsyncThunk(
       }
 
       if (
+        error.statusCode === 401 ||
+        error.status === 401 ||
         error.message?.includes("401") ||
         error.message?.includes("Unauthorized")
       ) {
@@ -307,21 +148,11 @@ export const deleteUser = createAsyncThunk(
   "users/deleteUser",
   async ({ userId, apiClient }, { rejectWithValue }) => {
     try {
-      if (!apiClient) {
+      if (!apiClient?.users) {
         throw new Error("API client is required");
       }
 
-      // Use the raw API client for delete user
-      await apiClient.users.apiClient.callApi(
-        `/users/${userId}`,
-        "DELETE",
-        {}, // path params
-        {}, // query params
-        {}, // header params
-        {}, // form params
-        {}, // body
-        ["application/json"] // accepts
-      );
+      await apiClient.users.deleteUser(userId);
       return userId; // Return the deleted user ID
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -336,23 +167,11 @@ export const syncUsers = createAsyncThunk(
   "users/syncUsers",
   async ({ syncOptions = {}, apiClient }, { rejectWithValue }) => {
     try {
-      if (!apiClient) {
+      if (!apiClient?.users) {
         throw new Error("API client is required");
       }
 
-      const { forceUpdate = false, dryRun = false } = syncOptions;
-
-      // Use the raw API client for sync users
-      const response = await apiClient.users.apiClient.callApi(
-        "/users/sync",
-        "POST",
-        {}, // path params
-        {}, // query params
-        {}, // header params
-        {}, // form params
-        { forceUpdate, dryRun }, // body
-        ["application/json"] // accepts
-      );
+      const response = await apiClient.users.syncUsers(syncOptions);
 
       // Return only serializable data to avoid Redux warnings
       return {
@@ -366,6 +185,8 @@ export const syncUsers = createAsyncThunk(
 
       // If it's an authentication error, provide a helpful message
       if (
+        error.statusCode === 401 ||
+        error.status === 401 ||
         error.message?.includes("401") ||
         error.message?.includes("Unauthorized")
       ) {

@@ -91,12 +91,82 @@ const PaginationControls = memo(
 
 // Memoized loading skeleton
 const LoadingSkeleton = memo(() => (
-  <div className="flex flex-col gap-4">
-    {[...Array(3)].map((_, index) => (
-      <div key={index} className="animate-pulse">
-        <div className="bg-gray-200 h-32 rounded-lg"></div>
+  <div className="p-4 sm:p-8 w-full max-w-7xl mx-auto">
+    {/* Header Skeleton */}
+    <div className="mb-6">
+      <div className="flex justify-between items-center mb-4">
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
+        <div className="flex gap-2">
+          <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div>
+          <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded w-28 animate-pulse"></div>
+        </div>
       </div>
-    ))}
+
+      {/* Search Bar Skeleton */}
+      <div className="relative">
+        <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-full max-w-md animate-pulse"></div>
+      </div>
+    </div>
+
+    {/* Filter Section Skeleton (Collapsed state) */}
+    <div className="h-0 overflow-hidden mb-3"></div>
+
+    {/* Hotel Cards Skeleton */}
+    <div className="flex flex-col gap-4">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={index}
+          className="min-[800px]:flex-col min-[1010px]:flex-row flex-col gap-2 px-2 py-3 shadow-sm rounded-lg border animate-pulse"
+        >
+          {/* Image Section */}
+          <div className="w-full">
+            <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
+          </div>
+
+          {/* Content Section */}
+          <div className="flex flex-col w-full justify-between">
+            <div className="px-2 flex flex-col gap-4">
+              {/* Title and Rating */}
+              <div className="w-full flex justify-between items-start">
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-48"></div>
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+              </div>
+
+              {/* Description Section */}
+              <div className="border-t-2 pt-1">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-2"></div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+                </div>
+              </div>
+
+              {/* Address Section */}
+              <div className="border-t-2 pt-1">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-2"></div>
+                <div className="space-y-1">
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-40"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-36"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-2 pt-4">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* Pagination Skeleton */}
+    <div className="flex justify-center items-center gap-2 mt-6">
+      <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div>
+      <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
+      <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div>
+    </div>
   </div>
 ));
 

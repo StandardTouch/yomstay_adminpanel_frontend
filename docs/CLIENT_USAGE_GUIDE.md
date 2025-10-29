@@ -1,12 +1,13 @@
-# YomStay API JavaScript Client Usage Guide
+# YomStay API Axios Service Layer Guide
 
-This comprehensive guide explains how to use the auto-generated JavaScript client for the YomStay API, with specific patterns for the YomStay Admin Panel React application. The client is generated from OpenAPI specifications using inline JSDoc comments and handles all HTTP communication, authentication, and data serialization automatically.
+This comprehensive guide explains how to use the **axios-based service layer** for the YomStay API in the YomStay Admin Panel React application. We use a clean service layer pattern with axios for HTTP communication, authentication, and data serialization.
 
 ## Quick Start for YomStay Admin Panel
 
 If you're working on the YomStay Admin Panel, jump directly to:
 
-- [Redux Integration](#redux-integration-patterns)
+- [Service Layer Architecture](#service-layer-architecture)
+- [Redux Integration Patterns](#redux-integration-patterns)
 - [Admin Panel Architecture](#yomstay-admin-panel-architecture)
 - [Feature Development Workflow](#feature-development-workflow)
 
@@ -29,232 +30,191 @@ If you're working on the YomStay Admin Panel, jump directly to:
 
 ## Installation
 
-### From GitHub Packages (Private Package)
+### Install Axios
 
 ```bash
-npm install @StandardTouch/yomstay_api
+npm install axios
 ```
 
-**Authentication Required**: Since this is a private package, you need to authenticate with GitHub Packages first:
-
-```bash
-# Set up .npmrc file
-echo "@StandardTouch:registry=https://npm.pkg.github.com/" >> .npmrc
-echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> .npmrc
-echo "always-auth=true" >> .npmrc
-```
+That's it! No additional packages needed.
 
 ## Basic Setup
 
-### Import the Client
+### Service Layer Structure
 
-```javascript
-// ES6 Modules (Recommended)
-import { UserApi, HotelApi, ApiClient } from "@StandardTouch/yomstay_api";
+The YomStay Admin Panel uses a service layer pattern where each feature has its own service class:
 
-// CommonJS (Node.js)
-const { UserApi, HotelApi, ApiClient } = require("@StandardTouch/yomstay_api");
+```
+src/
+├── services/
+│   ├── config.js              # Axios instance configuration
+│   └── index.js               # Service factory (optional)
+├── features/
+│   ├── users/
+│   │   └── services/
+│   │       └── usersService.js
+│   ├── hotels/
+│   │   └── services/
+│   │       ├── hotelsService.js
+│   │       └── adminService.js
+│   └── [feature]/
+│       └── services/
+│           └── [feature]Service.js
 ```
 
-### Initialize the API Client
+### Axios Instance Configuration
 
 ```javascript
-// Create API client instance
-const apiClient = new ApiClient("https://api.yomstay.com/api/v1");
+// src/services/config.js
+import axios from "axios";
 
-// For local development
-const apiClient = new ApiClient("http://localhost:3000/api/v1");
+export const createApiClient = (baseURL, getToken) => {
+  const apiClient = axios.create({
+    baseURL,
+    timeout: 60000,
+    headers: { "Content-Type": "application/json" },
+  });
 
-// Initialize specific API services
-const userApi = new UserApi(apiClient);
-const hotelApi = new HotelApi(apiClient);
+  // Request interceptor - Add auth token
+  apiClient.interceptors.request.use(async (config) => {
+    const token = await getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+
+  // Response interceptor - Handle errors and return data
+  apiClient.interceptors.response.use(
+    (response) => response.data, // Return response.data directly
+    (error) => {
+      // Enhanced error handling
+      if (error.response) {
+        const enhancedError = {
+          message: error.response.data?.message || error.message,
+          statusCode: error.response.status,
+          data: error.response.data,
+        };
+        return Promise.reject(enhancedError);
+      }
+      return Promise.reject(error);
+    }
+  );
+
+  return apiClient;
+};
 ```
 
 ## Authentication
 
-### Bearer Token Authentication
+### Bearer Token Authentication (Automatic)
 
-The YomStay API uses JWT Bearer token authentication. Set the token after creating the client:
-
-```javascript
-const apiClient = new ApiClient("https://api.yomstay.com/api/v1");
-
-// Set authentication token
-apiClient.authentications.bearerAuth.accessToken = "your-jwt-token-here";
-
-// Initialize APIs with authenticated client
-const userApi = new UserApi(apiClient);
-```
-
-### Dynamic Token Management
+The YomStay API uses JWT Bearer token authentication. Authentication is handled automatically through axios interceptors:
 
 ```javascript
-class AuthManager {
-  constructor() {
-    this.apiClient = new ApiClient("https://api.yomstay.com/api/v1");
-    this.userApi = new UserApi(this.apiClient);
-  }
-
-  setToken(token) {
-    this.apiClient.authentications.bearerAuth.accessToken = token;
-  }
-
-  clearToken() {
-    this.apiClient.authentications.bearerAuth.accessToken = null;
-  }
-}
-
-const authManager = new AuthManager();
-authManager.setToken("your-jwt-token");
+// Authentication is automatic via request interceptor
+// The getToken function from Clerk is called before each request
+// No manual token management needed!
 ```
+
+### Token Refresh (Automatic)
+
+Tokens are automatically refreshed on each request via the interceptor in `createApiClient`. The `getToken` function from Clerk ensures you always have a fresh token - no manual management needed!
 
 ### Clerk Authentication Integration
 
-Since you're using Clerk for authentication, here's how to integrate it with the generated client:
+The Clerk integration is already set up in the `ApiContext`. Here's how it works:
 
-#### React Hook for Clerk + API Client
+#### Using Services in Components
 
 ```javascript
-import { useAuth } from "@clerk/nextjs"; // or @clerk/react
-import { UserApi, HotelApi, ApiClient } from "@StandardTouch/yomstay_api";
+import { useAuth } from "@clerk/clerk-react";
+import { useApi } from "../../../contexts/ApiContext";
 
-// Custom hook for authenticated API calls
-function useAuthenticatedApi() {
-  const { getToken, isSignedIn } = useAuth();
-
-  const createApiClient = async () => {
-    if (!isSignedIn) {
-      throw new Error("User must be signed in");
-    }
-
-    const apiClient = new ApiClient("https://api.yomstay.com/api/v1");
-
-    // Get JWT token from Clerk
-    const token = await getToken();
-    if (token) {
-      apiClient.authentications.bearerAuth.accessToken = token;
-    }
-
-    return {
-      userApi: new UserApi(apiClient),
-      hotelApi: new HotelApi(apiClient),
-      apiClient,
-    };
-  };
-
-  return { createApiClient, isSignedIn };
-}
-
-// Usage in component
 function UserManagement() {
-  const { createApiClient, isSignedIn } = useAuthenticatedApi();
+  const { isLoaded, isSignedIn } = useAuth();
+  const apiClient = useApi(); // Get all services
   const [users, setUsers] = useState([]);
 
   const handleCreateUser = async (userData) => {
-    if (!isSignedIn) return;
+    if (!isSignedIn || !apiClient) return;
 
-    const { userApi } = await createApiClient();
+    try {
+      // Use service method directly
+      const result = await apiClient.users.createUser(
+        userData,
+        userData.profileImage // File object or null
+      );
 
-    const result = await userApi.usersPost(
-      userData.email,
-      userData.firstName,
-      userData.lastName,
-      userData.password,
-      userData.role,
-      {
-        phone: userData.phone,
-        profileImage: userData.profileImage,
-      }
-    );
-
-    setUsers((prev) => [...prev, result.data]);
-    return result;
+      setUsers((prev) => [...prev, result.data]);
+      return result;
+    } catch (error) {
+      console.error("Failed to create user:", error);
+      throw error;
+    }
   };
 
   const loadUsers = async () => {
-    const { userApi } = await createApiClient();
-    const response = await userApi.usersGet({ page: 1, pageSize: 20 });
-    setUsers(response.data.users);
+    if (!apiClient) return;
+
+    const response = await apiClient.users.listUsers({
+      page: 1,
+      pageSize: 20,
+    });
+    setUsers(response.data?.users || []);
   };
 
   useEffect(() => {
-    if (isSignedIn) {
+    if (isLoaded && isSignedIn && apiClient) {
       loadUsers();
     }
-  }, [isSignedIn]);
+  }, [isLoaded, isSignedIn, apiClient]);
 }
 ```
 
-#### Clerk Auth Manager Class
+#### Service Class Example
 
 ```javascript
-class ClerkAuthManager {
-  constructor(baseUrl = "https://api.yomstay.com/api/v1") {
-    this.apiClient = new ApiClient(baseUrl);
-    this.userApi = new UserApi(this.apiClient);
-    this.hotelApi = new HotelApi(this.apiClient);
-    this.isAuthenticated = false;
+// src/features/users/services/usersService.js
+export class UsersService {
+  constructor(apiClient) {
+    this.apiClient = apiClient; // Authenticated axios instance
   }
 
-  async authenticate(getToken) {
-    try {
-      const token = await getToken();
-      if (token) {
-        this.apiClient.authentications.bearerAuth.accessToken = token;
-        this.isAuthenticated = true;
-        return true;
-      }
-      this.isAuthenticated = false;
-      return false;
-    } catch (error) {
-      console.error("Failed to get Clerk token:", error);
-      this.isAuthenticated = false;
-      return false;
+  async listUsers(filters = {}) {
+    const params = { ...filters };
+    // Remove undefined values
+    Object.keys(params).forEach(
+      (key) => params[key] === undefined && delete params[key]
+    );
+    return this.apiClient.get("/users", { params });
+  }
+
+  async createUser(userData, profileImage = null) {
+    const formData = new FormData();
+    formData.append("email", userData.email);
+    formData.append("firstName", userData.firstName);
+    formData.append("lastName", userData.lastName);
+    formData.append("password", userData.password);
+    formData.append("role", userData.role);
+
+    if (userData.phone) formData.append("phone", userData.phone);
+    if (profileImage instanceof File) {
+      formData.append("profileImage", profileImage);
     }
-  }
 
-  clearAuth() {
-    this.apiClient.authentications.bearerAuth.accessToken = null;
-    this.isAuthenticated = false;
-  }
-
-  async ensureAuthenticated(getToken) {
-    if (!this.isAuthenticated) {
-      await this.authenticate(getToken);
-    }
-    if (!this.isAuthenticated) {
-      throw new Error("Authentication required");
-    }
-  }
-
-  getUserApi() {
-    return this.userApi;
-  }
-
-  getHotelApi() {
-    return this.hotelApi;
+    return this.apiClient.post("/users", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   }
 }
 
-// Global instance
-const authManager = new ClerkAuthManager();
-
-// Usage in React component
+// Usage via ApiContext
 function MyComponent() {
-  const { getToken } = useAuth();
+  const apiClient = useApi(); // Get services from context
 
   const createUser = async (userData) => {
-    await authManager.ensureAuthenticated(getToken);
-    const userApi = authManager.getUserApi();
-
-    return await userApi.usersPost(
-      userData.email,
-      userData.firstName,
-      userData.lastName,
-      userData.password,
-      userData.role,
-      { phone: userData.phone }
-    );
+    return await apiClient.users.createUser(userData, userData.profileImage);
   };
 }
 ```
@@ -451,37 +411,35 @@ const UserCreationForm = () => {
 export default UserCreationForm;
 ```
 
-## Understanding API Methods
+## Understanding Service Methods
 
-### Method Naming Convention
+### Service Method Naming Convention
 
-The generated client creates methods based on your OpenAPI paths and HTTP methods:
+Service methods use descriptive, RESTful naming conventions:
 
-| HTTP Method          | Path           | Generated Method Name  |
-| -------------------- | -------------- | ---------------------- |
-| `POST /users`        | Create user    | `usersPost()`          |
-| `GET /users`         | List users     | `usersGet()`           |
-| `GET /users/{id}`    | Get user by ID | `usersIdGet(id)`       |
-| `PUT /users/{id}`    | Update user    | `usersIdPut(id, opts)` |
-| `DELETE /users/{id}` | Delete user    | `usersIdDelete(id)`    |
+| HTTP Method          | Endpoint       | Service Method Name      |
+| -------------------- | -------------- | ------------------------ |
+| `GET /users`         | List users     | `listUsers(filters)`     |
+| `POST /users`        | Create user    | `createUser(data, file)` |
+| `GET /users/{id}`    | Get user by ID | `getUser(id)`            |
+| `PUT /users/{id}`    | Update user    | `updateUser(id, data)`   |
+| `DELETE /users/{id}` | Delete user    | `deleteUser(id)`         |
 
-### Method Variants
+### Response Format
 
-Each method has two variants:
-
-1. **Simple Method**: Returns data directly
-2. **WithHttpInfo Method**: Returns data + HTTP response info
+All service methods return the response data directly (via axios interceptor):
 
 ```javascript
-// Simple method - returns data only
-const userData = await userApi.usersIdGet("user123");
+// Service method returns response.data
+const response = await apiClient.users.listUsers({ page: 1 });
 
-// WithHttpInfo method - returns {data, response}
-const { data: userData, response } = await userApi.usersIdGetWithHttpInfo(
-  "user123"
-);
-console.log("Status:", response.status);
-console.log("Headers:", response.headers);
+// Response structure:
+{
+  statusCode: 200,
+  data: { users: [...], total: 100, page: 1 },
+  message: "Users fetched successfully",
+  success: true
+}
 ```
 
 ## JSON Requests (application/json)
@@ -492,14 +450,10 @@ For endpoints that accept JSON data:
 
 ```javascript
 // Example: Sync users endpoint (application/json)
-const syncRequest = {
-  forceUpdate: true,
-  dryRun: false,
-};
-
 try {
-  const result = await userApi.usersSyncPost({
-    usersSyncPostRequest: syncRequest,
+  const result = await apiClient.users.syncUsers({
+    forceUpdate: true,
+    dryRun: false,
   });
   console.log("Sync result:", result);
 } catch (error) {
@@ -507,61 +461,62 @@ try {
 }
 ```
 
-### JSON with Authentication
+### JSON with Automatic Authentication
 
 ```javascript
-// Ensure token is set
-apiClient.authentications.bearerAuth.accessToken = "your-jwt-token";
+// Authentication is automatic via interceptor
+// No need to manually set tokens
 
-// Make authenticated JSON request
-const passwordChangeRequest = {
-  newPassword: "newSecurePassword123",
-  forceChange: true,
-  notifyUser: true,
+// Example: Create hotel request
+const requestData = {
+  firstName: "John",
+  lastName: "Doe",
+  email: "john@example.com",
+  name: "Grand Hotel",
+  starRating: "4",
+  numberOfRooms: "150",
+  address: "123 Main St",
+  postalCode: "12345",
+  countryId: "uuid-here",
+  cityId: "uuid-here",
+  phone: "+966501234567",
+  jobFunction: "Hotel Manager",
+  message: "We want to add our hotel",
 };
 
-const result = await userApi.usersUserIdPasswordPut(
-  "user_123456789",
-  passwordChangeRequest
-);
+const result = await apiClient.hotelRequests.createRequest(requestData);
 ```
 
 ## Form Data Requests (multipart/form-data)
 
 ### Understanding the User Creation Example
 
-Based on your Swagger specification, here's how to use the `POST /users` endpoint:
+The service layer handles FormData creation automatically:
 
 ```javascript
 /**
- * Your Swagger spec shows:
- * - Content-Type: multipart/form-data
+ * POST /users endpoint uses multipart/form-data
  * - Required: email, firstName, lastName, password, role
  * - Optional: phone, profileImage (binary file)
  */
 
-// Required parameters (passed as individual arguments)
-const email = "john.doe@example.com";
-const firstName = "John";
-const lastName = "Doe";
-const password = "securePassword123";
-const role = "user";
-
-// Optional parameters (passed in opts object)
-const opts = {
-  phone: "+966501234567",
-  profileImage: null, // We'll add file later
+// Create user with profile image
+const userData = {
+  email: "john.doe@example.com",
+  firstName: "John",
+  lastName: "Doe",
+  password: "securePassword123",
+  role: "user",
+  phone: "+966501234567", // Optional
 };
 
-// Create user without file
+const profileImageFile = fileInput.files[0]; // File object
+
 try {
-  const newUser = await userApi.usersPost(
-    email,
-    firstName,
-    lastName,
-    password,
-    role,
-    opts
+  // Service handles FormData creation automatically
+  const newUser = await apiClient.users.createUser(
+    userData,
+    profileImageFile // Pass File object or null
   );
   console.log("User created:", newUser);
 } catch (error) {
@@ -579,19 +534,20 @@ const fileInput = document.getElementById("profileImageInput");
 const selectedFile = fileInput.files[0];
 
 // Create user with profile image
-const opts = {
+const userData = {
+  email: "john.doe@example.com",
+  firstName: "John",
+  lastName: "Doe",
+  password: "securePassword123",
+  role: "user",
   phone: "+966501234567",
-  profileImage: selectedFile, // Pass File object directly
 };
 
+// Service handles FormData and Content-Type automatically
 try {
-  const newUser = await userApi.usersPost(
-    "john.doe@example.com",
-    "John",
-    "Doe",
-    "securePassword123",
-    "user",
-    opts
+  const newUser = await apiClient.users.createUser(
+    userData,
+    selectedFile // Pass File object directly
   );
   console.log("User created with image:", newUser);
 } catch (error) {
@@ -1288,7 +1244,7 @@ This section covers the specific patterns and architecture used in the YomStay A
 The YomStay Admin Panel uses:
 
 - **Redux Toolkit** for state management
-- **@StandardTouch/yomstay_api** generated client for API calls
+- **Axios** for HTTP requests with service layer pattern
 - **Clerk** authentication
 - **ShadCN/UI** components with Tailwind CSS
 - **React Router** for navigation
@@ -1298,16 +1254,22 @@ The YomStay Admin Panel uses:
 
 ```
 src/
-├── contexts/           # React contexts (API, theme, etc.)
-├── features/          # Feature-based modules
+├── services/          # Service layer infrastructure
+│   ├── config.js     # Axios instance configuration
+│   └── index.js      # Service factory (optional)
+├── contexts/         # React contexts (API, theme, etc.)
+│   └── ApiContext.jsx # Service provider
+├── features/         # Feature-based modules
 │   └── [feature]/
-│       ├── screens/   # Main feature screens
+│       ├── services/ # Feature-specific services
+│       │   └── [feature]Service.js
+│       ├── screens/ # Main feature screens
 │       ├── components/ # Feature-specific components
 │       ├── [feature]Slice.js    # Redux state management
 │       └── [feature]Selectors.js # Redux selectors
-├── components/        # Shared/reusable components
-│   └── ui/           # ShadCN UI components
-├── common/           # Common utilities & components
+├── components/       # Shared/reusable components
+│   └── ui/          # ShadCN UI components
+├── common/          # Common utilities & components
 ├── utils/            # Utility functions
 ├── hooks/            # Custom React hooks
 ├── layout/           # Layout components
@@ -1315,4 +1277,83 @@ src/
 └── lib/              # Library utilities
 ```
 
-This comprehensive guide covers all aspects of using the generated JavaScript client with your OpenAPI specifications. The examples are based on your actual Swagger documentation and provide practical, working code that you can adapt to your specific needs.
+## Service Layer Reference
+
+### Available Services
+
+#### UsersService
+
+- `listUsers(filters)` - GET /users
+- `createUser(userData, profileImage)` - POST /users (multipart/form-data)
+- `updateUser(id, userData, profileImage)` - PUT /users/:id (multipart/form-data)
+- `deleteUser(id)` - DELETE /users/:id
+- `syncUsers(options)` - POST /users/sync
+
+#### HotelsService
+
+- `listHotels(filters)` - GET /hotels
+- `getHotel(id)` - GET /hotels/:id
+- `createHotel(hotelData)` - POST /hotels
+- `updateHotel(id, hotelData)` - PUT /hotels/:id
+- `deleteHotel(id)` - DELETE /hotels/:id
+
+#### AdminService
+
+- `getHotelById(id)` - GET /admin/hotels/:id
+- `updateHotel(id, updates)` - PUT /admin/hotels/:id
+- `getPlatformSettings()` - GET /admin/platform-settings
+- `updatePlatformSettings(data)` - PUT /admin/platform-settings
+- `listHotelConditions()` - GET /admin/hotel-conditions
+- `getHotelCondition(id)` - GET /admin/hotel-conditions/:id
+- `createHotelCondition(data)` - POST /admin/hotel-conditions
+- `updateHotelCondition(id, data)` - PUT /admin/hotel-conditions/:id
+- `deleteHotelCondition(id)` - DELETE /admin/hotel-conditions/:id
+
+#### LocationsService
+
+- `listCountries(search)` - GET /location/countries
+- `listStates(countryId, search)` - GET /location/states
+- `listCities(params)` - GET /location/cities
+
+#### HotelRequestsService
+
+- `listRequests(filters)` - GET /hotel-requests
+- `createRequest(requestData)` - POST /hotel-requests
+- `handleRequest(id, status)` - PATCH /hotel-requests/:id/approve-or-reject
+
+### Hotel Request Creation Example
+
+Based on the Swagger documentation:
+
+```javascript
+// Required fields
+const requestData = {
+  firstName: "John",
+  lastName: "Doe",
+  email: "john.doe@example.com",
+  name: "Grand Hotel Riyadh",
+  starRating: "4",
+  numberOfRooms: "150",
+  address: "King Fahd Road, Riyadh",
+  postalCode: "12345",
+  countryId: "123e4567-e89b-12d3-a456-426614174000",
+  cityId: "789e0123-e89b-12d3-a456-426614174000",
+};
+
+// Optional fields
+requestData.jobFunction = "Hotel Manager";
+requestData.phone = "+966501234567";
+requestData.managementCompany = "false";
+requestData.message = "We would like to add our new hotel to the platform";
+requestData.stateId = "456e7890-e89b-12d3-a456-426614174000";
+
+// Create hotel request
+try {
+  const result = await apiClient.hotelRequests.createRequest(requestData);
+  console.log("Hotel request created:", result.data);
+} catch (error) {
+  console.error("Failed to create hotel request:", error);
+}
+```
+
+This comprehensive guide covers all aspects of using the axios-based service layer with the YomStay API. The examples are based on your actual Swagger documentation and provide practical, working code that you can adapt to your specific needs.

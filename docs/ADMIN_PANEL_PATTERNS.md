@@ -1,6 +1,6 @@
 # YomStay Admin Panel - Redux & API Integration Patterns
 
-This document extends the CLIENT_USAGE_GUIDE.md with specific patterns for the YomStay Admin Panel.
+This document provides specific patterns for the YomStay Admin Panel using **axios-based service layer**.
 
 ## Redux Integration Patterns
 
@@ -20,26 +20,16 @@ export const fetchUsers = createAsyncThunk(
         throw new Error("API client is required");
       }
 
-      // Build opts object for StandardTouch API
-      const opts = {
-        search: filters.search,
-        role: filters.role,
-        page: filters.page,
-        pageSize: filters.pageSize,
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder,
-        hasProfileImage: filters.hasProfileImage,
-        createdAfter: filters.createdAfter,
-        hotelId: filters.hotelId,
+      // Call service method directly - filters are handled in the service
+      const response = await apiClient.users.listUsers(filters);
+
+      // Return only serializable data to avoid Redux warnings
+      return {
+        statusCode: response.statusCode,
+        data: response.data ? JSON.parse(JSON.stringify(response.data)) : null,
+        message: response.message,
+        success: response.success,
       };
-
-      // Remove undefined values
-      Object.keys(opts).forEach(
-        (key) => opts[key] === undefined && delete opts[key]
-      );
-
-      const response = await apiClient.users.usersGet(opts);
-      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch users");
     }
@@ -48,38 +38,28 @@ export const fetchUsers = createAsyncThunk(
 
 export const createUser = createAsyncThunk(
   "users/createUser",
-  async (userData, { rejectWithValue }) => {
+  async ({ userData, apiClient }, { rejectWithValue }) => {
     try {
-      const {
-        apiClient,
-        email,
-        firstName,
-        lastName,
-        password,
-        role,
-        ...options
-      } = userData;
-
       if (!apiClient?.users) {
         throw new Error("API client is required");
       }
 
-      // Build opts object for optional parameters
-      const opts = {};
-      if (options.phone) opts.phone = options.phone;
-      if (options.profileImage instanceof File) {
-        opts.profileImage = options.profileImage;
-      }
+      // Extract profileImage separately
+      const { profileImage, ...userDataWithoutFile } = userData;
 
-      const response = await apiClient.users.usersPost(
-        email,
-        firstName,
-        lastName,
-        password,
-        role,
-        opts
+      // Call service method - handles FormData for multipart/form-data
+      const response = await apiClient.users.createUser(
+        userDataWithoutFile,
+        profileImage
       );
-      return response;
+
+      // Return only serializable data
+      return {
+        statusCode: response.statusCode,
+        data: response.data ? JSON.parse(JSON.stringify(response.data)) : null,
+        message: response.message,
+        success: response.success,
+      };
     } catch (error) {
       return rejectWithValue(error.message || "Failed to create user");
     }
@@ -199,52 +179,42 @@ export const selectUsersPagination = createSelector(
 // src/contexts/ApiContext.jsx
 import React, { createContext, useContext, useMemo } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import {
-  ApiClient,
-  UserApi,
-  HotelApi,
-  HotelAmenityApi,
-  LocationApi,
-  CurrencyApi,
-  WebhooksApi,
-} from "@StandardTouch/yomstay_api";
+import { createApiClient } from "../services/config";
+import { UsersService } from "../features/users/services/usersService";
+import { HotelsService } from "../features/hotels/services/hotelsService";
+import { AdminService } from "../features/hotels/services/adminService";
+import { LocationsService } from "../features/locations/services/locationsService";
+import { HotelRequestsService } from "../features/hotel_requests/services/hotelRequestsService";
 
 const ApiContext = createContext(null);
 
 export const ApiProvider = ({ children }) => {
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn, isLoaded } = useAuth();
 
-  const apiClient = useMemo(() => {
-    const client = new ApiClient(process.env.REACT_APP_API_URL);
+  const apis = useMemo(() => {
+    if (!isSignedIn || !isLoaded) {
+      return null;
+    }
 
-    // Set up token refresh
-    const originalCallApi = client.callApi;
-    client.callApi = async function (...args) {
-      try {
-        const token = await getToken();
-        if (token) {
-          this.authentications.bearerAuth.accessToken = token;
-        }
-      } catch (error) {
-        console.warn("Failed to refresh token:", error);
-      }
-      return originalCallApi.apply(this, args);
-    };
+    // Create authenticated axios instance
+    const baseURL =
+      import.meta.env.VITE_API_BASE_URL || "https://api.yomstay.com/api/v1";
+    const apiClient = createApiClient(baseURL, getToken);
 
+    // Return all service instances
     return {
-      users: new UserApi(client),
-      hotels: new HotelApi(client),
-      hotelAmenities: new HotelAmenityApi(client),
-      locations: new LocationApi(client),
-      currencies: new CurrencyApi(client),
-      webhooks: new WebhooksApi(client),
-      // Add more API instances as needed
-    };
-  }, [getToken]);
+      users: new UsersService(apiClient),
+      hotels: new HotelsService(apiClient),
+      admin: new AdminService(apiClient),
+      locations: new LocationsService(apiClient),
+      hotelRequests: new HotelRequestsService(apiClient),
 
-  return (
-    <ApiContext.Provider value={apiClient}>{children}</ApiContext.Provider>
-  );
+      // Legacy support - keep apiClient for any remaining direct calls
+      apiClient,
+    };
+  }, [getToken, isSignedIn, isLoaded]);
+
+  return <ApiContext.Provider value={apis}>{children}</ApiContext.Provider>;
 };
 
 export const useApi = () => {
@@ -339,7 +309,80 @@ const UsersScreen = () => {
 export default UsersScreen;
 ```
 
-## Key Rules for Generated Client Usage
+## Service Layer Architecture
+
+### Service Structure
+
+Each feature has its own service class in `src/features/[feature]/services/[feature]Service.js`:
+
+```javascript
+// src/features/users/services/usersService.js
+export class UsersService {
+  constructor(apiClient) {
+    this.apiClient = apiClient; // Authenticated axios instance
+  }
+
+  async listUsers(filters = {}) {
+    // Handle query parameters, remove undefined values
+    const params = { ...filters };
+    Object.keys(params).forEach(
+      (key) => params[key] === undefined && delete params[key]
+    );
+
+    return this.apiClient.get("/users", { params });
+  }
+
+  async createUser(userData, profileImage = null) {
+    // Handle multipart/form-data for file uploads
+    const formData = new FormData();
+    formData.append("email", userData.email);
+    formData.append("firstName", userData.firstName);
+    // ... other fields
+
+    if (profileImage instanceof File) {
+      formData.append("profileImage", profileImage);
+    }
+
+    return this.apiClient.post("/users", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  }
+}
+```
+
+### Axios Instance Configuration
+
+```javascript
+// src/services/config.js
+import axios from "axios";
+
+export const createApiClient = (baseURL, getToken) => {
+  const apiClient = axios.create({
+    baseURL,
+    timeout: 60000,
+    headers: { "Content-Type": "application/json" },
+  });
+
+  // Request interceptor - Add auth token
+  apiClient.interceptors.request.use(async (config) => {
+    const token = await getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+
+  // Response interceptor - Return data directly
+  apiClient.interceptors.response.use(
+    (response) => response.data, // Return response.data
+    (error) => Promise.reject(error)
+  );
+
+  return apiClient;
+};
+```
+
+## Key Rules for Service Usage
 
 ### ✅ CORRECT Patterns
 
@@ -353,50 +396,39 @@ dispatch(
   })
 );
 
-// 2. Use generated client methods directly
-const response = await apiClient.users.usersPost(
-  email, // Required parameter
-  firstName, // Required parameter
-  lastName, // Required parameter
-  password, // Required parameter
-  role, // Required parameter
-  opts // Options object with optional fields
-);
+// 2. Use service methods directly
+const response = await apiClient.users.listUsers(filters);
+const response = await apiClient.users.createUser(userData, profileImage);
 
 // 3. Pass File objects directly for uploads
-const opts = {};
-if (profileImage instanceof File) {
-  opts.profileImage = profileImage; // Let client handle multipart
-}
+// Service handles FormData creation automatically
+await apiClient.users.createUser(userData, profileImageFile);
 
-// 4. Build opts object properly
-const opts = {
-  search: filters.search,
-  role: filters.role,
-  page: filters.page,
-};
-// Remove undefined values
-Object.keys(opts).forEach((key) => opts[key] === undefined && delete opts[key]);
+// 4. Service methods handle parameter cleaning
+// No need to remove undefined values manually - service does it
+await apiClient.users.listUsers({ search, role, page });
 ```
 
 ### ❌ WRONG Patterns
 
 ```javascript
 // 1. Missing apiClient
-dispatch(fetchUsers({
-  search: "john",
-  role: "user", // Missing apiClient!
-}));
+dispatch(
+  fetchUsers({
+    search: "john",
+    role: "user", // Missing apiClient!
+  })
+);
 
-// 2. Using raw callApi instead of generated methods
-const response = await apiClient.users.apiClient.callApi(/*...*/);
+// 2. Using axios directly instead of services
+const response = await axios.get("/users");
 
-// 3. Manually creating FormData
+// 3. Manually creating FormData (let service handle it)
 const formData = new FormData();
-formData.append('profileImage', profileImage);
+await apiClient.users.createUser(formData); // Wrong pattern
 
-// 4. Setting Content-Type manually for file uploads
-headers: { 'Content-Type': 'multipart/form-data' }
+// 4. Calling service with wrong parameters
+await apiClient.users.createUser(userData.profileImage); // Wrong - pass separately
 ```
 
 ## Toast Integration
@@ -431,18 +463,128 @@ const handleAsyncOperation = async () => {
 };
 ```
 
+## Service Layer Pattern
+
+### Creating a New Service
+
+```javascript
+// src/features/[feature]/services/[feature]Service.js
+export class FeatureService {
+  constructor(apiClient) {
+    this.apiClient = apiClient;
+  }
+
+  async listResources(filters = {}) {
+    const params = { ...filters };
+    // Remove undefined values
+    Object.keys(params).forEach(
+      (key) => params[key] === undefined && delete params[key]
+    );
+    return this.apiClient.get("/endpoint", { params });
+  }
+
+  async createResource(data) {
+    return this.apiClient.post("/endpoint", data);
+  }
+
+  async updateResource(id, data) {
+    return this.apiClient.put(`/endpoint/${id}`, data);
+  }
+
+  async deleteResource(id) {
+    return this.apiClient.delete(`/endpoint/${id}`);
+  }
+}
+```
+
+### Adding Service to ApiContext
+
+```javascript
+// src/contexts/ApiContext.jsx
+import { FeatureService } from "../features/[feature]/services/[feature]Service";
+
+// In ApiProvider
+return {
+  // ... other services
+  feature: new FeatureService(apiClient),
+};
+```
+
+## Hotel Request Example
+
+### Creating a Hotel Request
+
+```javascript
+// In Redux slice
+export const createHotelRequest = createAsyncThunk(
+  "hotelRequests/createHotelRequest",
+  async ({ requestData, apiClient }, { rejectWithValue }) => {
+    try {
+      if (!apiClient?.hotelRequests) {
+        throw new Error("API client is required");
+      }
+
+      const response = await apiClient.hotelRequests.createRequest(requestData);
+
+      return {
+        statusCode: response.statusCode,
+        data: response.data,
+        message: response.message,
+        success: response.success,
+      };
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to create hotel request");
+    }
+  }
+);
+
+// In component
+const handleSubmit = async (formData) => {
+  try {
+    const result = await dispatch(
+      createHotelRequest({
+        requestData: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          name: formData.hotelName,
+          starRating: formData.starRating,
+          numberOfRooms: formData.numberOfRooms,
+          address: formData.address,
+          postalCode: formData.postalCode,
+          countryId: formData.countryId,
+          cityId: formData.cityId,
+          stateId: formData.stateId,
+          phone: formData.phone,
+          jobFunction: formData.jobFunction,
+          message: formData.message,
+          managementCompany: formData.managementCompany,
+        },
+        apiClient,
+      })
+    ).unwrap();
+
+    showSuccess("Hotel request submitted successfully!");
+    return result;
+  } catch (error) {
+    showError(error.message || "Failed to submit hotel request");
+  }
+};
+```
+
 ## Development Workflow
 
 ### New Feature Checklist
 
 1. ✅ Create feature directory: `src/features/[feature]/`
-2. ✅ Add Redux slice with async thunks
-3. ✅ Create selectors file with memoized selectors
-4. ✅ Add to root reducer
-5. ✅ Create main screen component
-6. ✅ Add feature-specific components
-7. ✅ Integrate with API context
-8. ✅ Add proper error handling
-9. ✅ Test all functionality
+2. ✅ Create service class: `src/features/[feature]/services/[feature]Service.js`
+3. ✅ Add service to ApiContext
+4. ✅ Add Redux slice with async thunks calling service methods
+5. ✅ Create selectors file with memoized selectors
+6. ✅ Add to root reducer
+7. ✅ Create main screen component
+8. ✅ Add feature-specific components
+9. ✅ Add proper error handling
+10. ✅ Test all functionality
 
 This pattern ensures consistency across all features in the YomStay Admin Panel.

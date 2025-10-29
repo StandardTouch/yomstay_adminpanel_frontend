@@ -9,11 +9,9 @@ export const selectHotelRequestsError = (state) => state.hotelRequests.error;
 
 // Action state selectors
 export const selectHandling = (state) => state.hotelRequests.handling;
-export const selectDeleting = (state) => state.hotelRequests.deleting;
 
 // Action error selectors
 export const selectHandleError = (state) => state.hotelRequests.handleError;
-export const selectDeleteError = (state) => state.hotelRequests.deleteError;
 
 // Computed selectors
 export const selectHotelRequestsByStatus = createSelector(
@@ -190,17 +188,17 @@ export const selectHotelRequestById = createSelector(
 
 // Loading states
 export const selectAnyLoading = createSelector(
-  [selectHotelRequestsLoading, selectHandling, selectDeleting],
-  (loading, handling, deleting) => {
-    return loading || handling || deleting;
+  [selectHotelRequestsLoading, selectHandling],
+  (loading, handling) => {
+    return loading || handling;
   }
 );
 
 // Error states
 export const selectAnyError = createSelector(
-  [selectHotelRequestsError, selectHandleError, selectDeleteError],
-  (error, handleError, deleteError) => {
-    return error || handleError || deleteError;
+  [selectHotelRequestsError, selectHandleError],
+  (error, handleError) => {
+    return error || handleError;
   }
 );
 

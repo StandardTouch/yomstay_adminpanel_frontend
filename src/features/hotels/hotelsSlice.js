@@ -8,61 +8,15 @@ export const fetchHotels = createAsyncThunk(
       const { apiClient, ...filters } = queryParams;
 
       if (!apiClient?.hotels) {
-        throw new Error("API client is required");
+        throw new Error("API client hotels instance is missing");
       }
 
-      // Extract filter parameters
-      const {
-        search,
-        city,
-        state,
-        country,
-        status,
-        lat,
-        lng,
-        page = 1,
-        pageSize = 20,
-      } = filters;
-
-      // Build opts object for StandardTouch API
-      const opts = {
-        search,
-        city,
-        state,
-        country,
-        status,
-        lat,
-        lng,
-        page,
-        pageSize,
-        // Try to include images if the API supports it
-        include: "images",
-      };
-
-      // Remove undefined and empty string values
-      Object.keys(opts).forEach(
-        (key) =>
-          (opts[key] === undefined || opts[key] === "") && delete opts[key]
-      );
-
-      const response = await apiClient.hotels.hotelsGet(opts);
+      const response = await apiClient.hotels.listHotels(filters);
 
       // Debug logging to see the actual API response
       console.log("fetchHotels - API response:", response);
       console.log("fetchHotels - response.data:", response.data);
       console.log("fetchHotels - response.data.hotels:", response.data?.hotels);
-      console.log(
-        "fetchHotels - first hotel structure:",
-        response.data?.hotels?.[0]
-      );
-      console.log(
-        "fetchHotels - first hotel images:",
-        response.data?.hotels?.[0]?.images
-      );
-      console.log(
-        "fetchHotels - first hotel featuredImage:",
-        response.data?.hotels?.[0]?.featuredImage
-      );
 
       // Return only serializable data to avoid Redux warnings
       return {
@@ -86,7 +40,7 @@ export const createHotel = createAsyncThunk(
         throw new Error("API client is required");
       }
 
-      const response = await apiClient.hotels.hotelsPost(hotelData);
+      const response = await apiClient.hotels.createHotel(hotelData);
 
       // Return only serializable data to avoid Redux warnings
       return {
@@ -110,7 +64,7 @@ export const updateHotel = createAsyncThunk(
         throw new Error("API client is required");
       }
 
-      const response = await apiClient.hotels.hotelsIdPut(hotelId, hotelData);
+      const response = await apiClient.hotels.updateHotel(hotelId, hotelData);
 
       // Return only serializable data to avoid Redux warnings
       return {
@@ -134,7 +88,7 @@ export const deleteHotel = createAsyncThunk(
         throw new Error("API client is required");
       }
 
-      const response = await apiClient.hotels.hotelsIdDelete(hotelId);
+      const response = await apiClient.hotels.deleteHotel(hotelId);
       return { response, hotelId };
     } catch (error) {
       return rejectWithValue(error.message || "Failed to delete hotel");
@@ -162,7 +116,7 @@ export const fetchHotelsForDropdown = createAsyncThunk(
         pageSize = 100, // Larger page size for dropdown
       } = filters;
 
-      const opts = {
+      const queryFilters = {
         search,
         city,
         state,
@@ -172,12 +126,13 @@ export const fetchHotelsForDropdown = createAsyncThunk(
       };
 
       // Remove undefined and empty string values
-      Object.keys(opts).forEach(
+      Object.keys(queryFilters).forEach(
         (key) =>
-          (opts[key] === undefined || opts[key] === "") && delete opts[key]
+          (queryFilters[key] === undefined || queryFilters[key] === "") &&
+          delete queryFilters[key]
       );
 
-      const response = await apiClient.hotels.hotelsGet(opts);
+      const response = await apiClient.hotels.listHotels(queryFilters);
 
       // Transform response for dropdown usage and ensure serializability
       if (response.success && response.data?.hotels) {

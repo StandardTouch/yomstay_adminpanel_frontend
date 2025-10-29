@@ -1,7 +1,17 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AddButton from "../../../../components/AddButton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { Spinner } from "../../../../common/components/spinner";
 
 // Import optimized section components
@@ -19,13 +29,29 @@ import HotelDocumentsSection from "./components/HotelDocumentsSection";
 
 const OptimizedSingleHotel = ({
   hotel,
-  setShow,
-  onAddHotel,
+  onUpdateOverview,
+  onUpdateAmenities,
+  onUpdateThematics,
+  onUpdateConditions,
+  onUpdateTaxes,
+  updatingStates = {},
+  onUnsavedChanges,
   defaultAmenities = [],
-  updating = false,
 }) => {
-  // Initialize fields with safe defaults
-  const [fields, setFields] = useState({
+  // Tab switching and unsaved changes
+  const [currentTab, setCurrentTab] = useState("overview");
+  const [showTabSwitchDialog, setShowTabSwitchDialog] = useState(false);
+  const [pendingTab, setPendingTab] = useState(null);
+  const [sectionHasChanges, setSectionHasChanges] = useState({
+    overview: false,
+    amenities: false,
+    thematics: false,
+    conditions: false,
+    taxes: false,
+  });
+
+  // Section-specific states
+  const [overviewFields, setOverviewFields] = useState({
     name: hotel?.name || "",
     description: hotel?.description || "",
     address: hotel?.address || "",
@@ -34,26 +60,48 @@ const OptimizedSingleHotel = ({
     city: hotel?.city?.name || "",
     country: hotel?.country?.name || "",
     countryId: hotel?.country?.id || "",
-    images: hotel?.images || [],
+    stateId: hotel?.state?.id || "",
+    cityId: hotel?.city?.id || "",
     starRating: hotel?.starRating || 0,
     numberOfRooms: hotel?.numberOfRooms || 0,
     postalCode: hotel?.postalCode || "",
-    amenities: hotel?.amenities || [],
-    faq: hotel?.faq || [],
-    reviews: hotel?.reviews || [],
-    // New fields from API
     status: hotel?.status || "pending",
     location: hotel?.location || { lat: null, lng: null },
+    freeCancellationPolicy: hotel?.freeCancellationPolicy || false,
+    countryCode: hotel?.countryCode || "",
+  });
+
+  const [amenitiesFields, setAmenitiesFields] = useState({
+    amenities: hotel?.amenities || [],
+    faq: hotel?.faq || [],
+  });
+
+  const [thematicsFields, setThematicsFields] = useState({
+    thematics: hotel?.thematics || [],
+  });
+
+  const [conditionsFields, setConditionsFields] = useState({
+    conditions: hotel?.conditions || [],
+  });
+
+  const [taxesFields, setTaxesFields] = useState({
     taxes: hotel?.taxes || [],
     platform: hotel?.platform || {
       commissionPercentage: 0,
       platformTaxPercentage: 0,
     },
+  });
+
+  // Separate states for read-only or different endpoints
+  const [imagesFields, setImagesFields] = useState({
+    images: hotel?.images || [],
+  });
+
+  const [roomsFields, setRoomsFields] = useState({
     rooms: hotel?.rooms || [],
-    freeCancellationPolicy: hotel?.freeCancellationPolicy || false,
-    // Latest API additions
-    thematics: hotel?.thematics || [],
-    conditions: hotel?.conditions || [],
+  });
+
+  const [documentsFields, setDocumentsFields] = useState({
     documentRequirements: hotel?.documentRequirements || [],
     documentProgress: hotel?.documentProgress || {
       totalRequired: 0,
@@ -63,10 +111,14 @@ const OptimizedSingleHotel = ({
     },
   });
 
-  // Update fields when hotel data loads
+  const [reviewsFields] = useState({
+    reviews: hotel?.reviews || [],
+  });
+
+  // Update section fields when hotel data loads/changes
   useEffect(() => {
     if (hotel) {
-      setFields({
+      setOverviewFields({
         name: hotel?.name || "",
         description: hotel?.description || "",
         address: hotel?.address || "",
@@ -77,26 +129,45 @@ const OptimizedSingleHotel = ({
         countryId: hotel?.country?.id || "",
         stateId: hotel?.state?.id || "",
         cityId: hotel?.city?.id || "",
-        images: hotel?.images || [],
         starRating: hotel?.starRating || 0,
         numberOfRooms: hotel?.numberOfRooms || 0,
         postalCode: hotel?.postalCode || "",
-        amenities: hotel?.amenities || [],
-        faq: hotel?.faq || [],
-        reviews: hotel?.reviews || [],
-        // New fields from API
         status: hotel?.status || "pending",
         location: hotel?.location || { lat: null, lng: null },
+        freeCancellationPolicy: hotel?.freeCancellationPolicy || false,
+        countryCode: hotel?.countryCode || "",
+      });
+
+      setAmenitiesFields({
+        amenities: hotel?.amenities || [],
+        faq: hotel?.faq || [],
+      });
+
+      setThematicsFields({
+        thematics: hotel?.thematics || [],
+      });
+
+      setConditionsFields({
+        conditions: hotel?.conditions || [],
+      });
+
+      setTaxesFields({
         taxes: hotel?.taxes || [],
         platform: hotel?.platform || {
           commissionPercentage: 0,
           platformTaxPercentage: 0,
         },
+      });
+
+      setImagesFields({
+        images: hotel?.images || [],
+      });
+
+      setRoomsFields({
         rooms: hotel?.rooms || [],
-        freeCancellationPolicy: hotel?.freeCancellationPolicy || false,
-        // Latest API additions
-        thematics: hotel?.thematics || [],
-        conditions: hotel?.conditions || [],
+      });
+
+      setDocumentsFields({
         documentRequirements: hotel?.documentRequirements || [],
         documentProgress: hotel?.documentProgress || {
           totalRequired: 0,
@@ -105,273 +176,608 @@ const OptimizedSingleHotel = ({
           completionPercentage: 0,
         },
       });
+
+      // Reset unsaved changes tracking when hotel data updates
+      setSectionHasChanges({
+        overview: false,
+        amenities: false,
+        thematics: false,
+        conditions: false,
+        taxes: false,
+      });
     }
   }, [hotel]);
 
-  // Memoized field change handler
-  const handleFieldChange = useCallback((key, value) => {
-    setFields((prev) => ({ ...prev, [key]: value }));
+  // Notify parent of unsaved changes
+  useEffect(() => {
+    const hasAnyChanges = Object.values(sectionHasChanges).some(
+      (changed) => changed
+    );
+    onUnsavedChanges?.(hasAnyChanges);
+  }, [sectionHasChanges, onUnsavedChanges]);
+
+  // Tab switching handler with unsaved changes check
+  const handleTabChange = useCallback(
+    (newTab) => {
+      const currentSection = getCurrentSection(currentTab);
+      if (currentSection && sectionHasChanges[currentSection]) {
+        setPendingTab(newTab);
+        setShowTabSwitchDialog(true);
+      } else {
+        setCurrentTab(newTab);
+      }
+    },
+    [currentTab, sectionHasChanges]
+  );
+
+  const getCurrentSection = (tab) => {
+    const sectionMap = {
+      overview: "overview",
+      amenities: "amenities",
+      thematics: "thematics",
+      conditions: "conditions",
+      financial: "taxes",
+    };
+    return sectionMap[tab];
+  };
+
+  const handleConfirmTabSwitch = useCallback(() => {
+    setShowTabSwitchDialog(false);
+    if (pendingTab) {
+      // Reset unsaved changes for current section
+      const currentSection = getCurrentSection(currentTab);
+      if (currentSection) {
+        setSectionHasChanges((prev) => ({ ...prev, [currentSection]: false }));
+      }
+      setCurrentTab(pendingTab);
+      setPendingTab(null);
+    }
+  }, [pendingTab, currentTab]);
+
+  // Section-specific update handlers
+  const handleOverviewChange = useCallback((key, value) => {
+    setOverviewFields((prev) => ({ ...prev, [key]: value }));
+    setSectionHasChanges((prev) => ({ ...prev, overview: true }));
   }, []);
 
-  // Memoized section update handlers
-  const handleUpdateImages = useCallback(
-    (images) => {
-      handleFieldChange("images", images);
-    },
-    [handleFieldChange]
-  );
+  const handleAmenitiesChange = useCallback((amenities) => {
+    setAmenitiesFields((prev) => ({ ...prev, amenities }));
+    setSectionHasChanges((prev) => ({ ...prev, amenities: true }));
+  }, []);
 
-  const handleUpdateAmenities = useCallback(
-    (amenities) => {
-      handleFieldChange("amenities", amenities);
-    },
-    [handleFieldChange]
-  );
+  const handleFaqsChange = useCallback((faq) => {
+    setAmenitiesFields((prev) => ({ ...prev, faq }));
+    setSectionHasChanges((prev) => ({ ...prev, amenities: true }));
+  }, []);
 
-  const handleUpdateFaqs = useCallback(
-    (faqs) => {
-      handleFieldChange("faq", faqs);
-    },
-    [handleFieldChange]
-  );
+  const handleThematicsChange = useCallback((thematics) => {
+    setThematicsFields({ thematics });
+    setSectionHasChanges((prev) => ({ ...prev, thematics: true }));
+  }, []);
 
-  const handleUpdateRooms = useCallback(
-    (rooms) => {
-      handleFieldChange("rooms", rooms);
-    },
-    [handleFieldChange]
-  );
+  const handleConditionsChange = useCallback((conditions) => {
+    setConditionsFields({ conditions });
+    setSectionHasChanges((prev) => ({ ...prev, conditions: true }));
+  }, []);
 
-  const handleUpdateTaxes = useCallback(
-    (taxes) => {
-      handleFieldChange("taxes", taxes);
-    },
-    [handleFieldChange]
-  );
+  const handleTaxesChange = useCallback((taxes) => {
+    setTaxesFields((prev) => ({ ...prev, taxes }));
+    setSectionHasChanges((prev) => ({ ...prev, taxes: true }));
+  }, []);
 
-  const handleUpdatePlatform = useCallback(
-    (platform) => {
-      handleFieldChange("platform", platform);
-    },
-    [handleFieldChange]
-  );
+  const handlePlatformChange = useCallback((platform) => {
+    setTaxesFields((prev) => ({ ...prev, platform }));
+    setSectionHasChanges((prev) => ({ ...prev, taxes: true }));
+  }, []);
 
-  const handleUpdateThematics = useCallback(
-    (thematics) => {
-      handleFieldChange("thematics", thematics);
-    },
-    [handleFieldChange]
-  );
+  // Image handlers (different endpoint, will be implemented later)
+  const handleImagesChange = useCallback((images) => {
+    setImagesFields({ images });
+  }, []);
 
-  const handleUpdateConditions = useCallback(
-    (conditions) => {
-      handleFieldChange("conditions", conditions);
-    },
-    [handleFieldChange]
-  );
-
-  const handleUpdateDocuments = useCallback(
-    (documentRequirements) => {
-      handleFieldChange("documentRequirements", documentRequirements);
-    },
-    [handleFieldChange]
-  );
-
-  // Memoized image upload handler
   const handleImageUpload = useCallback(
     (file) => {
       const newImage = {
         id: Math.random().toString(),
         url: URL.createObjectURL(file),
-        isPrimary: fields.images.length === 0, // First image is primary by default
+        isPrimary: imagesFields.images.length === 0,
       };
-      const updatedImages = [...fields.images, newImage];
-      handleUpdateImages(updatedImages);
+      const updatedImages = [...imagesFields.images, newImage];
+      handleImagesChange(updatedImages);
     },
-    [fields.images, handleUpdateImages]
+    [imagesFields.images, handleImagesChange]
   );
 
-  // Memoized hotel update handler
-  const handleHotelUpdate = useCallback(() => {
-    const updatedHotel = {
-      id: hotel.id,
-      ...fields,
-      city: { name: fields.city },
-      state: { name: fields.state },
-      country: { name: fields.country },
-      amenities: fields.amenities,
-    };
-    onAddHotel(updatedHotel);
-  }, [hotel?.id, fields, onAddHotel]);
+  // Room handlers (different endpoint, will be implemented later)
+  const handleRoomsChange = useCallback((rooms) => {
+    setRoomsFields({ rooms });
+  }, []);
 
-  // Memoized cancel handler
-  const handleCancel = useCallback(() => {
-    setShow(false);
-  }, [setShow]);
+  // Document handlers (different endpoint, will be implemented later)
+  const handleDocumentsChange = useCallback((documentRequirements) => {
+    setDocumentsFields((prev) => ({ ...prev, documentRequirements }));
+  }, []);
+
+  // Section update button handlers
+  const handleUpdateOverviewClick = useCallback(() => {
+    onUpdateOverview?.(overviewFields);
+    setSectionHasChanges((prev) => ({ ...prev, overview: false }));
+  }, [onUpdateOverview, overviewFields]);
+
+  const handleUpdateAmenitiesClick = useCallback(() => {
+    onUpdateAmenities?.(amenitiesFields.amenities, amenitiesFields.faq);
+    setSectionHasChanges((prev) => ({ ...prev, amenities: false }));
+  }, [onUpdateAmenities, amenitiesFields]);
+
+  const handleUpdateThematicsClick = useCallback(() => {
+    onUpdateThematics?.(thematicsFields.thematics);
+    setSectionHasChanges((prev) => ({ ...prev, thematics: false }));
+  }, [onUpdateThematics, thematicsFields]);
+
+  const handleUpdateConditionsClick = useCallback(() => {
+    onUpdateConditions?.(conditionsFields.conditions);
+    setSectionHasChanges((prev) => ({ ...prev, conditions: false }));
+  }, [onUpdateConditions, conditionsFields]);
+
+  const handleUpdateTaxesClick = useCallback(() => {
+    onUpdateTaxes?.(taxesFields.taxes);
+    setSectionHasChanges((prev) => ({ ...prev, taxes: false }));
+  }, [onUpdateTaxes, taxesFields]);
+
+  // Reset section to original hotel data
+  const handleResetSection = useCallback(
+    (section) => {
+      switch (section) {
+        case "overview":
+          setOverviewFields({
+            name: hotel?.name || "",
+            description: hotel?.description || "",
+            address: hotel?.address || "",
+            neighborhood: hotel?.neighborhood || "",
+            state: hotel?.state?.name || "",
+            city: hotel?.city?.name || "",
+            country: hotel?.country?.name || "",
+            countryId: hotel?.country?.id || "",
+            stateId: hotel?.state?.id || "",
+            cityId: hotel?.city?.id || "",
+            starRating: hotel?.starRating || 0,
+            numberOfRooms: hotel?.numberOfRooms || 0,
+            postalCode: hotel?.postalCode || "",
+            status: hotel?.status || "pending",
+            location: hotel?.location || { lat: null, lng: null },
+            freeCancellationPolicy: hotel?.freeCancellationPolicy || false,
+            countryCode: hotel?.countryCode || "",
+          });
+          break;
+        case "amenities":
+          setAmenitiesFields({
+            amenities: hotel?.amenities || [],
+            faq: hotel?.faq || [],
+          });
+          break;
+        case "thematics":
+          setThematicsFields({
+            thematics: hotel?.thematics || [],
+          });
+          break;
+        case "conditions":
+          setConditionsFields({
+            conditions: hotel?.conditions || [],
+          });
+          break;
+        case "taxes":
+          setTaxesFields({
+            taxes: hotel?.taxes || [],
+            platform: hotel?.platform || {
+              commissionPercentage: 0,
+              platformTaxPercentage: 0,
+            },
+          });
+          break;
+      }
+      setSectionHasChanges((prev) => ({ ...prev, [section]: false }));
+    },
+    [hotel]
+  );
 
   // Memoized tab sections for better performance
   const tabSections = useMemo(
     () => ({
       overview: (
         <HotelOverviewSection
-          fields={fields}
-          onFieldChange={handleFieldChange}
+          fields={overviewFields}
+          onFieldChange={handleOverviewChange}
         />
       ),
       images: (
         <HotelImagesSection
-          images={fields.images}
-          onUpdateImages={handleUpdateImages}
+          images={imagesFields.images}
+          onUpdateImages={handleImagesChange}
           onImageUpload={handleImageUpload}
         />
       ),
       rooms: (
         <HotelRoomsSection
-          rooms={fields.rooms}
-          onUpdateRooms={handleUpdateRooms}
+          rooms={roomsFields.rooms}
+          onUpdateRooms={handleRoomsChange}
         />
       ),
       amenities: (
         <HotelAmenitiesSection
-          amenitiesList={fields.amenities}
-          onUpdateAmenities={handleUpdateAmenities}
+          amenitiesList={amenitiesFields.amenities}
+          onUpdateAmenities={handleAmenitiesChange}
           defaultAmenities={defaultAmenities}
-          faqs={fields.faq}
-          onUpdateFaqs={handleUpdateFaqs}
+          faqs={amenitiesFields.faq}
+          onUpdateFaqs={handleFaqsChange}
         />
       ),
       thematics: (
         <HotelThematicsSection
-          thematics={fields.thematics}
-          onUpdateThematics={handleUpdateThematics}
+          thematics={thematicsFields.thematics}
+          onUpdateThematics={handleThematicsChange}
         />
       ),
       conditions: (
         <HotelConditionsSection
-          conditions={fields.conditions}
-          onUpdateConditions={handleUpdateConditions}
+          conditions={conditionsFields.conditions}
+          onUpdateConditions={handleConditionsChange}
         />
       ),
       documents: (
         <HotelDocumentsSection
-          documentRequirements={fields.documentRequirements}
-          documentProgress={fields.documentProgress}
-          onUpdateDocuments={handleUpdateDocuments}
+          documentRequirements={documentsFields.documentRequirements}
+          documentProgress={documentsFields.documentProgress}
+          onUpdateDocuments={handleDocumentsChange}
         />
       ),
-      reviews: <HotelReviewsSection reviews={fields.reviews} />,
+      reviews: <HotelReviewsSection reviews={reviewsFields.reviews} />,
       financial: (
         <HotelFinancialSection
-          taxes={fields.taxes}
-          platform={fields.platform}
-          onUpdateTaxes={handleUpdateTaxes}
-          onUpdatePlatform={handleUpdatePlatform}
+          taxes={taxesFields.taxes}
+          platform={taxesFields.platform}
+          onUpdateTaxes={handleTaxesChange}
+          onUpdatePlatform={handlePlatformChange}
         />
       ),
     }),
     [
-      fields,
-      handleFieldChange,
-      handleUpdateImages,
+      overviewFields,
+      amenitiesFields,
+      thematicsFields,
+      conditionsFields,
+      taxesFields,
+      imagesFields,
+      roomsFields,
+      documentsFields,
+      reviewsFields,
+      handleOverviewChange,
+      handleAmenitiesChange,
+      handleFaqsChange,
+      handleThematicsChange,
+      handleConditionsChange,
+      handleTaxesChange,
+      handlePlatformChange,
+      handleImagesChange,
       handleImageUpload,
-      handleUpdateAmenities,
-      handleUpdateRooms,
-      handleUpdateTaxes,
-      handleUpdatePlatform,
-      handleUpdateThematics,
-      handleUpdateConditions,
-      handleUpdateDocuments,
+      handleRoomsChange,
+      handleDocumentsChange,
       defaultAmenities,
     ]
   );
 
   return (
     <div className="w-full bg-inherit flex flex-col gap-4 pb-10 relative">
-      {/* Loading Overlay */}
-      {updating && (
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="text-center">
-            <Spinner />
-            <p className="mt-4 text-gray-600">Updating hotel...</p>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between w-full">
-        <h1 className="text-2xl font-bold mb-6">
-          Update Hotel
-          {updating && (
-            <span className="ml-2 text-sm text-blue-600">(Updating...)</span>
+      <div className="flex flex-col md:flex-row justify-between w-full gap-3 md:gap-0">
+        <h1 className="text-xl sm:text-2xl font-bold">Update Hotel</h1>
+        <div className="text-xs sm:text-sm text-gray-600">
+          {Object.values(sectionHasChanges).some((v) => v) && (
+            <span className="flex items-center gap-2 text-yellow-600">
+              <AlertTriangle className="w-4 h-4" />
+              You have unsaved changes
+            </span>
           )}
-        </h1>
-        <div className="flex flex-row gap-2">
-          <AddButton
-            buttonValue="Cancel"
-            onAdd={handleCancel}
-            disabled={updating}
-          />
-          <AddButton
-            buttonValue={updating ? "Updating..." : "Update"}
-            onAdd={handleHotelUpdate}
-            disabled={updating}
-          />
         </div>
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="overview" className="w-full">
-        <div className="w-full overflow-scroll md:overflow-hidden rounded-md">
-          <TabsList className="flex gap-2 *:cursor-pointer z-20">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="images">Images & Media</TabsTrigger>
-            <TabsTrigger value="rooms">Rooms & Pricing</TabsTrigger>
-            <TabsTrigger value="amenities">Amenities & Policies</TabsTrigger>
-            <TabsTrigger value="thematics">Thematics</TabsTrigger>
-            <TabsTrigger value="conditions">Conditions</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews & Ratings</TabsTrigger>
-            <TabsTrigger value="financial">Financial Settings</TabsTrigger>
+      <Tabs
+        value={currentTab}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
+        <div className="w-full overflow-x-auto md:overflow-hidden rounded-md">
+          <TabsList className="flex gap-1 sm:gap-2 *:cursor-pointer z-20 min-w-max md:min-w-0">
+            <TabsTrigger
+              value="overview"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="images"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Images & Media
+            </TabsTrigger>
+            <TabsTrigger
+              value="rooms"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Rooms & Pricing
+            </TabsTrigger>
+            <TabsTrigger
+              value="amenities"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Amenities & Policies
+            </TabsTrigger>
+            <TabsTrigger
+              value="thematics"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Thematics
+            </TabsTrigger>
+            <TabsTrigger
+              value="conditions"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Conditions
+            </TabsTrigger>
+            <TabsTrigger
+              value="documents"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Documents
+            </TabsTrigger>
+            <TabsTrigger
+              value="reviews"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Reviews & Ratings
+            </TabsTrigger>
+            <TabsTrigger
+              value="financial"
+              className="text-xs sm:text-sm whitespace-nowrap"
+            >
+              Financial Settings
+            </TabsTrigger>
           </TabsList>
         </div>
 
         {/* Tab Contents */}
-        <TabsContent value="overview" className="border rounded-md p-2">
+        <TabsContent value="overview" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">Hotel Overview</h2>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => handleResetSection("overview")}
+                disabled={
+                  updatingStates.overview || !sectionHasChanges.overview
+                }
+              >
+                Reset
+              </Button>
+              <Button
+                onClick={handleUpdateOverviewClick}
+                disabled={
+                  updatingStates.overview || !sectionHasChanges.overview
+                }
+              >
+                {updatingStates.overview ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Overview"
+                )}
+              </Button>
+            </div>
+          </div>
           {tabSections.overview}
         </TabsContent>
 
-        <TabsContent value="images" className="border rounded-md p-2">
+        <TabsContent value="images" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">Images & Media</h2>
+            <div className="text-sm text-gray-500">
+              Separate endpoint required (Coming soon)
+            </div>
+          </div>
           {tabSections.images}
         </TabsContent>
 
-        <TabsContent value="rooms" className="border rounded-md p-2">
+        <TabsContent value="rooms" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">
+              Rooms & Pricing
+            </h2>
+            <div className="text-sm text-gray-500">
+              Separate endpoint required (Coming soon)
+            </div>
+          </div>
           {tabSections.rooms}
         </TabsContent>
 
-        <TabsContent value="amenities" className="border rounded-md p-2">
+        <TabsContent value="amenities" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">
+              Amenities & FAQs
+            </h2>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => handleResetSection("amenities")}
+                disabled={
+                  updatingStates.amenities || !sectionHasChanges.amenities
+                }
+              >
+                Reset
+              </Button>
+              <Button
+                onClick={handleUpdateAmenitiesClick}
+                disabled={
+                  updatingStates.amenities || !sectionHasChanges.amenities
+                }
+              >
+                {updatingStates.amenities ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Amenities"
+                )}
+              </Button>
+            </div>
+          </div>
           {tabSections.amenities}
         </TabsContent>
 
-        <TabsContent value="thematics" className="border rounded-md p-2">
+        <TabsContent value="thematics" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">Thematics</h2>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => handleResetSection("thematics")}
+                disabled={
+                  updatingStates.thematics || !sectionHasChanges.thematics
+                }
+              >
+                Reset
+              </Button>
+              <Button
+                onClick={handleUpdateThematicsClick}
+                disabled={
+                  updatingStates.thematics || !sectionHasChanges.thematics
+                }
+              >
+                {updatingStates.thematics ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Thematics"
+                )}
+              </Button>
+            </div>
+          </div>
           {tabSections.thematics}
         </TabsContent>
 
-        <TabsContent value="conditions" className="border rounded-md p-2">
+        <TabsContent
+          value="conditions"
+          className="border rounded-md p-3 sm:p-4"
+        >
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">Conditions</h2>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => handleResetSection("conditions")}
+                disabled={
+                  updatingStates.conditions || !sectionHasChanges.conditions
+                }
+              >
+                Reset
+              </Button>
+              <Button
+                onClick={handleUpdateConditionsClick}
+                disabled={
+                  updatingStates.conditions || !sectionHasChanges.conditions
+                }
+              >
+                {updatingStates.conditions ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Conditions"
+                )}
+              </Button>
+            </div>
+          </div>
           {tabSections.conditions}
         </TabsContent>
 
-        <TabsContent value="documents" className="border rounded-md p-2">
+        <TabsContent value="documents" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">Documents</h2>
+            <div className="text-sm text-gray-500">
+              Separate endpoint required (Coming soon)
+            </div>
+          </div>
           {tabSections.documents}
         </TabsContent>
 
-        <TabsContent value="reviews" className="border rounded-md p-2">
+        <TabsContent value="reviews" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">
+              Reviews & Ratings
+            </h2>
+            <div className="text-sm text-gray-500">Read-only</div>
+          </div>
           {tabSections.reviews}
         </TabsContent>
 
-        <TabsContent value="financial" className="border rounded-md p-2">
+        <TabsContent value="financial" className="border rounded-md p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">
+              Financial Settings (Taxes)
+            </h2>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => handleResetSection("taxes")}
+                disabled={updatingStates.taxes || !sectionHasChanges.taxes}
+              >
+                Reset
+              </Button>
+              <Button
+                onClick={handleUpdateTaxesClick}
+                disabled={updatingStates.taxes || !sectionHasChanges.taxes}
+              >
+                {updatingStates.taxes ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Taxes"
+                )}
+              </Button>
+            </div>
+          </div>
           {tabSections.financial}
         </TabsContent>
       </Tabs>
+
+      {/* Tab Switch Warning Dialog */}
+      <AlertDialog
+        open={showTabSwitchDialog}
+        onOpenChange={setShowTabSwitchDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes in this section. Switching tabs will
+              discard these changes. Are you sure you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Stay on Current Tab</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmTabSwitch}>
+              Discard Changes & Switch
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

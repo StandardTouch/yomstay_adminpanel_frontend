@@ -5,9 +5,48 @@ export const selectSingleHotelState = (state) => state.singleHotel;
 export const selectSingleHotel = (state) => state.singleHotel.hotel;
 export const selectSingleHotelLoading = (state) => state.singleHotel.loading;
 export const selectSingleHotelError = (state) => state.singleHotel.error;
+
+// Legacy update selectors (deprecated - use section-specific selectors)
 export const selectSingleHotelUpdating = (state) => state.singleHotel.updating;
 export const selectSingleHotelUpdateError = (state) =>
   state.singleHotel.updateError;
+
+// Section-specific loading selectors
+export const selectSingleHotelUpdatingOverview = (state) =>
+  state.singleHotel.updatingOverview;
+export const selectSingleHotelUpdatingAmenities = (state) =>
+  state.singleHotel.updatingAmenities;
+export const selectSingleHotelUpdatingThematics = (state) =>
+  state.singleHotel.updatingThematics;
+export const selectSingleHotelUpdatingConditions = (state) =>
+  state.singleHotel.updatingConditions;
+export const selectSingleHotelUpdatingTaxes = (state) =>
+  state.singleHotel.updatingTaxes;
+
+// Section-specific error selectors
+export const selectSingleHotelOverviewError = (state) =>
+  state.singleHotel.overviewError;
+export const selectSingleHotelAmenitiesError = (state) =>
+  state.singleHotel.amenitiesError;
+export const selectSingleHotelThematicsError = (state) =>
+  state.singleHotel.thematicsError;
+export const selectSingleHotelConditionsError = (state) =>
+  state.singleHotel.conditionsError;
+export const selectSingleHotelTaxesError = (state) =>
+  state.singleHotel.taxesError;
+
+// Check if any section is being updated
+export const selectIsAnyUpdateInProgress = createSelector(
+  [
+    selectSingleHotelUpdatingOverview,
+    selectSingleHotelUpdatingAmenities,
+    selectSingleHotelUpdatingThematics,
+    selectSingleHotelUpdatingConditions,
+    selectSingleHotelUpdatingTaxes,
+  ],
+  (overview, amenities, thematics, conditions, taxes) =>
+    overview || amenities || thematics || conditions || taxes
+);
 
 // Computed selectors
 export const selectSingleHotelExists = createSelector(

@@ -1,9 +1,9 @@
 import React, { memo, useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import HtmlEditor from "@/components/ui/html-editor";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 import {
   Select,
@@ -266,11 +266,10 @@ const HotelOverviewSection = memo(({ fields, onFieldChange }) => {
       {/* Description */}
       <div className="flex flex-col gap-2">
         <Label className="text-lg">Description</Label>
-        <Textarea
-          value={fields.description}
-          onChange={(e) => handleFieldChange("description", e.target.value)}
+        <HtmlEditor
+          value={fields.description || ""}
+          onChange={(content) => handleFieldChange("description", content)}
           placeholder="Enter hotel description"
-          rows={4}
         />
       </div>
     </div>

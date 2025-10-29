@@ -1,11 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "@clerk/clerk-react";
 import { useApi } from "../../../../contexts/ApiContext";
 import {
   fetchSingleHotel,
-  updateSingleHotel,
+  updateHotelOverview,
+  updateHotelAmenitiesAndFaqs,
+  updateHotelThematics,
+  updateHotelConditions,
+  updateHotelTaxes,
   clearSingleHotel,
   clearErrors,
 } from "../../singleHotelSlice";
@@ -13,11 +17,30 @@ import {
   selectSingleHotel,
   selectSingleHotelLoading,
   selectSingleHotelError,
-  selectSingleHotelUpdating,
-  selectSingleHotelUpdateError,
+  selectSingleHotelUpdatingOverview,
+  selectSingleHotelUpdatingAmenities,
+  selectSingleHotelUpdatingThematics,
+  selectSingleHotelUpdatingConditions,
+  selectSingleHotelUpdatingTaxes,
+  selectSingleHotelOverviewError,
+  selectSingleHotelAmenitiesError,
+  selectSingleHotelThematicsError,
+  selectSingleHotelConditionsError,
+  selectSingleHotelTaxesError,
+  selectIsAnyUpdateInProgress,
 } from "../../singleHotelSelectors";
 import OptimizedSingleHotel from "./OptimizedSingleHotel";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { showError, showSuccess } from "../../../../utils/toast";
 import { Spinner } from "../../../../common/components/spinner";
@@ -29,11 +52,31 @@ const SingleHotelScreen = () => {
   const { isLoaded, isSignedIn } = useAuth();
   const apiClient = useApi();
 
+  // Hotel data and loading
   const hotel = useSelector(selectSingleHotel);
   const loading = useSelector(selectSingleHotelLoading);
   const error = useSelector(selectSingleHotelError);
-  const updating = useSelector(selectSingleHotelUpdating);
-  const updateError = useSelector(selectSingleHotelUpdateError);
+
+  // Section-specific loading states
+  const updatingOverview = useSelector(selectSingleHotelUpdatingOverview);
+  const updatingAmenities = useSelector(selectSingleHotelUpdatingAmenities);
+  const updatingThematics = useSelector(selectSingleHotelUpdatingThematics);
+  const updatingConditions = useSelector(selectSingleHotelUpdatingConditions);
+  const updatingTaxes = useSelector(selectSingleHotelUpdatingTaxes);
+  const isAnyUpdateInProgress = useSelector(selectIsAnyUpdateInProgress);
+
+  // Section-specific errors
+  const overviewError = useSelector(selectSingleHotelOverviewError);
+  const amenitiesError = useSelector(selectSingleHotelAmenitiesError);
+  const thematicsError = useSelector(selectSingleHotelThematicsError);
+  const conditionsError = useSelector(selectSingleHotelConditionsError);
+  const taxesError = useSelector(selectSingleHotelTaxesError);
+
+  // Unsaved changes tracking
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] =
+    useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
 
   // Fetch single hotel by ID
   useEffect(() => {
@@ -51,35 +94,133 @@ const SingleHotelScreen = () => {
 
   // Handle errors
   useEffect(() => {
-    if (error) {
-      showError(error);
-    }
+    if (error) showError(error);
   }, [error]);
 
-  // Handle update errors
   useEffect(() => {
-    if (updateError) {
-      showError(updateError);
+    if (overviewError) showError(`Overview: ${overviewError}`);
+  }, [overviewError]);
+
+  useEffect(() => {
+    if (amenitiesError) showError(`Amenities: ${amenitiesError}`);
+  }, [amenitiesError]);
+
+  useEffect(() => {
+    if (thematicsError) showError(`Thematics: ${thematicsError}`);
+  }, [thematicsError]);
+
+  useEffect(() => {
+    if (conditionsError) showError(`Conditions: ${conditionsError}`);
+  }, [conditionsError]);
+
+  useEffect(() => {
+    if (taxesError) showError(`Taxes: ${taxesError}`);
+  }, [taxesError]);
+
+  // Handle back navigation with unsaved changes warning
+  const handleBack = useCallback(() => {
+    if (hasUnsavedChanges && !isAnyUpdateInProgress) {
+      setPendingNavigation("/dashboard/hotels");
+      setShowUnsavedChangesDialog(true);
+    } else {
+      navigate("/dashboard/hotels");
     }
-  }, [updateError]);
+  }, [hasUnsavedChanges, isAnyUpdateInProgress, navigate]);
 
-  const handleBack = () => {
-    navigate("/dashboard/hotels");
-  };
-
-  const handleUpdateHotel = async (updatedHotel) => {
-    try {
-      const result = await dispatch(
-        updateSingleHotel({ hotelId, hotelData: updatedHotel, apiClient })
-      ).unwrap();
-
-      showSuccess("Hotel updated successfully!");
-      console.log("Hotel updated:", result);
-    } catch (error) {
-      console.error("Failed to update hotel:", error);
-      showError(error || "Failed to update hotel");
+  // Confirm navigation when there are unsaved changes
+  const handleConfirmNavigation = useCallback(() => {
+    setShowUnsavedChangesDialog(false);
+    setHasUnsavedChanges(false);
+    if (pendingNavigation) {
+      navigate(pendingNavigation);
     }
-  };
+  }, [pendingNavigation, navigate]);
+
+  // Section-specific update handlers
+  const handleUpdateOverview = useCallback(
+    async (overviewData) => {
+      try {
+        await dispatch(
+          updateHotelOverview({ hotelId, hotelData: overviewData, apiClient })
+        ).unwrap();
+
+        showSuccess("Hotel overview updated successfully!");
+        setHasUnsavedChanges(false);
+      } catch (error) {
+        console.error("Failed to update hotel overview:", error);
+        showError(error || "Failed to update hotel overview");
+      }
+    },
+    [dispatch, hotelId, apiClient]
+  );
+
+  const handleUpdateAmenities = useCallback(
+    async (amenities, faq) => {
+      try {
+        await dispatch(
+          updateHotelAmenitiesAndFaqs({ hotelId, amenities, faq, apiClient })
+        ).unwrap();
+
+        showSuccess("Amenities and FAQs updated successfully!");
+        setHasUnsavedChanges(false);
+      } catch (error) {
+        console.error("Failed to update amenities:", error);
+        showError(error || "Failed to update amenities and FAQs");
+      }
+    },
+    [dispatch, hotelId, apiClient]
+  );
+
+  const handleUpdateThematics = useCallback(
+    async (thematics) => {
+      try {
+        await dispatch(
+          updateHotelThematics({ hotelId, thematics, apiClient })
+        ).unwrap();
+
+        showSuccess("Thematics updated successfully!");
+        setHasUnsavedChanges(false);
+      } catch (error) {
+        console.error("Failed to update thematics:", error);
+        showError(error || "Failed to update thematics");
+      }
+    },
+    [dispatch, hotelId, apiClient]
+  );
+
+  const handleUpdateConditions = useCallback(
+    async (conditions) => {
+      try {
+        await dispatch(
+          updateHotelConditions({ hotelId, conditions, apiClient })
+        ).unwrap();
+
+        showSuccess("Conditions updated successfully!");
+        setHasUnsavedChanges(false);
+      } catch (error) {
+        console.error("Failed to update conditions:", error);
+        showError(error || "Failed to update conditions");
+      }
+    },
+    [dispatch, hotelId, apiClient]
+  );
+
+  const handleUpdateTaxes = useCallback(
+    async (taxes) => {
+      try {
+        await dispatch(
+          updateHotelTaxes({ hotelId, taxes, apiClient })
+        ).unwrap();
+
+        showSuccess("Taxes updated successfully!");
+        setHasUnsavedChanges(false);
+      } catch (error) {
+        console.error("Failed to update taxes:", error);
+        showError(error || "Failed to update taxes");
+      }
+    },
+    [dispatch, hotelId, apiClient]
+  );
 
   // Loading state
   if (loading) {
@@ -134,24 +275,26 @@ const SingleHotelScreen = () => {
   return (
     <div className="space-y-6">
       {/* Header with back button */}
-      <div className="flex items-center gap-4">
-        <Button
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        {/* <Button
           onClick={handleBack}
           variant="outline"
           size="sm"
-          disabled={updating}
+          disabled={isAnyUpdateInProgress}
+          className="w-full sm:w-auto"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Hotels
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {hotel.name}
-            {updating && (
-              <Loader2 className="inline-block h-5 w-5 animate-spin ml-2" />
+          <span className="hidden sm:inline">Back to Hotels</span>
+          <span className="sm:hidden">Back</span>
+        </Button> */}
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate flex items-center gap-2">
+            <span className="truncate">{hotel.name}</span>
+            {isAnyUpdateInProgress && (
+              <Loader2 className="h-5 w-5 animate-spin flex-shrink-0" />
             )}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 truncate">
             {hotel.city?.name}, {hotel.country?.name}
           </p>
         </div>
@@ -160,11 +303,43 @@ const SingleHotelScreen = () => {
       {/* Optimized Single Hotel Component */}
       <OptimizedSingleHotel
         hotel={hotel}
-        setShow={() => handleBack()}
-        onAddHotel={handleUpdateHotel}
+        onUpdateOverview={handleUpdateOverview}
+        onUpdateAmenities={handleUpdateAmenities}
+        onUpdateThematics={handleUpdateThematics}
+        onUpdateConditions={handleUpdateConditions}
+        onUpdateTaxes={handleUpdateTaxes}
+        updatingStates={{
+          overview: updatingOverview,
+          amenities: updatingAmenities,
+          thematics: updatingThematics,
+          conditions: updatingConditions,
+          taxes: updatingTaxes,
+        }}
+        onUnsavedChanges={setHasUnsavedChanges}
         defaultAmenities={[]} // TODO: Fetch from API when available
-        updating={updating}
       />
+
+      {/* Unsaved Changes Dialog */}
+      <AlertDialog
+        open={showUnsavedChangesDialog}
+        onOpenChange={setShowUnsavedChangesDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Are you sure you want to leave? All
+              unsaved changes will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Stay on Page</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmNavigation}>
+              Leave Without Saving
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
