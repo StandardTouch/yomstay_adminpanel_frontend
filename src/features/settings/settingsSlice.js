@@ -33,6 +33,9 @@ export const fetchPlatformSettings = createAsyncThunk(
 
 /**
  * Update platform settings
+ * According to Swagger spec:
+ * - Required: minStartHour, maxEndHour, minDuration, maxDuration
+ * - Optional: minCheckInTime, maxCheckOutTime, defaultDuration, commissionPercentage, platformTaxPercentage
  */
 export const updatePlatformSettings = createAsyncThunk(
   "settings/updatePlatformSettings",
@@ -46,10 +49,76 @@ export const updatePlatformSettings = createAsyncThunk(
         throw new Error("Platform settings data is required");
       }
 
-      // Prepare payload (exclude id, createdAt, updatedAt from update)
-      const { id, updatedAt, createdAt, ...updateData } = settingsData;
+      // Validate required fields
+      const requiredFields = [
+        "minStartHour",
+        "maxEndHour",
+        "minDuration",
+        "maxDuration",
+      ];
+      for (const field of requiredFields) {
+        if (settingsData[field] === undefined || settingsData[field] === null) {
+          throw new Error(`Missing required field: ${field}`);
+        }
+      }
 
-      const response = await apiClient.admin.updatePlatformSettings(updateData);
+      // Client-side validation based on Swagger spec
+      const { minStartHour, maxEndHour, minDuration, maxDuration } =
+        settingsData;
+
+      // Validate minStartHour: 0-23
+      if (minStartHour < 0 || minStartHour > 23) {
+        throw new Error("minStartHour must be between 0 and 23");
+      }
+
+      // Validate maxEndHour: 1-23, must be > minStartHour
+      if (maxEndHour < 1 || maxEndHour > 23) {
+        throw new Error("maxEndHour must be between 1 and 23");
+      }
+      if (maxEndHour <= minStartHour) {
+        throw new Error("maxEndHour must be greater than minStartHour");
+      }
+
+      // Validate durations: 1-24
+      if (minDuration < 1 || minDuration > 24) {
+        throw new Error("minDuration must be between 1 and 24 hours");
+      }
+      if (maxDuration < 1 || maxDuration > 24) {
+        throw new Error("maxDuration must be between 1 and 24 hours");
+      }
+      if (maxDuration < minDuration) {
+        throw new Error(
+          "maxDuration must be greater than or equal to minDuration"
+        );
+      }
+
+      // Prepare payload according to Swagger spec
+      // Required fields
+      const payload = {
+        minStartHour,
+        maxEndHour,
+        minDuration,
+        maxDuration,
+      };
+
+      // Optional fields - only include if they exist
+      if (settingsData.minCheckInTime !== undefined) {
+        payload.minCheckInTime = settingsData.minCheckInTime;
+      }
+      if (settingsData.maxCheckOutTime !== undefined) {
+        payload.maxCheckOutTime = settingsData.maxCheckOutTime;
+      }
+      if (settingsData.defaultDuration !== undefined) {
+        payload.defaultDuration = settingsData.defaultDuration;
+      }
+      if (settingsData.commissionPercentage !== undefined) {
+        payload.commissionPercentage = settingsData.commissionPercentage;
+      }
+      if (settingsData.platformTaxPercentage !== undefined) {
+        payload.platformTaxPercentage = settingsData.platformTaxPercentage;
+      }
+
+      const response = await apiClient.admin.updatePlatformSettings(payload);
       const data = response.data || response;
 
       return {
@@ -60,10 +129,44 @@ export const updatePlatformSettings = createAsyncThunk(
       };
     } catch (error) {
       console.error("updatePlatformSettings error:", error);
+
+      // Handle validation errors (client-side or API)
+      // Client-side validation errors are thrown as Error objects
+      if (error instanceof Error && !error.response) {
+        return rejectWithValue(error.message);
+      }
+
+      // Handle API validation errors (400 status)
+      if (error.response?.status === 400) {
+        if (
+          error.response?.data?.errors &&
+          Array.isArray(error.response.data.errors)
+        ) {
+          const validationErrors = error.response.data.errors
+            .map((err) => `${err.field}: ${err.message}`)
+            .join(", ");
+          return rejectWithValue(`Validation failed: ${validationErrors}`);
+        }
+        // Fallback for 400 without structured errors
+        return rejectWithValue(
+          error.response?.data?.message ||
+            "Validation failed. Please check your input values."
+        );
+      }
+
+      // Handle other API errors (401, 403, 500, etc.)
+      if (error.response?.status === 401) {
+        return rejectWithValue("Unauthorized. Please sign in again.");
+      }
+      if (error.response?.status === 403) {
+        return rejectWithValue("Forbidden. Admin access required.");
+      }
+
+      // Handle network errors or other errors
       return rejectWithValue(
         error.response?.data?.message ||
           error.message ||
-          "Failed to update platform settings"
+          "Failed to update platform settings. Please try again."
       );
     }
   }

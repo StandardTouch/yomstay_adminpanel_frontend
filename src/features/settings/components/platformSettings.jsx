@@ -108,7 +108,13 @@ export default function PlatformSettings() {
       return result;
     } catch (error) {
       console.error("Failed to save platform settings:", error);
-      // Error already handled by useEffect
+      // Fallback: Show error if not already handled by useEffect
+      // Most errors are handled by useEffect, but this ensures we catch any edge cases
+      const errorMessage =
+        error?.message ||
+        error?.toString() ||
+        "Failed to update platform settings";
+      showError(errorMessage);
     }
   }, [dispatch, platformSettings, apiClient]);
 
@@ -156,7 +162,7 @@ export default function PlatformSettings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="minStartHour" className="font-semibold">
-                Minimum Start Hour
+                Minimum Start Hour <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="minStartHour"
@@ -167,64 +173,72 @@ export default function PlatformSettings() {
                 name="minStartHour"
                 onChange={handleChange}
                 placeholder="6"
+                required
               />
               <p className="text-xs text-muted-foreground">
-                Earliest hour bookings can start (default: 6 AM)
+                Earliest hour bookings can start (0-23, default: 6 AM)
               </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="maxEndHour" className="font-semibold">
-                Maximum End Hour
+                Maximum End Hour <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="maxEndHour"
                 type="number"
-                min="0"
+                min="1"
                 max="23"
                 value={platformSettings.maxEndHour}
                 name="maxEndHour"
                 onChange={handleChange}
                 placeholder="22"
+                required
               />
               <p className="text-xs text-muted-foreground">
-                Latest hour bookings can end (default: 10 PM)
+                Latest hour bookings can end (1-23, must be &gt; minStartHour,
+                default: 10 PM)
               </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="minDuration" className="font-semibold">
-                Minimum Duration (hours)
+                Minimum Duration (hours) <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="minDuration"
                 type="number"
                 min="1"
+                max="24"
                 value={platformSettings.minDuration}
                 name="minDuration"
                 onChange={handleChange}
                 placeholder="2"
+                required
               />
               <p className="text-xs text-muted-foreground">
-                Minimum booking duration in hours
+                Minimum booking duration in hours (1-24)
               </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="maxDuration" className="font-semibold">
-                Maximum Duration (hours)
+                Maximum Duration (hours) <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="maxDuration"
                 type="number"
                 min="1"
+                max="24"
                 value={platformSettings.maxDuration}
                 name="maxDuration"
                 onChange={handleChange}
                 placeholder="10"
+                required
               />
               <p className="text-xs text-muted-foreground">
-                Maximum booking duration in hours
+                Maximum booking duration in hours (1-24, must be &gt;=
+                minDuration)
               </p>
             </div>
 
