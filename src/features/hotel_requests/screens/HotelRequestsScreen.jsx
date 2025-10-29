@@ -124,7 +124,7 @@ const FilterTabs = memo(({ activeFilter, onFilterChange, stats }) => (
       { key: "pending", label: "Pending", count: stats.pending, icon: Clock },
       {
         key: "needs_completion",
-        label: "Incomplete",
+        label: "Needs More Info",
         count: stats.needs_completion,
         icon: Clock,
       },
@@ -298,12 +298,14 @@ function HotelRequestsScreen() {
       )
         .unwrap()
         .then(() => {
-          showSuccess("Hotel request marked as incomplete successfully!");
+          showSuccess(
+            "Request for more information sent to partner successfully!"
+          );
           setShowNeedsCompletionModal(false);
           setCurrentRequest(null);
         })
         .catch((error) => {
-          showError(error || "Failed to mark hotel request as incomplete");
+          showError(error || "Failed to request more information");
         });
     },
     [dispatch, apiClient]
@@ -389,7 +391,7 @@ function HotelRequestsScreen() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatsCard
           title="Total Requests"
           value={stats.total}
@@ -402,6 +404,13 @@ function HotelRequestsScreen() {
           icon={Clock}
           color="text-yellow-600"
           percentage={stats.pendingPercentage}
+        />
+        <StatsCard
+          title="Needs More Info"
+          value={stats.needs_completion}
+          icon={AlertCircle}
+          color="text-orange-600"
+          percentage={stats.needs_completionPercentage}
         />
         <StatsCard
           title="Approved"

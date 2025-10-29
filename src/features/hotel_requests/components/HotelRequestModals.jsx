@@ -25,7 +25,7 @@ import {
   Clock,
 } from "lucide-react";
 
-// Confirmation Modal for Needs Completion Action
+// Confirmation Modal for Requesting More Information
 const NeedsCompletionModal = memo(
   ({ isOpen, onClose, onConfirm, request, isHandling = false }) => {
     const handleConfirm = useCallback(() => {
@@ -44,11 +44,11 @@ const NeedsCompletionModal = memo(
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-orange-600" />
-              Mark as Incomplete
+              Request More Information
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to mark this hotel request as incomplete?
-              This will notify the hotel owner to complete their listing setup.
+              This will notify the hotel partner to provide additional
+              information or complete missing details in their hotel listing.
             </DialogDescription>
           </DialogHeader>
 
@@ -93,7 +93,7 @@ const NeedsCompletionModal = memo(
               disabled={isHandling}
               className="bg-orange-600 hover:bg-orange-700 text-white"
             >
-              {isHandling ? "Processing..." : "Mark as Incomplete"}
+              {isHandling ? "Processing..." : "Request More Information"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -122,7 +122,7 @@ const RejectModal = memo(
     }, [onClose]);
 
     const rejectionReasons = [
-      "Incomplete information",
+      "Insufficient information",
       "Invalid hotel details",
       "Duplicate request",
       "Does not meet requirements",

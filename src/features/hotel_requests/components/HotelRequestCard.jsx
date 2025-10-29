@@ -19,15 +19,16 @@ import {
   Calendar,
   User,
   Clock,
+  AlertCircle,
 } from "lucide-react";
 
-function HotelRequestCard({
+const HotelRequestCard = ({
   request,
   onReject,
   onNeedsCompletion,
   onViewDetails,
   isHandling = false,
-}) {
+}) => {
   // Memoized status badge configuration
   const statusConfig = useMemo(() => {
     const configs = {
@@ -54,7 +55,7 @@ function HotelRequestCard({
       needs_completion: {
         variant: "secondary",
         icon: Clock,
-        text: "Incomplete",
+        text: "Needs More Info",
         className:
           "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
       },
@@ -72,6 +73,18 @@ function HotelRequestCard({
       minute: "2-digit",
     });
   }, [request.createdAt]);
+
+  // Memoized updated date
+  const formattedUpdatedDate = useMemo(() => {
+    if (!request.updatedAt) return null;
+    return new Date(request.updatedAt).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, [request.updatedAt]);
 
   // Memoized requester name
   const requesterName = useMemo(() => {
@@ -206,6 +219,31 @@ function HotelRequestCard({
           </div>
         )}
 
+        {/* Needs More Info Alert Section */}
+        {request.status === "needs_completion" && (
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 space-y-2">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-2">
+                <h4 className="font-semibold text-sm text-orange-900 dark:text-orange-200">
+                  Additional Information Requested
+                </h4>
+                <p className="text-sm text-orange-800 dark:text-orange-300">
+                  The hotel partner has been notified to provide additional
+                  information or complete missing details. They will update the
+                  listing once they have the required information.
+                </p>
+                {formattedUpdatedDate && (
+                  <div className="flex items-center text-xs text-orange-700 dark:text-orange-400 mt-2">
+                    <Clock className="w-3 h-3 mr-1" />
+                    <span>Requested on: {formattedUpdatedDate}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Request Date */}
         <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
           <Calendar className="w-4 h-4 mr-2" />
@@ -242,7 +280,7 @@ function HotelRequestCard({
                 disabled={isHandling}
                 className="bg-orange-600 hover:bg-orange-700 text-white"
               >
-                {isHandling ? "Processing..." : "Mark Incomplete"}
+                {isHandling ? "Processing..." : "Request More Info"}
               </Button>
             </div>
           )}
@@ -250,7 +288,7 @@ function HotelRequestCard({
       </CardFooter>
     </Card>
   );
-}
+};
 
 // Export memoized component for better performance
 export default memo(HotelRequestCard);
