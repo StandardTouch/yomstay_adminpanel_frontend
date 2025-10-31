@@ -18,12 +18,25 @@ export const AmenityItem = ({ amenity, onDelete, onAdd, CheckSheet }) => (
       )}
       <div>
         <p>
-          {amenity.name.slice(0, 15)}
-          {amenity.name.length > 15 && "..."}
+          {amenity.name ? (
+            <>
+              {amenity.name.slice(0, 15)}
+              {amenity.name.length > 15 && "..."}
+            </>
+          ) : (
+            "Untitled"
+          )}
         </p>
         <p className="text-sm text-accent-foreground">
-          {amenity.describation.slice(0, 15)}
-          {amenity.describation.length > 15 && "..."}
+          {amenity.describation || amenity.description ? (
+            <>
+              {(amenity.describation || amenity.description).slice(0, 15)}
+              {(amenity.describation || amenity.description).length > 15 &&
+                "..."}
+            </>
+          ) : (
+            "No description"
+          )}
         </p>
       </div>
     </div>

@@ -77,6 +77,111 @@ export class AdminService {
   }
 
   /**
+   * List room types with optional filtering and pagination
+   * @param {Object} params - Query parameters (page, limit, search, isActive)
+   * @returns {Promise} API response
+   */
+  async listRoomTypes(params = {}) {
+    const queryParams = { ...params };
+    // Remove undefined values
+    Object.keys(queryParams).forEach(
+      (key) => queryParams[key] === undefined && delete queryParams[key]
+    );
+
+    return this.apiClient.get("/admin/room-types", { params: queryParams });
+  }
+
+  /**
+   * Create room type
+   * @param {Object} data - Room type create data
+   * @returns {Promise} API response
+   */
+  async createRoomType(data) {
+    if (!data) {
+      throw new Error("Room type data is required");
+    }
+
+    // Prepare payload with required and optional fields
+    const payload = {
+      name: data.name,
+      displayName: data.displayName,
+    };
+
+    // Optional fields
+    if (data.description !== undefined)
+      payload.description = data.description || null;
+    if (data.icon !== undefined) payload.icon = data.icon || null;
+    if (data.isActive !== undefined) payload.isActive = data.isActive;
+    if (data.sortOrder !== undefined) payload.sortOrder = data.sortOrder;
+
+    return this.apiClient.post("/admin/room-types", payload);
+  }
+
+  /**
+   * Update room type
+   * @param {string} id - Room type ID
+   * @param {Object} data - Room type update data
+   * @returns {Promise} API response
+   */
+  async updateRoomType(id, data) {
+    if (!id) {
+      throw new Error("Room type ID is required");
+    }
+    if (!data) {
+      throw new Error("Room type data is required");
+    }
+
+    // Prepare payload - only include defined fields
+    const payload = {};
+    if (data.name !== undefined) payload.name = data.name;
+    if (data.displayName !== undefined) payload.displayName = data.displayName;
+    if (data.description !== undefined) payload.description = data.description;
+    if (data.icon !== undefined) payload.icon = data.icon;
+    if (data.isActive !== undefined) payload.isActive = data.isActive;
+    if (data.sortOrder !== undefined) payload.sortOrder = data.sortOrder;
+
+    return this.apiClient.put(`/admin/room-types/${id}`, payload);
+  }
+
+  /**
+   * Reorder room types
+   * @param {{orders: {id: string, sortOrder: number}[]}} data
+   * @returns {Promise} API response
+   */
+  async reorderRoomTypes(data) {
+    if (!data || !Array.isArray(data.orders) || data.orders.length === 0) {
+      throw new Error("orders array is required");
+    }
+    return this.apiClient.patch("/admin/room-types/reorder", data);
+  }
+
+  /**
+   * Toggle active status for a room type
+   * @param {string} id
+   * @param {{isActive?: boolean}} body
+   * @returns {Promise} API response
+   */
+  async toggleRoomTypeActive(id, body = {}) {
+    if (!id) {
+      throw new Error("Room type ID is required");
+    }
+    return this.apiClient.patch(`/admin/room-types/${id}/toggle-active`, body);
+  }
+
+  /**
+   * Delete room type
+   * @param {string} id - Room type ID
+   * @returns {Promise} API response
+   */
+  async deleteRoomType(id) {
+    if (!id) {
+      throw new Error("Room type ID is required");
+    }
+
+    return this.apiClient.delete(`/admin/room-types/${id}`);
+  }
+
+  /**
    * List all hotel conditions
    * @returns {Promise} API response
    */
