@@ -96,16 +96,39 @@ export default function RoomType() {
   // Drag & drop local state for responsive visuals
   const [orderedRoomTypes, setOrderedRoomTypes] = useState([]);
   const [draggingIndex, setDraggingIndex] = useState(null);
+  const [draggedItem, setDraggedItem] = useState(null);
   const [overIndex, setOverIndex] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   // Track optimistically updated room types - trust these until error
   const [optimisticUpdates, setOptimisticUpdates] = useState({});
+  // Track if we have an optimistic reorder in progress
+  const [optimisticReorder, setOptimisticReorder] = useState(null);
 
   // Sync from Redux, but always preserve optimistic updates
   // Also auto-remove optimistic updates when Redux confirms the value
   useEffect(() => {
     if (!isDragging) {
       setOrderedRoomTypes((prev) => {
+        // If we have an optimistic reorder in progress, check if Redux has caught up
+        if (optimisticReorder) {
+          // Check if Redux order matches our optimistic order (by comparing IDs in sequence)
+          const reduxIds = roomTypes.map((rt) => rt.id).join(",");
+          const optimisticIds = optimisticReorder.map((rt) => rt.id).join(",");
+
+          // If Redux order matches optimistic, remove the optimistic reorder tracking
+          if (reduxIds === optimisticIds) {
+            setOptimisticReorder(null);
+          } else {
+            // Still waiting for Redux to update, keep optimistic order
+            return optimisticReorder.map((rt) => {
+              if (optimisticUpdates[rt.id]) {
+                return { ...rt, isActive: optimisticUpdates[rt.id].isActive };
+              }
+              return rt;
+            });
+          }
+        }
+
         // Start with Redux state (source of truth)
         const base = [...roomTypes];
 
@@ -138,7 +161,7 @@ export default function RoomType() {
         });
       });
     }
-  }, [roomTypes, isDragging, optimisticUpdates]);
+  }, [roomTypes, isDragging, optimisticUpdates, optimisticReorder]);
 
   // Icon options for selection (React components for UI)
   const iconOptions = useMemo(
@@ -255,49 +278,116 @@ export default function RoomType() {
   }, [searchTerm, filters.search, dispatch]);
 
   // Handle drag start
-  const handleDragStart = useCallback((e, index) => {
-    e.dataTransfer.setData("draggedIndex", String(index));
-    setDraggingIndex(index);
-    setIsDragging(true);
-  }, []);
+  const handleDragStart = useCallback(
+    (e, index) => {
+      const base = orderedRoomTypes.length ? orderedRoomTypes : roomTypes;
+      const item = base[index];
+
+      e.dataTransfer.setData("draggedId", item.id);
+      e.dataTransfer.setData("draggedIndex", String(index));
+      e.dataTransfer.effectAllowed = "move";
+
+      // Create a custom drag image (transparent)
+      const dragImage = e.target.cloneNode(true);
+      dragImage.style.opacity = "0.5";
+      document.body.appendChild(dragImage);
+      dragImage.style.position = "absolute";
+      dragImage.style.top = "-1000px";
+      e.dataTransfer.setDragImage(dragImage, 0, 0);
+      setTimeout(() => document.body.removeChild(dragImage), 0);
+
+      setDraggingIndex(index);
+      setDraggedItem(item);
+      setIsDragging(true);
+
+      // Store original order before any drag modifications
+      if (!orderedRoomTypes.length) {
+        setOrderedRoomTypes([...base]);
+      }
+    },
+    [roomTypes, orderedRoomTypes]
+  );
 
   // Handle drag over
   const handleDragOver = useCallback(
     (e, index) => {
       e.preventDefault();
-      if (index !== overIndex) {
-        setOverIndex(index);
-        if (draggingIndex !== null && draggingIndex !== index) {
-          const base = orderedRoomTypes.length ? orderedRoomTypes : roomTypes;
-          const preview = [...base];
-          const [moved] = preview.splice(draggingIndex, 1);
-          preview.splice(index, 0, moved);
-          setOrderedRoomTypes(preview);
-        }
-      }
-    },
-    [draggingIndex, overIndex, orderedRoomTypes, roomTypes]
-  );
+      e.dataTransfer.dropEffect = "move";
 
-  // Handle drop - TODO: This will need an API endpoint to update sortOrder
-  const handleDrop = useCallback(
-    async (e, targetIndex) => {
-      e.preventDefault();
-      const draggedIndex = parseInt(e.dataTransfer.getData("draggedIndex"));
-      if (
-        draggedIndex === targetIndex ||
-        isNaN(draggedIndex) ||
-        draggedIndex < 0 ||
-        targetIndex < 0
-      ) {
+      if (draggingIndex === null || draggingIndex === index || !draggedItem) {
         return;
       }
 
-      // Build new ordering locally (optimistic)
+      // Use current display order
       const base = orderedRoomTypes.length ? orderedRoomTypes : roomTypes;
-      const current = [...base];
-      const [moved] = current.splice(draggedIndex, 1);
-      current.splice(targetIndex, 0, moved);
+
+      // Find current position of dragged item (it may have moved during previous drag overs)
+      const currentDraggedIndex = base.findIndex(
+        (item) => item.id === draggedItem.id
+      );
+      if (currentDraggedIndex === -1 || currentDraggedIndex === index) {
+        return;
+      }
+
+      const preview = [...base];
+
+      // Remove the dragged item from its current position
+      const [moved] = preview.splice(currentDraggedIndex, 1);
+
+      // Calculate where to insert based on target index
+      // If dragging down, target index shifts left by 1 after removal
+      let insertAt = index;
+      if (currentDraggedIndex < index) {
+        insertAt = index - 1; // After removal, target shifts left
+      }
+      // If dragging up, no adjustment needed (target stays same)
+
+      // Insert at the calculated position
+      preview.splice(insertAt, 0, moved);
+
+      setOverIndex(index);
+      setOrderedRoomTypes(preview);
+    },
+    [draggingIndex, draggedItem, orderedRoomTypes, roomTypes]
+  );
+
+  // Handle drop - optimistic local update with revert on error
+  const handleDrop = useCallback(
+    (e, targetIndex) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!draggedItem) {
+        setDraggingIndex(null);
+        setDraggedItem(null);
+        setOverIndex(null);
+        setIsDragging(false);
+        return;
+      }
+
+      // Use the current preview order (from handleDragOver) as it's already correct
+      const current = orderedRoomTypes.length
+        ? [...orderedRoomTypes]
+        : [...roomTypes];
+
+      // Verify the dragged item is in the current order
+      const draggedItemIndex = current.findIndex(
+        (item) => item.id === draggedItem.id
+      );
+      if (draggedItemIndex === -1) {
+        // Item not found, reset
+        setDraggingIndex(null);
+        setDraggedItem(null);
+        setOverIndex(null);
+        setIsDragging(false);
+        return;
+      }
+
+      // Store previous order for potential revert (from Redux)
+      const previousOrder = [...roomTypes];
+
+      // The order is already correct from handleDragOver, just ensure it's saved
+      setOptimisticReorder(current); // Track optimistic reorder
 
       // Compute new absolute sortOrder values using pagination offset
       const pageStartIndex =
@@ -310,35 +400,50 @@ export default function RoomType() {
 
       if (!apiClient?.admin) {
         showError("API client not available");
+        setOrderedRoomTypes(previousOrder); // Revert
+        setOptimisticReorder(null); // Clear optimistic reorder
         setDraggingIndex(null);
+        setDraggedItem(null);
         setOverIndex(null);
         setIsDragging(false);
         return;
       }
 
-      try {
-        setOrderedRoomTypes(current);
-        await dispatch(reorderRoomTypesAction({ orders, apiClient })).unwrap();
-        showSuccess("Order updated");
-        // Fetch server state to reflect canonical order
-        dispatch(fetchRoomTypes(apiParams));
-      } catch (err) {
-        // Redux slice keeps previous order; we refetch to ensure sync
-        dispatch(fetchRoomTypes(apiParams));
-      }
+      // Fire and forget - handle result asynchronously
+      dispatch(reorderRoomTypesAction({ orders, apiClient }))
+        .unwrap()
+        .then(() => {
+          // Success - keep optimistic state, no toast, no refetch
+          // Redux will update when it confirms, and useEffect will sync
+          // The optimistic reorder will be cleared when Redux order matches
+        })
+        .catch((err) => {
+          // Error - revert to previous order and show toast
+          setOrderedRoomTypes(previousOrder);
+          setOptimisticReorder(null); // Clear optimistic reorder
+          showError(err || "Failed to reorder room types");
+        });
+
       setDraggingIndex(null);
+      setDraggedItem(null);
       setOverIndex(null);
       setIsDragging(false);
     },
-    [roomTypes, apiClient, dispatch, apiParams, orderedRoomTypes]
+    [roomTypes, apiClient, dispatch, pagination, orderedRoomTypes, draggedItem]
   );
 
   const handleDragEnd = useCallback(() => {
+    // Reset drag state
     setDraggingIndex(null);
+    setDraggedItem(null);
     setOverIndex(null);
     setIsDragging(false);
-    if (!orderedRoomTypes.length) setOrderedRoomTypes(roomTypes);
-  }, [orderedRoomTypes.length, roomTypes]);
+
+    // If we have an optimistic reorder, keep it; otherwise sync from Redux
+    if (!optimisticReorder && !orderedRoomTypes.length) {
+      setOrderedRoomTypes(roomTypes);
+    }
+  }, [orderedRoomTypes.length, roomTypes, optimisticReorder]);
 
   const handleCancel = useCallback(() => {
     setAddOpen(false);
@@ -603,127 +708,150 @@ export default function RoomType() {
       ) : (
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {(orderedRoomTypes.length ? orderedRoomTypes : roomTypes).map(
-            (item, index) => (
-              <Card
-                key={item.id}
-                className={`flex flex-col justify-between gap-4 hover:shadow-md transition-shadow ${
-                  isDragging && draggingIndex === index ? "opacity-60" : ""
-                }`}
-                draggable
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDrop={(e) => handleDrop(e, index)}
-                onDragEnd={handleDragEnd}
-              >
-                <CardContent className="pt-6">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex justify-between gap-4">
-                      <div className="rounded-md bg-muted w-fit p-2 capitalize">
-                        {renderIcon(item.icon)}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => {
-                          // When editing, store the icon as-is (string from API or keep it)
-                          setNewRoomData({
-                            id: item.id,
-                            name: item.name || "",
-                            displayName: item.displayName,
-                            description: item.description || "",
-                            icon: item.icon || "", // Keep as string from API
-                            isActive: item.isActive,
-                            sortOrder: item.sortOrder || 0,
-                          });
-                          setAddOpen(true);
-                        }}
-                        disabled={updating || creating}
-                      >
-                        <SquarePen className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold">
-                        {item.displayName}
-                      </div>
-                      <div className="text-muted-foreground text-sm mt-1">
-                        {item.description || "No description"}
-                      </div>
-                      {item.name && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          ID: {item.name}
+            (item, index) => {
+              const isDraggedItem = isDragging && draggingIndex === index;
+              const isDropTarget =
+                isDragging && overIndex === index && draggingIndex !== index;
+
+              return (
+                <React.Fragment key={item.id}>
+                  {/* Insertion placeholder - show above the target card */}
+                  {isDropTarget &&
+                    draggingIndex !== null &&
+                    draggingIndex < index && (
+                      <div className="col-span-full sm:col-span-2 lg:col-span-3 h-2 my-2 mx-4 bg-primary/20 border-2 border-dashed border-primary rounded-md animate-pulse" />
+                    )}
+
+                  <Card
+                    className={`flex flex-col justify-between gap-4 hover:shadow-md transition-all duration-200 ${
+                      isDraggedItem
+                        ? "opacity-40 scale-95 cursor-grabbing"
+                        : isDropTarget
+                        ? "ring-2 ring-primary ring-offset-2 scale-105"
+                        : ""
+                    } ${isDragging && !isDraggedItem ? "cursor-pointer" : ""}`}
+                    draggable={!isDragging}
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <CardContent className="pt-6">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex justify-between gap-4">
+                          <div className="rounded-md bg-muted w-fit p-2 capitalize">
+                            {renderIcon(item.icon)}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => {
+                              // When editing, store the icon as-is (string from API or keep it)
+                              setNewRoomData({
+                                id: item.id,
+                                name: item.name || "",
+                                displayName: item.displayName,
+                                description: item.description || "",
+                                icon: item.icon || "", // Keep as string from API
+                                isActive: item.isActive,
+                                sortOrder: item.sortOrder || 0,
+                              });
+                              setAddOpen(true);
+                            }}
+                            disabled={updating || creating}
+                          >
+                            <SquarePen className="w-4 h-4" />
+                          </Button>
                         </div>
-                      )}
-                      <div className="mt-3 flex gap-2">
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={async () => {
-                            if (!apiClient?.admin) {
-                              showError("API client not available");
-                              return;
-                            }
-                            const confirmed = window.confirm(
-                              `Delete room type "${item.displayName}"? This action cannot be undone.`
-                            );
-                            if (!confirmed) return;
-                            try {
-                              await dispatch(
-                                deleteRoomTypeAction({
-                                  roomTypeId: item.id,
-                                  apiClient,
-                                })
-                              ).unwrap();
-                              showSuccess("Room type deleted successfully!");
-                              // Optionally refresh list to sync pagination
-                              dispatch(fetchRoomTypes(apiParams));
-                            } catch (err) {
-                              // Error shown via toast in useEffect
-                            }
-                          }}
-                          disabled={
-                            Boolean(deletingIds[item.id]) ||
-                            updating ||
-                            creating
-                          }
-                        >
-                          {deletingIds[item.id] ? (
-                            <span className="flex items-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin" />{" "}
-                              Deleting...
-                            </span>
-                          ) : (
-                            "Delete"
+                        <div>
+                          <div className="text-2xl font-bold">
+                            {item.displayName}
+                          </div>
+                          <div className="text-muted-foreground text-sm mt-1">
+                            {item.description || "No description"}
+                          </div>
+                          {item.name && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              ID: {item.name}
+                            </div>
                           )}
-                        </Button>
+                          <div className="mt-3 flex gap-2">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={async () => {
+                                if (!apiClient?.admin) {
+                                  showError("API client not available");
+                                  return;
+                                }
+                                const confirmed = window.confirm(
+                                  `Delete room type "${item.displayName}"? This action cannot be undone.`
+                                );
+                                if (!confirmed) return;
+                                try {
+                                  await dispatch(
+                                    deleteRoomTypeAction({
+                                      roomTypeId: item.id,
+                                      apiClient,
+                                    })
+                                  ).unwrap();
+                                  showSuccess(
+                                    "Room type deleted successfully!"
+                                  );
+                                  // Optionally refresh list to sync pagination
+                                  dispatch(fetchRoomTypes(apiParams));
+                                } catch (err) {
+                                  // Error shown via toast in useEffect
+                                }
+                              }}
+                              disabled={
+                                Boolean(deletingIds[item.id]) ||
+                                updating ||
+                                creating
+                              }
+                            >
+                              {deletingIds[item.id] ? (
+                                <span className="flex items-center gap-2">
+                                  <Loader2 className="h-4 w-4 animate-spin" />{" "}
+                                  Deleting...
+                                </span>
+                              ) : (
+                                "Delete"
+                              )}
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-4">
-                  <div className="flex justify-between items-center w-full">
-                    <Switch
-                      checked={item.isActive}
-                      onCheckedChange={(checked) =>
-                        handleToggleActive(item.id, checked)
-                      }
-                    />
-                    <div
-                      className={`${
-                        item.isActive ? "text-green-500" : "text-red-500"
-                      } text-sm font-semibold`}
-                    >
-                      {item.isActive ? "Active" : "Inactive"}
-                    </div>
-                  </div>
-                </CardFooter>
-                {/* Drop placeholder indicator below this card when targeted */}
-                {isDragging && overIndex === index && (
-                  <div className="h-6 mt-2 border-2 border-dashed border-accent rounded-md" />
-                )}
-              </Card>
-            )
+                    </CardContent>
+                    <CardFooter className="border-t pt-4">
+                      <div className="flex justify-between items-center w-full">
+                        <Switch
+                          checked={item.isActive}
+                          onCheckedChange={(checked) =>
+                            handleToggleActive(item.id, checked)
+                          }
+                        />
+                        <div
+                          className={`${
+                            item.isActive ? "text-green-500" : "text-red-500"
+                          } text-sm font-semibold`}
+                        >
+                          {item.isActive ? "Active" : "Inactive"}
+                        </div>
+                      </div>
+                    </CardFooter>
+                  </Card>
+
+                  {/* Insertion placeholder - show below the target card when dragging up */}
+                  {isDropTarget &&
+                    draggingIndex !== null &&
+                    draggingIndex > index && (
+                      <div className="col-span-full sm:col-span-2 lg:col-span-3 h-2 my-2 mx-4 bg-primary/20 border-2 border-dashed border-primary rounded-md animate-pulse" />
+                    )}
+                </React.Fragment>
+              );
+            }
           )}
         </div>
       )}
