@@ -5,6 +5,9 @@ import { useUser } from "@clerk/clerk-react";
 import RoomType from "../components/roomType";
 import PlatformSettings from "../components/platformSettings";
 import DocumentVerification from "../components/documentVerification";
+import CancellationPolicy from "../components/cancellationPolicy";
+import TermsOfService from "../components/termsOfService";
+import PrivacyPolicy from "../components/privacyPolicy";
 
 function Settings() {
   const { user } = useUser();
@@ -33,6 +36,18 @@ function Settings() {
       name: "Document Verification",
       value: "documentVerification",
     },
+    {
+      name: "Cancellation Policy",
+      value: "cancellationPolicy",
+    },
+    {
+      name: "Terms of Service",
+      value: "termsOfService",
+    },
+    {
+      name: "Privacy Policy",
+      value: "privacyPolicy",
+    },
   ];
   return (
     <div className="p-4 sm:p-8 w-full max-w-7xl mx-auto relative ">
@@ -55,24 +70,17 @@ function Settings() {
             </div>
           </div>
         </div>
-        {showModal.roomType && (
-          <div className=" col-span-4 md:col-span-3 ">
-            <RoomType />
-          </div>
-        )}
-        {showModal.notifications && (
-          <div className=" col-span-4 md:col-span-3 ">Notifications</div>
-        )}
-        {showModal.platformSettings && (
-          <div className=" col-span-4 md:col-span-3 ">
-            <PlatformSettings />
-          </div>
-        )}
-        {showModal.documentVerification && (
-          <div className=" col-span-4 md:col-span-3 ">
-            <DocumentVerification />
-          </div>
-        )}
+        <div className=" col-span-4 md:col-span-3 ">
+          {showModal.roomType && <RoomType />}
+          {showModal.notifications && (
+            <div className=" col-span-4 md:col-span-3 ">Notifications</div>
+          )}
+          {showModal.platformSettings && <PlatformSettings />}
+          {showModal.documentVerification && <DocumentVerification />}
+          {showModal.cancellationPolicy && <CancellationPolicy />}
+          {showModal.termsOfService && <TermsOfService />}
+          {showModal.privacyPolicy && <PrivacyPolicy />}
+        </div>
       </div>
     </div>
   );
