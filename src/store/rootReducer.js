@@ -11,6 +11,9 @@ import conditionsReducer from "../features/conditions/conditionsSlice";
 import thematicsReducer from "../features/thematics/thematicsSlice";
 import newsletterReducer from "../features/newsletter/newsletterSlice";
 import contactRequestsReducer from "../features/contact_request/contactRequestsSlice";
+import cancellationPolicyReducer from "../features/settings/cancellationPolicySlice";
+import termsOfUseReducer from "../features/settings/termsOfUseSlice";
+import privacyPolicyReducer from "../features/settings/privacyPolicySlice";
 // import authReducer from '../features/auth/authSlice';
 // import dashboardReducer from '../features/dashboard/dashboardSlice';
 // import filtersReducer from '../features/filters/filtersSlice';
@@ -28,6 +31,9 @@ const rootReducer = combineReducers({
   thematics: thematicsReducer,
   newsletter: newsletterReducer,
   contactRequests: contactRequestsReducer,
+  cancellationPolicy: cancellationPolicyReducer,
+  termsOfUse: termsOfUseReducer,
+  privacyPolicy: privacyPolicyReducer,
   // auth: authReducer,
   // dashboard: dashboardReducer,
   // filters: filtersReducer,

@@ -11,6 +11,7 @@ import { ConditionsService } from "../features/conditions/services/conditionsSer
 import { ThematicsService } from "../features/thematics/services/thematicsService";
 import { NewsletterService } from "../features/newsletter/services/newsletterService";
 import { ContactRequestsService } from "../features/contact_request/services/contactRequestsService";
+import { PoliciesService } from "../features/settings/services/policiesService";
 
 // Create the API Context
 const ApiContext = createContext(null);
@@ -51,6 +52,7 @@ export const ApiProvider = ({ children }) => {
       thematics: new ThematicsService(apiClient),
       newsletter: new NewsletterService(apiClient),
       contactRequests: new ContactRequestsService(apiClient),
+      policies: new PoliciesService(apiClient),
 
       // Legacy support - keep apiClient for any remaining direct calls
       apiClient,
