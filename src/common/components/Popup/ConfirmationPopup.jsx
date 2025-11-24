@@ -27,28 +27,29 @@ const ConfirmationPopup = ({
   const getVariantStyles = () => {
     switch (variant) {
       case "danger":
+      case "destructive":
         return {
-          button: "bg-red-600 hover:bg-red-700 focus:ring-red-500",
-          icon: "text-red-600",
-          title: "text-red-900",
+          button: "bg-red-600 hover:bg-red-700 focus:ring-red-500 dark:bg-red-600 dark:hover:bg-red-700",
+          icon: "text-red-600 dark:text-red-400",
+          title: "text-red-900 dark:text-red-100",
         };
       case "warning":
         return {
-          button: "bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500",
-          icon: "text-yellow-600",
-          title: "text-yellow-900",
+          button: "bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500 dark:bg-yellow-600 dark:hover:bg-yellow-700",
+          icon: "text-yellow-600 dark:text-yellow-400",
+          title: "text-yellow-900 dark:text-yellow-100",
         };
       case "info":
         return {
-          button: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500",
-          icon: "text-blue-600",
-          title: "text-blue-900",
+          button: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700",
+          icon: "text-blue-600 dark:text-blue-400",
+          title: "text-blue-900 dark:text-blue-100",
         };
       default:
         return {
-          button: "bg-gray-600 hover:bg-gray-700 focus:ring-gray-500",
-          icon: "text-gray-600",
-          title: "text-gray-900",
+          button: "bg-gray-600 hover:bg-gray-700 focus:ring-gray-500 dark:bg-gray-600 dark:hover:bg-gray-700",
+          icon: "text-gray-600 dark:text-gray-400",
+          title: "text-gray-900 dark:text-gray-100",
         };
     }
   };
@@ -59,13 +60,13 @@ const ConfirmationPopup = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn("sm:max-w-md", className)}>
         <DialogHeader className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 mb-4">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
             <Icon className={cn("h-6 w-6", styles.icon)} />
           </div>
           <DialogTitle className={cn("text-lg font-semibold", styles.title)}>
             {title}
           </DialogTitle>
-          <DialogDescription className="text-gray-600 mt-2">
+          <DialogDescription className="text-gray-600 dark:text-gray-300 mt-2">
             {description}
           </DialogDescription>
         </DialogHeader>

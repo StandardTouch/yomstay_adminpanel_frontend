@@ -14,7 +14,7 @@ import GlobalAmenities from "./features/global_amenities/screens/GlobalAmenities
 import Filter from "./features/filters/screens/Filter";
 import Conditions from "./features/conditions/screens/conditions";
 import Newsletter from "./features/newsletter/screens/newsletter";
-import Theme from "./features/theme/screens/theme";
+import ThematicsScreen from "./features/thematics/screens/ThematicsScreen";
 import ContactRequest from "./features/contact_request/screens/contactRequest";
 
 import { ToastContainer } from "react-toastify";
@@ -63,7 +63,7 @@ function App() {
           <Route path="conditions" element={<Conditions />} />
           <Route path="newsletter" element={<Newsletter />} />
           <Route path="settings" element={<Settings />} />
-          <Route path="theme" element={<Theme />} />
+          <Route path="theme" element={<ThematicsScreen />} />
           <Route path="contact_request" element={<ContactRequest />} />
           {/* <Route path="request_hotels" element={<RequestHotels />} /> */}
         </Route>

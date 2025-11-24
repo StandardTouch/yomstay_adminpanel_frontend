@@ -8,6 +8,7 @@ import settingsReducer from "../features/settings/settingsSlice";
 import roomTypesReducer from "../features/settings/roomTypesSlice";
 import amenitiesReducer from "../features/global_amenities/amenitiesSlice";
 import conditionsReducer from "../features/conditions/conditionsSlice";
+import thematicsReducer from "../features/thematics/thematicsSlice";
 // import authReducer from '../features/auth/authSlice';
 // import dashboardReducer from '../features/dashboard/dashboardSlice';
 // import filtersReducer from '../features/filters/filtersSlice';
@@ -22,6 +23,7 @@ const rootReducer = combineReducers({
   roomTypes: roomTypesReducer,
   amenities: amenitiesReducer,
   conditions: conditionsReducer,
+  thematics: thematicsReducer,
   // auth: authReducer,
   // dashboard: dashboardReducer,
   // filters: filtersReducer,
