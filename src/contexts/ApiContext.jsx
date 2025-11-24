@@ -6,6 +6,7 @@ import { HotelsService } from "../features/hotels/services/hotelsService";
 import { AdminService } from "../features/hotels/services/adminService";
 import { LocationsService } from "../features/locations/services/locationsService";
 import { HotelRequestsService } from "../features/hotel_requests/services/hotelRequestsService";
+import { AmenitiesService } from "../features/global_amenities/services/amenitiesService";
 
 // Create the API Context
 const ApiContext = createContext(null);
@@ -41,12 +42,12 @@ export const ApiProvider = ({ children }) => {
       admin: new AdminService(apiClient),
       locations: new LocationsService(apiClient),
       hotelRequests: new HotelRequestsService(apiClient),
+      amenities: new AmenitiesService(apiClient),
 
       // Legacy support - keep apiClient for any remaining direct calls
       apiClient,
 
       // TODO: Add other services as needed
-      // hotelAmenities: new HotelAmenitiesService(apiClient),
       // currencies: new CurrenciesService(apiClient),
       // webhooks: new WebhooksService(apiClient),
     };

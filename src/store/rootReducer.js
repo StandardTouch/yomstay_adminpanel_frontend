@@ -6,9 +6,9 @@ import hotelRequestsReducer from "../features/hotel_requests/hotelRequestsSlice"
 import locationReducer from "../features/locations/locationSlice";
 import settingsReducer from "../features/settings/settingsSlice";
 import roomTypesReducer from "../features/settings/roomTypesSlice";
+import amenitiesReducer from "../features/global_amenities/amenitiesSlice";
 // import authReducer from '../features/auth/authSlice';
 // import dashboardReducer from '../features/dashboard/dashboardSlice';
-// import globalAmenitiesReducer from '../features/global_amenities/globalAmenitiesSlice';
 // import filtersReducer from '../features/filters/filtersSlice';
 
 const rootReducer = combineReducers({
@@ -19,9 +19,9 @@ const rootReducer = combineReducers({
   locations: locationReducer,
   settings: settingsReducer,
   roomTypes: roomTypesReducer,
+  amenities: amenitiesReducer,
   // auth: authReducer,
   // dashboard: dashboardReducer,
-  // globalAmenities: globalAmenitiesReducer,
   // filters: filtersReducer,
 });
 
