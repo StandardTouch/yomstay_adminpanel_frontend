@@ -16,6 +16,7 @@ import Conditions from "./features/conditions/screens/conditions";
 import Newsletter from "./features/newsletter/screens/newsletter";
 import ThematicsScreen from "./features/thematics/screens/ThematicsScreen";
 import ContactRequest from "./features/contact_request/screens/contactRequest";
+import SingleContactRequest from "./features/contact_request/screens/SingleContactRequest";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -65,6 +66,7 @@ function App() {
           <Route path="settings" element={<Settings />} />
           <Route path="theme" element={<ThematicsScreen />} />
           <Route path="contact_request" element={<ContactRequest />} />
+          <Route path="contact_request/:id" element={<SingleContactRequest />} />
           {/* <Route path="request_hotels" element={<RequestHotels />} /> */}
         </Route>
 

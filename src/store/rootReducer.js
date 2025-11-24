@@ -10,6 +10,7 @@ import amenitiesReducer from "../features/global_amenities/amenitiesSlice";
 import conditionsReducer from "../features/conditions/conditionsSlice";
 import thematicsReducer from "../features/thematics/thematicsSlice";
 import newsletterReducer from "../features/newsletter/newsletterSlice";
+import contactRequestsReducer from "../features/contact_request/contactRequestsSlice";
 // import authReducer from '../features/auth/authSlice';
 // import dashboardReducer from '../features/dashboard/dashboardSlice';
 // import filtersReducer from '../features/filters/filtersSlice';
@@ -26,6 +27,7 @@ const rootReducer = combineReducers({
   conditions: conditionsReducer,
   thematics: thematicsReducer,
   newsletter: newsletterReducer,
+  contactRequests: contactRequestsReducer,
   // auth: authReducer,
   // dashboard: dashboardReducer,
   // filters: filtersReducer,
