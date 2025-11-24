@@ -10,15 +10,15 @@ export const AmenityItem = ({ amenity, onDelete, onAdd, CheckSheet }) => (
     >
       {amenity.icon ? (
         amenity.icon.startsWith("http") || amenity.icon.startsWith("/") ? (
-          <img
-            src={amenity.icon}
-            alt={amenity.name}
-            className="w-10 h-10 rounded"
+        <img
+          src={amenity.icon}
+          alt={amenity.name}
+          className="w-10 h-10 rounded"
             onError={(e) => {
               // Hide image if it fails to load
               e.target.style.display = "none";
             }}
-          />
+        />
         ) : (
           // If icon is an emoji or identifier, try to display as emoji
           <span className="text-3xl w-10 h-10 flex items-center justify-center">

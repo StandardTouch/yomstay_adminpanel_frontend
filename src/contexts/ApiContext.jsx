@@ -7,6 +7,7 @@ import { AdminService } from "../features/hotels/services/adminService";
 import { LocationsService } from "../features/locations/services/locationsService";
 import { HotelRequestsService } from "../features/hotel_requests/services/hotelRequestsService";
 import { AmenitiesService } from "../features/global_amenities/services/amenitiesService";
+import { ConditionsService } from "../features/conditions/services/conditionsService";
 
 // Create the API Context
 const ApiContext = createContext(null);
@@ -43,6 +44,7 @@ export const ApiProvider = ({ children }) => {
       locations: new LocationsService(apiClient),
       hotelRequests: new HotelRequestsService(apiClient),
       amenities: new AmenitiesService(apiClient),
+      conditions: new ConditionsService(apiClient),
 
       // Legacy support - keep apiClient for any remaining direct calls
       apiClient,
