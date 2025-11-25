@@ -14,6 +14,7 @@ import contactRequestsReducer from "../features/contact_request/contactRequestsS
 import cancellationPolicyReducer from "../features/settings/cancellationPolicySlice";
 import termsOfUseReducer from "../features/settings/termsOfUseSlice";
 import privacyPolicyReducer from "../features/settings/privacyPolicySlice";
+import documentTypesReducer from "../features/settings/documentTypesSlice";
 // import authReducer from '../features/auth/authSlice';
 // import dashboardReducer from '../features/dashboard/dashboardSlice';
 // import filtersReducer from '../features/filters/filtersSlice';
@@ -34,6 +35,7 @@ const rootReducer = combineReducers({
   cancellationPolicy: cancellationPolicyReducer,
   termsOfUse: termsOfUseReducer,
   privacyPolicy: privacyPolicyReducer,
+  documentTypes: documentTypesReducer,
   // auth: authReducer,
   // dashboard: dashboardReducer,
   // filters: filtersReducer,
