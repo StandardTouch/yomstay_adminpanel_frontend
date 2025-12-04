@@ -10,6 +10,9 @@ import {
   SlidersHorizontal,
   User,
   Building2,
+  Building,
+  Banknote,
+  FileCog,
   FileText,
   ListTodo,
   Newspaper,
@@ -38,6 +41,8 @@ const sidebarGroups = [
     items: [
       { title: "Dashboard", url: "/dashboard", icon: Home },
       { title: "Users", url: "users", icon: User },
+      { title: "Bookings", url: "booking", icon: Calendar },
+      { title: "Support Requests", url: "support_request", icon: FileCog },
     ],
   },
   {
@@ -56,7 +61,12 @@ const sidebarGroups = [
   },
   {
     label: "General",
-    items: [{ title: "Settings", url: "settings", icon: Settings }],
+    items: [{ title: "Settings", url: "settings", icon: Settings },
+    { title: "Currency Conversion", url: "currency_conversion", icon: Banknote },
+    { title: "Countries", url: "countries", icon: Building2 },
+    { title: "Cities", url: "cities", icon: Building },
+    { title: "States", url: "states", icon: Building }
+    ],
   },
   // Add more groups here as needed
 ];

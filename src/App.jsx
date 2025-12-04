@@ -17,6 +17,12 @@ import Newsletter from "./features/newsletter/screens/newsletter";
 import ThematicsScreen from "./features/thematics/screens/ThematicsScreen";
 import ContactRequest from "./features/contact_request/screens/contactRequest";
 import SingleContactRequest from "./features/contact_request/screens/SingleContactRequest";
+import Booking from "./features/booking/screens/booking";
+import SupportRequest from "./features/support_request/screens/supportRequest";
+import CurrencyConversion from "./features/currency_conversion/screens/currencyConversion";
+import Countries from "./features/countries/screens/countries";
+import Cities from "./features/cities/screens/cities";
+import States from "./features/states/screens/states";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -67,6 +73,12 @@ function App() {
           <Route path="theme" element={<ThematicsScreen />} />
           <Route path="contact_request" element={<ContactRequest />} />
           <Route path="contact_request/:id" element={<SingleContactRequest />} />
+          <Route path="booking" element={<Booking />} />
+          <Route path="support_request" element={<SupportRequest />} />
+          <Route path="currency_conversion" element={<CurrencyConversion />} />
+          <Route path="countries" element={<Countries />} />
+          <Route path="cities" element={<Cities />} />
+          <Route path="states" element={<States />} />
           {/* <Route path="request_hotels" element={<RequestHotels />} /> */}
         </Route>
 
