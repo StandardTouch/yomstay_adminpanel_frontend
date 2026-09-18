@@ -33,7 +33,10 @@ export const fetchHotelRequests = createAsyncThunk(
 // Async thunk for handling hotel request (approve, reject, needs_completion)
 export const handleHotelRequest = createAsyncThunk(
   "hotelRequests/handleHotelRequest",
-  async ({ requestId, status, apiClient }, { rejectWithValue }) => {
+  async (
+    { requestId, status, rejectionReason, apiClient },
+    { rejectWithValue }
+  ) => {
     try {
       if (!apiClient?.hotelRequests) {
         throw new Error("API client is required");
@@ -41,7 +44,8 @@ export const handleHotelRequest = createAsyncThunk(
 
       const response = await apiClient.hotelRequests.handleRequest(
         requestId,
-        status
+        status,
+        rejectionReason
       );
 
       return {
