@@ -1,0 +1,25 @@
+# Single-page-app fallback.
+#
+# admin.yomstay.com is served by LiteSpeed, not by the nginx container in the
+# Dockerfile, so the try_files rule there never applies and any direct URL
+# (for example /dashboard/settings) returns the host 404 page instead of the
+# app. Vite copies this file into dist/, so the built upload carries the rule.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Leave real files and directories alone
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else is handled by the app
+  RewriteRule . /index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "env\.js$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+</IfModule>
