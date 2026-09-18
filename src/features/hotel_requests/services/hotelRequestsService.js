@@ -103,7 +103,7 @@ export class HotelRequestsService {
    * @param {string} status - Status: 'approved', 'rejected', or 'needs_completion'
    * @returns {Promise} API response
    */
-  async handleRequest(id, status) {
+  async handleRequest(id, status, rejectionReason) {
     if (!id) {
       throw new Error("Request ID is required");
     }
@@ -117,8 +117,23 @@ export class HotelRequestsService {
       );
     }
 
-    return this.apiClient.patch(`/hotel-requests/${id}/approve-or-reject`, {
-      status,
-    });
+    const payload = { status };
+
+    // The API rejects the request unless a reason of at least 10 characters
+    // is sent with a 'rejected' status.
+    if (status === "rejected") {
+      const reason = (rejectionReason || "").trim();
+      if (reason.length < 10) {
+        throw new Error(
+          "A rejection reason of at least 10 characters is required"
+        );
+      }
+      payload.rejectionReason = reason;
+    }
+
+    return this.apiClient.patch(
+      `/hotel-requests/${id}/approve-or-reject`,
+      payload
+    );
   }
 }
