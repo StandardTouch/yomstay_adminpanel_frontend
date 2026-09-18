@@ -343,7 +343,21 @@ function HotelRequestsScreen() {
 
   const handleConfirmReject = useCallback(
     (requestId, reason, notes) => {
-      dispatch(handleHotelRequest({ requestId, status: "rejected", apiClient }))
+      // The API needs a reason of at least 10 characters, so the selected
+      // reason and the optional notes are sent together.
+      const rejectionReason = [reason, notes]
+        .map((part) => (part || "").trim())
+        .filter(Boolean)
+        .join(" - ");
+
+      dispatch(
+        handleHotelRequest({
+          requestId,
+          status: "rejected",
+          rejectionReason,
+          apiClient,
+        })
+      )
         .unwrap()
         .then(() => {
           showSuccess("Hotel request rejected successfully!");

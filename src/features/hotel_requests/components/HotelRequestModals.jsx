@@ -108,12 +108,20 @@ const RejectModal = memo(
     const [reason, setReason] = useState("");
     const [notes, setNotes] = useState("");
 
+    // The API needs a reason of at least 10 characters. Short options such as
+    // "Other" only pass once the admin adds a note, so both are checked here.
+    const combinedReason = [reason, notes]
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .join(" - ");
+    const isReasonLongEnough = combinedReason.length >= 10;
+
     const handleConfirm = useCallback(() => {
-      if (!reason.trim() || !request?.id) return;
+      if (!reason.trim() || !isReasonLongEnough || !request?.id) return;
       onConfirm(request.id, reason, notes);
       setReason("");
       setNotes("");
-    }, [onConfirm, request?.id, reason, notes]);
+    }, [onConfirm, request?.id, reason, notes, isReasonLongEnough]);
 
     const handleClose = useCallback(() => {
       setReason("");
@@ -190,7 +198,7 @@ const RejectModal = memo(
 
             {/* Additional Notes */}
             <div className="space-y-2">
-              <Label htmlFor="reject-notes">Additional Notes (Optional)</Label>
+              <Label htmlFor="reject-notes">Additional Notes</Label>
               <Textarea
                 id="reject-notes"
                 placeholder="Provide additional details about the rejection..."
@@ -198,6 +206,12 @@ const RejectModal = memo(
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
               />
+              {reason.trim() && !isReasonLongEnough && (
+                <p className="text-xs text-red-600">
+                  Add a short note: the reason must be at least 10 characters
+                  long.
+                </p>
+              )}
             </div>
           </div>
 
@@ -211,7 +225,7 @@ const RejectModal = memo(
             </Button>
             <Button
               onClick={handleConfirm}
-              disabled={isHandling || !reason.trim()}
+              disabled={isHandling || !reason.trim() || !isReasonLongEnough}
               variant="destructive"
             >
               {isHandling ? "Processing..." : "Reject Request"}
