@@ -479,8 +479,12 @@ const UserModals = ({
       errors.role = "Role is required";
     }
 
-    // Hotel validation for hotel-related roles
-    if (requiresHotel(formData.role) && !formData.hotelId) {
+    // Staff belong to a hotel that already exists, so one must be picked.
+    // A hotel owner is different: a new partner has no hotel yet and creates
+    // it through the onboarding flow, so requiring one here made it
+    // impossible to create the very first owner on a platform with no
+    // hotels - the dropdown was empty and the submit button never enabled.
+    if (formData.role === "hotelStaff" && !formData.hotelId) {
       errors.hotelId = "Hotel selection is required for this role";
     }
 
@@ -831,7 +835,9 @@ const UserModals = ({
                   {requiresHotel(formData.role) && (
                     <div className="space-y-2">
                       <Label className="text-sm font-medium text-foreground">
-                        Hotel *
+                        {formData.role === "hotelStaff"
+                          ? "Hotel *"
+                          : "Hotel (optional)"}
                       </Label>
                       {console.log("Add form - SearchableDropdown props:", {
                         value: formData.hotelId,
@@ -1191,7 +1197,9 @@ const UserModals = ({
                   {requiresHotel(formData.role) && (
                     <div className="space-y-2">
                       <Label className="text-sm font-medium text-foreground">
-                        Hotel *
+                        {formData.role === "hotelStaff"
+                          ? "Hotel *"
+                          : "Hotel (optional)"}
                       </Label>
                       {console.log("Edit form - SearchableDropdown props:", {
                         value: formData.hotelId,
