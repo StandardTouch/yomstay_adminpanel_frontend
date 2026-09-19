@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "@clerk/clerk-react";
 import { useApi } from "../../../contexts/ApiContext";
@@ -28,6 +29,7 @@ import { showError } from "../../../utils/toast";
 
 export default function DashboardScreen() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { isLoaded, isSignedIn } = useAuth();
   const apiClient = useApi();
 
@@ -268,13 +270,26 @@ export default function DashboardScreen() {
       <Card className="p-4 w-full">
         <div className="font-semibold mb-3">Quick Actions:</div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          <Button variant="default" className="gap-2 w-full justify-center">
+          {/* These three had no handler at all, so nothing happened on click. */}
+          <Button
+            variant="default"
+            className="gap-2 w-full justify-center"
+            onClick={() => navigate("/dashboard/hotels")}
+          >
             <Plus size={16} /> Add Hotel
           </Button>
-          <Button variant="secondary" className="gap-2 w-full justify-center">
+          <Button
+            variant="secondary"
+            className="gap-2 w-full justify-center"
+            onClick={() => navigate("/dashboard/booking")}
+          >
             <List size={16} /> View All Bookings
           </Button>
-          <Button variant="outline" className="gap-2 w-full justify-center">
+          <Button
+            variant="outline"
+            className="gap-2 w-full justify-center"
+            onClick={() => navigate("/dashboard/users")}
+          >
             <User size={16} /> Manage Users
           </Button>
         </div>
