@@ -28,7 +28,6 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import VerifyMagicLinkWithPasswordReset from "./features/auth/test";
 import Settings from "./features/settings/screens/settings";
-import { Contact } from "lucide-react";
 
 function App() {
   const { isSignedIn, user, isLoaded } = useUser();
@@ -79,12 +78,28 @@ function App() {
           <Route path="countries" element={<Countries />} />
           <Route path="cities" element={<Cities />} />
           <Route path="states" element={<States />} />
+          {/* An unknown /dashboard/... URL matched the parent route but no
+              child, so the content area rendered nothing at all. */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
           {/* <Route path="request_hotels" element={<RequestHotels />} /> */}
         </Route>
 
         {/* Login route */}
         <Route path="/login" element={<SignInPage />} />
         <Route path="/verify" element={<VerifyMagicLinkWithPasswordReset />} />
+        {/* Any other URL (for example /settings, which is really
+            /dashboard/settings) matched no route and rendered a completely
+            blank page, which reads as an outage rather than a wrong link. */}
+        <Route
+          path="*"
+          element={
+            isSignedIn ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
       </Routes>
       <ToastContainer />
     </BrowserRouter>
