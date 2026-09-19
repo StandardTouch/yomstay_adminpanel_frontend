@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { SignIn, useUser } from "@clerk/clerk-react";
+import { SignIn, useUser, useClerk } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 
 export default function SignInPage() {
   const { isSignedIn, user, isLoaded } = useUser();
+  // Sign-out lives on the Clerk instance, not on the User object.
+  const { signOut } = useClerk();
   const navigate = useNavigate();
   const [isCheckingRole, setIsCheckingRole] = useState(false);
   const [roleError, setRoleError] = useState("");
@@ -80,9 +82,10 @@ export default function SignInPage() {
               <p className="text-gray-600 mb-6">{roleError}</p>
               <button
                 onClick={() => {
-                  setRoleError("");
-                  // Sign out the user
-                  user?.signOut();
+                  // This called user?.signOut(), which does not exist on the
+                  // User object, so the click threw and anyone signed in with
+                  // the wrong account was stuck on this screen.
+                  signOut({ redirectUrl: "/login" });
                 }}
                 className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-md transition-colors"
               >
