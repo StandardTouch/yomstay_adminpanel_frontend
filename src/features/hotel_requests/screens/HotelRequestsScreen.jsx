@@ -312,6 +312,26 @@ function HotelRequestsScreen() {
     dispatch(fetchHotelRequests(apiParams));
   }, [dispatch, apiParams]);
 
+  // Approving a request is what actually creates the hotel owner's account
+  // and publishes the hotel. Until now the card had no Approve button at all,
+  // so the only way out of "pending" was to reject.
+  const handleApprove = useCallback(
+    (requestId) => {
+      dispatch(handleHotelRequest({ requestId, status: "approved", apiClient }))
+        .unwrap()
+        .then(() => {
+          showSuccess(
+            "Hotel request approved. The owner now has a partner account and the hotel is live."
+          );
+          dispatch(fetchHotelRequests({ apiClient }));
+        })
+        .catch((error) => {
+          showError(error || "Failed to approve hotel request");
+        });
+    },
+    [dispatch, apiClient]
+  );
+
   const handleReject = useCallback(
     (requestId) => {
       const request = hotelRequests.find((req) => req.id === requestId);
@@ -550,6 +570,7 @@ function HotelRequestsScreen() {
             <HotelRequestCard
               key={request.id}
               request={request}
+              onApprove={handleApprove}
               onReject={handleReject}
               onNeedsCompletion={handleNeedsCompletion}
               onViewDetails={handleViewDetails}
