@@ -24,6 +24,7 @@ import {
 
 const HotelRequestCard = ({
   request,
+  onApprove,
   onReject,
   onNeedsCompletion,
   onViewDetails,
@@ -104,6 +105,10 @@ const HotelRequestCard = ({
   }, [request.hotel?.address]);
 
   // Memoized callbacks for actions
+  const handleApprove = useCallback(() => {
+    onApprove?.(request.id);
+  }, [onApprove, request.id]);
+
   const handleReject = useCallback(() => {
     onReject?.(request.id);
   }, [onReject, request.id]);
@@ -268,9 +273,21 @@ const HotelRequestCard = ({
             View Details
           </Button>
 
+          {/* A rejected request can still be approved later - the first real
+              applications were all rejected because no Approve button existed,
+              and their owners should not have to apply again. */}
           {(request.status === "pending" ||
-            request.status === "needs_completion") && (
+            request.status === "needs_completion" ||
+            request.status === "rejected") && (
             <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2 w-full sm:w-auto">
+              <Button
+                size="sm"
+                onClick={handleApprove}
+                disabled={isHandling}
+                className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
+              >
+                {isHandling ? "Processing..." : "Approve"}
+              </Button>
               <Button
                 size="sm"
                 variant="destructive"
