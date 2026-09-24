@@ -60,6 +60,17 @@ const HotelRequestCard = ({
         className:
           "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
       },
+      // The partner panel sets this status when a hotel finishes its five
+      // setup steps and presses "send for review". Without an entry here the
+      // card fell back to the "pending" badge, so a hotel that had actually
+      // completed its listing was indistinguishable from one that had not.
+      ready_for_review: {
+        variant: "secondary",
+        icon: AlertCircle,
+        text: "Ready for Review",
+        className:
+          "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      },
     };
     return configs[request.status] || configs.pending;
   }, [request.status]);
@@ -254,6 +265,30 @@ const HotelRequestCard = ({
           </div>
         )}
 
+        {/* Ready for Review Alert Section */}
+        {request.status === "ready_for_review" && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-2">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-2">
+                <h4 className="font-semibold text-sm text-blue-900 dark:text-blue-200">
+                  Listing Submitted for Review
+                </h4>
+                <p className="text-sm text-blue-800 dark:text-blue-300">
+                  The hotel has completed its setup steps in the partner panel
+                  and submitted the listing. Approving it publishes the hotel.
+                </p>
+                {formattedUpdatedDate && (
+                  <div className="flex items-center text-xs text-blue-700 dark:text-blue-400 mt-2">
+                    <Clock className="w-3 h-3 mr-1" />
+                    <span>Submitted on: {formattedUpdatedDate}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Request Date */}
         <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
           <Calendar className="w-4 h-4 mr-2" />
@@ -275,9 +310,13 @@ const HotelRequestCard = ({
 
           {/* A rejected request can still be approved later - the first real
               applications were all rejected because no Approve button existed,
-              and their owners should not have to apply again. */}
+              and their owners should not have to apply again. ready_for_review
+              is the status a hotel lands in once it submits its completed
+              listing, and it was missing here, so a finished hotel could never
+              be approved and the onboarding chain ended there. */}
           {(request.status === "pending" ||
             request.status === "needs_completion" ||
+            request.status === "ready_for_review" ||
             request.status === "rejected") && (
             <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2 w-full sm:w-auto">
               <Button
