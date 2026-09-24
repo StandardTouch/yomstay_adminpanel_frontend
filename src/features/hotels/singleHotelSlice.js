@@ -345,8 +345,11 @@ const singleHotelSlice = createSlice({
       })
       .addCase(updateHotelOverview.fulfilled, (state, action) => {
         state.updatingOverview = false;
-        // Update hotel data with response
-        state.hotel = action.payload.data?.hotel || action.payload.data;
+        // The admin update endpoint answers with { id } only. Replacing the
+        // stored hotel with that answer wiped every other field, the form then
+        // re-seeded itself from the stub, and the next save wrote the defaults
+        // back to the database: status "pending", latitude and longitude null.
+        if (action.payload.data?.hotel) state.hotel = action.payload.data.hotel;
         state.overviewError = null;
       })
       .addCase(updateHotelOverview.rejected, (state, action) => {
@@ -361,7 +364,7 @@ const singleHotelSlice = createSlice({
       })
       .addCase(updateHotelAmenitiesAndFaqs.fulfilled, (state, action) => {
         state.updatingAmenities = false;
-        state.hotel = action.payload.data?.hotel || action.payload.data;
+        if (action.payload.data?.hotel) state.hotel = action.payload.data.hotel;
         state.amenitiesError = null;
       })
       .addCase(updateHotelAmenitiesAndFaqs.rejected, (state, action) => {
@@ -376,7 +379,7 @@ const singleHotelSlice = createSlice({
       })
       .addCase(updateHotelThematics.fulfilled, (state, action) => {
         state.updatingThematics = false;
-        state.hotel = action.payload.data?.hotel || action.payload.data;
+        if (action.payload.data?.hotel) state.hotel = action.payload.data.hotel;
         state.thematicsError = null;
       })
       .addCase(updateHotelThematics.rejected, (state, action) => {
@@ -391,7 +394,7 @@ const singleHotelSlice = createSlice({
       })
       .addCase(updateHotelConditions.fulfilled, (state, action) => {
         state.updatingConditions = false;
-        state.hotel = action.payload.data?.hotel || action.payload.data;
+        if (action.payload.data?.hotel) state.hotel = action.payload.data.hotel;
         state.conditionsError = null;
       })
       .addCase(updateHotelConditions.rejected, (state, action) => {
@@ -406,7 +409,7 @@ const singleHotelSlice = createSlice({
       })
       .addCase(updateHotelTaxes.fulfilled, (state, action) => {
         state.updatingTaxes = false;
-        state.hotel = action.payload.data?.hotel || action.payload.data;
+        if (action.payload.data?.hotel) state.hotel = action.payload.data.hotel;
         state.taxesError = null;
       })
       .addCase(updateHotelTaxes.rejected, (state, action) => {
@@ -422,7 +425,7 @@ const singleHotelSlice = createSlice({
       .addCase(updateSingleHotel.fulfilled, (state, action) => {
         state.updating = false;
         // Store the serialized hotel data - extract from nested structure
-        state.hotel = action.payload.data?.hotel || action.payload.data;
+        if (action.payload.data?.hotel) state.hotel = action.payload.data.hotel;
         state.updateError = null;
       })
       .addCase(updateSingleHotel.rejected, (state, action) => {
