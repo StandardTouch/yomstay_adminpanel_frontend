@@ -60,8 +60,8 @@ const LoadingSkeleton = memo(() => (
     </div>
 
     {/* Stats Cards Skeleton */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-      {Array.from({ length: 5 }).map((_, index) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+      {Array.from({ length: 6 }).map((_, index) => (
         <Card key={index} className="animate-pulse">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
@@ -86,7 +86,7 @@ const LoadingSkeleton = memo(() => (
     {/* Filter Tabs Skeleton */}
     <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
       <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:space-x-1">
-        {Array.from({ length: 5 }).map((_, index) => (
+        {Array.from({ length: 6 }).map((_, index) => (
           <div
             key={index}
             className="h-9 bg-gray-200 dark:bg-gray-700 rounded px-3 sm:px-4 flex-shrink-0 animate-pulse"
@@ -188,6 +188,12 @@ const FilterTabs = memo(({ activeFilter, onFilterChange, stats }) => (
         icon: Clock,
       },
       {
+        key: "ready_for_review",
+        label: "Ready for Review",
+        count: stats.ready_for_review,
+        icon: AlertCircle,
+      },
+      {
         key: "approved",
         label: "Approved",
         count: stats.approved,
@@ -212,6 +218,8 @@ const FilterTabs = memo(({ activeFilter, onFilterChange, stats }) => (
         <span className="sm:hidden">
           {key === "needs_completion"
             ? "Info"
+            : key === "ready_for_review"
+            ? "Review"
             : key === "pending"
             ? "Pending"
             : label.substring(0, 4)}
@@ -241,7 +249,10 @@ function HotelRequestsScreen() {
 
   // Local state
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeFilter, setActiveFilter] = useState("pending");
+  // The screen used to open on the "pending" tab, so an admin arriving here
+  // saw an empty list whenever the waiting requests sat in another status and
+  // had to discover the tabs to find them. Opening on "all" shows everything.
+  const [activeFilter, setActiveFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
@@ -488,7 +499,7 @@ function HotelRequestsScreen() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
         <StatsCard
           title="Total Requests"
           value={stats.total}
@@ -508,6 +519,13 @@ function HotelRequestsScreen() {
           icon={AlertCircle}
           color="text-orange-600"
           percentage={stats.needs_completionPercentage}
+        />
+        <StatsCard
+          title="Ready for Review"
+          value={stats.ready_for_review}
+          icon={AlertCircle}
+          color="text-blue-600"
+          percentage={stats.ready_for_reviewPercentage}
         />
         <StatsCard
           title="Approved"
