@@ -141,6 +141,14 @@ const OptimizedSingleHotel = ({
         location: hotel?.location || { lat: null, lng: null },
         freeCancellationPolicy: hotel?.freeCancellationPolicy || false,
         countryCode: hotel?.countryCode || "",
+        // This effect re-seeds the form once the hotel arrives and overwrites
+        // whatever useState set, so any field missing here silently stays
+        // empty no matter what the API returned.
+        slug: hotel?.slug || "",
+        nameAr: hotel?.nameAr || "",
+        descriptionAr: hotel?.descriptionAr || "",
+        addressAr: hotel?.addressAr || "",
+        neighborhoodAr: hotel?.neighborhoodAr || "",
       });
 
       setAmenitiesFields({
