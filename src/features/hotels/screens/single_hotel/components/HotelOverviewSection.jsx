@@ -79,17 +79,52 @@ const HotelOverviewSection = memo(({ fields, onFieldChange }) => {
         <h2 className="text-2xl font-semibold">Hotel Overview</h2>
       </div>
 
+      {/* The site is bilingual and reads the Arabic columns, so every field a
+          guest sees needs its Arabic counterpart here. Leaving an Arabic box
+          empty leaves the stored Arabic value untouched. */}
+      <p className="text-sm text-muted-foreground -mt-4">
+        Arabic fields are what guests see on the Arabic site. Leave one empty to
+        keep whatever Arabic value is already stored.
+      </p>
+
       {/* Basic Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Hotel Name */}
         <div className="flex flex-col gap-2">
-          <Label className="text-lg">Hotel Name</Label>
+          <Label className="text-lg">Hotel Name (English)</Label>
           <Input
             type="text"
             value={fields.name}
             onChange={(e) => handleFieldChange("name", e.target.value)}
             placeholder="Enter hotel name"
           />
+        </div>
+
+        {/* Hotel Name in Arabic */}
+        <div className="flex flex-col gap-2">
+          <Label className="text-lg">Hotel Name (Arabic)</Label>
+          <Input
+            type="text"
+            dir="rtl"
+            value={fields.nameAr || ""}
+            onChange={(e) => handleFieldChange("nameAr", e.target.value)}
+            placeholder="اسم الفندق بالعربية"
+          />
+        </div>
+
+        {/* URL slug */}
+        <div className="flex flex-col gap-2 md:col-span-2">
+          <Label className="text-lg">URL Slug</Label>
+          <Input
+            type="text"
+            value={fields.slug || ""}
+            onChange={(e) => handleFieldChange("slug", e.target.value)}
+            placeholder="hotel-name-in-lowercase-with-dashes"
+          />
+          <p className="text-xs text-muted-foreground">
+            This is the hotel's web address on yomstay.com and it must be unique
+            across the platform. Changing it breaks any link already shared.
+          </p>
         </div>
 
         {/* Status */}
@@ -165,8 +200,8 @@ const HotelOverviewSection = memo(({ fields, onFieldChange }) => {
         <h3 className="text-xl font-semibold">Address Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Address */}
-          <div className="flex flex-col gap-2 md:col-span-2">
-            <Label className="text-lg">Address</Label>
+          <div className="flex flex-col gap-2">
+            <Label className="text-lg">Address (English)</Label>
             <Input
               type="text"
               value={fields.address}
@@ -175,9 +210,21 @@ const HotelOverviewSection = memo(({ fields, onFieldChange }) => {
             />
           </div>
 
+          {/* Address in Arabic */}
+          <div className="flex flex-col gap-2">
+            <Label className="text-lg">Address (Arabic)</Label>
+            <Input
+              type="text"
+              dir="rtl"
+              value={fields.addressAr || ""}
+              onChange={(e) => handleFieldChange("addressAr", e.target.value)}
+              placeholder="عنوان الفندق بالعربية"
+            />
+          </div>
+
           {/* Neighborhood */}
           <div className="flex flex-col gap-2">
-            <Label className="text-lg">Neighborhood</Label>
+            <Label className="text-lg">Neighborhood (English)</Label>
             <Input
               type="text"
               value={fields.neighborhood}
@@ -185,6 +232,20 @@ const HotelOverviewSection = memo(({ fields, onFieldChange }) => {
                 handleFieldChange("neighborhood", e.target.value)
               }
               placeholder="Enter neighborhood"
+            />
+          </div>
+
+          {/* Neighborhood in Arabic */}
+          <div className="flex flex-col gap-2">
+            <Label className="text-lg">Neighborhood (Arabic)</Label>
+            <Input
+              type="text"
+              dir="rtl"
+              value={fields.neighborhoodAr || ""}
+              onChange={(e) =>
+                handleFieldChange("neighborhoodAr", e.target.value)
+              }
+              placeholder="الحي بالعربية"
             />
           </div>
 
@@ -265,12 +326,24 @@ const HotelOverviewSection = memo(({ fields, onFieldChange }) => {
 
       {/* Description */}
       <div className="flex flex-col gap-2">
-        <Label className="text-lg">Description</Label>
+        <Label className="text-lg">Description (English)</Label>
         <HtmlEditor
           value={fields.description || ""}
           onChange={(content) => handleFieldChange("description", content)}
           placeholder="Enter hotel description"
         />
+      </div>
+
+      {/* Description in Arabic */}
+      <div className="flex flex-col gap-2">
+        <Label className="text-lg">Description (Arabic)</Label>
+        <div dir="rtl">
+          <HtmlEditor
+            value={fields.descriptionAr || ""}
+            onChange={(content) => handleFieldChange("descriptionAr", content)}
+            placeholder="وصف الفندق بالعربية"
+          />
+        </div>
       </div>
     </div>
   );

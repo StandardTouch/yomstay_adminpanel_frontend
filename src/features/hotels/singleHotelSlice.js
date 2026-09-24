@@ -49,12 +49,42 @@ export const updateHotelOverview = createAsyncThunk(
           freeCancellationPolicy: hotelData.freeCancellationPolicy,
           latitude: hotelData.location?.lat,
           longitude: hotelData.location?.lng,
+          slug: hotelData.slug || undefined,
+          cityId: hotelData.cityId || undefined,
+          stateId: hotelData.stateId || undefined,
+          countryId: hotelData.countryId || undefined,
         },
       };
 
       // Remove undefined values
       Object.keys(payload.hotel).forEach(
         (key) => payload.hotel[key] === undefined && delete payload.hotel[key]
+      );
+
+      // The public site reads the bilingual columns, not the base ones, so
+      // an Arabic value typed in the panel has to be written there or the
+      // site keeps showing whatever was imported with the hotel. An empty
+      // box is left alone, so saving here never wipes an Arabic value.
+      const setTranslation = (key, en, ar) => {
+        const arabic = (ar || "").trim();
+        if (!arabic) return;
+        payload.hotel[key] = { en: en || "", ar: arabic };
+      };
+      setTranslation("nameTranslations", hotelData.name, hotelData.nameAr);
+      setTranslation(
+        "descriptionTranslations",
+        hotelData.description,
+        hotelData.descriptionAr
+      );
+      setTranslation(
+        "addressTranslations",
+        hotelData.address,
+        hotelData.addressAr
+      );
+      setTranslation(
+        "neighborhoodTranslations",
+        hotelData.neighborhood,
+        hotelData.neighborhoodAr
       );
 
       const response = await apiClient.admin.updateHotel(hotelId, payload);

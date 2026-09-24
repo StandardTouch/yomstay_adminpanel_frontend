@@ -52,6 +52,11 @@ const OptimizedSingleHotel = ({
 
   // Section-specific states
   const [overviewFields, setOverviewFields] = useState({
+    slug: hotel?.slug || "",
+    nameAr: hotel?.nameAr || "",
+    descriptionAr: hotel?.descriptionAr || "",
+    addressAr: hotel?.addressAr || "",
+    neighborhoodAr: hotel?.neighborhoodAr || "",
     name: hotel?.name || "",
     description: hotel?.description || "",
     address: hotel?.address || "",
