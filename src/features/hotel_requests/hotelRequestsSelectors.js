@@ -14,6 +14,10 @@ export const selectHandling = (state) => state.hotelRequests.handling;
 export const selectHandleError = (state) => state.hotelRequests.handleError;
 
 // Computed selectors
+// ready_for_review is the status the partner panel sets once a hotel finishes
+// its setup steps and submits the listing. It was missing from every bucket
+// below, so those requests were left out of the totals and had no tab of their
+// own, which made a finished hotel invisible on this screen.
 export const selectHotelRequestsByStatus = createSelector(
   [selectHotelRequests],
   (requests) => {
@@ -21,6 +25,9 @@ export const selectHotelRequestsByStatus = createSelector(
       pending: requests.filter((req) => req.status === "pending"),
       needs_completion: requests.filter(
         (req) => req.status === "needs_completion"
+      ),
+      ready_for_review: requests.filter(
+        (req) => req.status === "ready_for_review"
       ),
       approved: requests.filter((req) => req.status === "approved"),
       rejected: requests.filter((req) => req.status === "rejected"),
@@ -34,10 +41,12 @@ export const selectHotelRequestsCount = createSelector(
     total:
       requestsByStatus.pending.length +
       requestsByStatus.needs_completion.length +
+      requestsByStatus.ready_for_review.length +
       requestsByStatus.approved.length +
       requestsByStatus.rejected.length,
     pending: requestsByStatus.pending.length,
     needs_completion: requestsByStatus.needs_completion.length,
+    ready_for_review: requestsByStatus.ready_for_review.length,
     approved: requestsByStatus.approved.length,
     rejected: requestsByStatus.rejected.length,
   })
@@ -52,6 +61,10 @@ export const selectHotelRequestsStats = createSelector(
     needs_completionPercentage:
       counts.total > 0
         ? Math.round((counts.needs_completion / counts.total) * 100)
+        : 0,
+    ready_for_reviewPercentage:
+      counts.total > 0
+        ? Math.round((counts.ready_for_review / counts.total) * 100)
         : 0,
     approvedPercentage:
       counts.total > 0 ? Math.round((counts.approved / counts.total) * 100) : 0,
