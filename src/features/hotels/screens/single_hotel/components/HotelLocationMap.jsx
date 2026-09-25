@@ -19,6 +19,7 @@ const HotelLocationMap = ({
   const map = useRef(null);
   const marker = useRef(null);
   const [isMapReady, setIsMapReady] = useState(false);
+  const [mapError, setMapError] = useState(null);
   const [tempLocation, setTempLocation] = useState({
     lat: latitude,
     lng: longitude,
@@ -55,11 +56,17 @@ const HotelLocationMap = ({
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Set your Mapbox access token
-    const accessToken =
-      import.meta.env.VITE_MAPBOX_ACCESS_TOKEN ||
-      "pk.eyJ1IjoieWFzZWVuIiwiYSI6ImNsdGJ6dGJ6dGJ6dGJ6In0.example";
-    console.log("Mapbox access token:", accessToken ? "Present" : "Missing");
+    // A missing token used to fall back to a hard-coded placeholder ending in
+    // ".example". Mapbox answered 401 and the panel span on "Loading map..."
+    // for ever, while the console claimed the token was "Present".
+    const accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+    if (!accessToken) {
+      setMapError(
+        "VITE_MAPBOX_ACCESS_TOKEN is not set for this build, so the map cannot load."
+      );
+      return;
+    }
+    setMapError(null);
     mapboxgl.accessToken = accessToken;
 
     // Initialize map
@@ -360,8 +367,19 @@ const HotelLocationMap = ({
           </div>
         )}
 
+        {/* Map unavailable */}
+        {mapError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted rounded-lg p-4">
+            <div className="text-center">
+              <MapPin className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm font-medium text-foreground">Map unavailable</p>
+              <p className="text-xs text-muted-foreground mt-1">{mapError}</p>
+            </div>
+          </div>
+        )}
+
         {/* Loading State */}
-        {!isMapReady && (
+        {!isMapReady && !mapError && (
           <div className="absolute inset-0 flex items-center justify-center bg-muted rounded-lg">
             <div className="text-center">
               <div className="w-8 h-8 border-4 border-primary border-dashed rounded-full animate-spin mx-auto mb-2"></div>
