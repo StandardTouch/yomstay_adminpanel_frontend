@@ -1,9 +1,14 @@
-import React, { memo, useCallback } from "react";
+import React, { memo, useCallback, useState } from "react";
 import { Upload } from "lucide-react";
 import { ImageCard } from "./ImageCard";
+import { useApi } from "@/contexts/ApiContext";
+import { showError, showSuccess } from "@/utils/toast";
 
 const HotelImagesSection = memo(
-  ({ images = [], onUpdateImages, onImageUpload }) => {
+  ({ hotelId, images = [], onUpdateImages, onImageUpload }) => {
+    const api = useApi();
+    const [deletingIndex, setDeletingIndex] = useState(null);
+
     const handleSetPrimary = useCallback(
       (imageId) => {
         const updatedImages = images.map((img) => ({
@@ -15,12 +20,41 @@ const HotelImagesSection = memo(
       [images, onUpdateImages]
     );
 
+    // This used to drop the image from React state and stop there. Nothing
+    // was ever sent to the server, so the image came back on the next page
+    // load and never left the public site.
     const handleDeleteImage = useCallback(
-      (index) => {
-        const updatedImages = images.filter((_, i) => i !== index);
-        onUpdateImages(updatedImages);
+      async (index) => {
+        // A second click while the first delete is still in flight would
+        // delete the wrong image, because the list shifts underneath.
+        if (deletingIndex !== null) return;
+
+        const image = images[index];
+        const removeLocally = () =>
+          onUpdateImages(images.filter((_, i) => i !== index));
+
+        // An image picked but not uploaded yet has no id, so there is
+        // nothing on the server to delete.
+        if (!image?.id || !hotelId) {
+          removeLocally();
+          return;
+        }
+
+        setDeletingIndex(index);
+        try {
+          await api.admin.deleteHotelImage(hotelId, image.id);
+          removeLocally();
+          showSuccess("Image deleted");
+        } catch (error) {
+          showError(
+            error?.response?.data?.message ||
+              "Could not delete the image. Please try again."
+          );
+        } finally {
+          setDeletingIndex(null);
+        }
       },
-      [images, onUpdateImages]
+      [api, deletingIndex, hotelId, images, onUpdateImages]
     );
 
     const handleFileUpload = useCallback(

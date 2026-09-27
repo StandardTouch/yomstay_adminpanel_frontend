@@ -56,6 +56,28 @@ export class AdminService {
   }
 
   /**
+   * Delete one image from a hotel
+   *
+   * The images tab used to drop the image from React state only, so it
+   * reappeared on the next page load and stayed on the public site.
+   *
+   * @param {string} hotelId - Hotel ID
+   * @param {string} imageId - Image ID
+   * @returns {Promise} API response
+   */
+  async deleteHotelImage(hotelId, imageId) {
+    if (!hotelId) {
+      throw new Error("Hotel ID is required");
+    }
+
+    if (!imageId) {
+      throw new Error("Image ID is required");
+    }
+
+    return this.apiClient.delete(`/admin/hotels/${hotelId}/images/${imageId}`);
+  }
+
+  /**
    * Get platform settings
    * @returns {Promise} API response
    */
