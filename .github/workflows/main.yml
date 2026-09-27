@@ -31,6 +31,7 @@ jobs:
         run: |
           echo "VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}" >> .env
           echo "NOVU_APP_ID=${{ secrets.NOVU_APP_ID }}" >> .env
+          echo "VITE_MAPBOX_ACCESS_TOKEN=${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}" >> .env
 
       - name: 🔨 Install Dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
