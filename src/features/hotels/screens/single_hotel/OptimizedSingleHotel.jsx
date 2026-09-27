@@ -404,6 +404,7 @@ const OptimizedSingleHotel = ({
       ),
       images: (
         <HotelImagesSection
+          hotelId={hotel?.id}
           images={imagesFields.images}
           onUpdateImages={handleImagesChange}
           onImageUpload={handleImageUpload}
