@@ -30,7 +30,11 @@ jobs:
       - name: 📄 Create .env file from GitHub Secrets
         run: |
           echo "VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}" >> .env
-          echo "NOVU_APP_ID=${{ secrets.NOVU_APP_ID }}" >> .env
+          # Vite only hands the browser variables whose name starts with
+          # VITE_, so the old line put the value somewhere the Inbox could
+          # never read it. The secret keeps its name; what is written into
+          # .env is the name the code reads.
+          echo "VITE_NOVU_APP_ID=${{ secrets.NOVU_APP_ID }}" >> .env
           echo "VITE_MAPBOX_ACCESS_TOKEN=${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}" >> .env
 
       - name: 🔨 Install Dependencies
