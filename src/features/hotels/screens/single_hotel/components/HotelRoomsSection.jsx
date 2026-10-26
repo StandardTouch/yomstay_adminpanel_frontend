@@ -166,7 +166,7 @@ const HotelRoomsSection = memo(({ rooms = [], onUpdateRooms }) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="size">Room Size (sq ft)</Label>
+                  <Label htmlFor="size">Room Size (m²)</Label>
                   <Input
                     id="size"
                     type="number"
@@ -348,7 +348,7 @@ const HotelRoomsSection = memo(({ rooms = [], onUpdateRooms }) => {
                 {room.size > 0 && (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Bed className="w-4 h-4" />
-                    <span>{room.size} sq ft</span>
+                    <span>{room.size} m²</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2 text-sm">
