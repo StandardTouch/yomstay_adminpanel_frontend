@@ -142,10 +142,13 @@ export default function ThematicsScreen() {
   const handleEditClick = (thematic) => {
     setIsEditing(true);
     setEditingThematic(thematic);
+    // The list is locale aware, so in Arabic mode its displayName holds the
+    // Arabic text. The dialog reads both names from the raw record instead.
+    const raw = thematics.find((t) => t.id === thematic.id) || thematic;
     setThematicForm({
       name: thematic.name || "",
-      displayName: thematic.displayName || "",
-      displayNameAr: thematic.ar?.displayName || "",
+      displayName: raw.displayName || "",
+      displayNameAr: raw.ar?.displayName || "",
     });
     setSheetOpen(true);
   };
