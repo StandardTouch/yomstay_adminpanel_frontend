@@ -71,9 +71,9 @@ const HotelRoomsSection = memo(({ hotelId, rooms = [], onUpdateRooms }) => {
         if (cancelled) return;
 
         setBedTypeOptions(
-          filters?.data?.data?.availableFilters?.bedTypes || []
+          filters?.data?.availableFilters?.bedTypes || []
         );
-        setRoomTypeOptions(types?.data?.data?.roomTypes || []);
+        setRoomTypeOptions(types?.data?.roomTypes || []);
       } catch (error) {
         if (!cancelled) {
           showError("Could not load the bed types and room types.");
@@ -129,7 +129,7 @@ const HotelRoomsSection = memo(({ hotelId, rooms = [], onUpdateRooms }) => {
     setSaving(true);
     try {
       const response = await api.admin.createHotelRoom(hotelId, toPayload());
-      const saved = response?.data?.data?.room;
+      const saved = response?.data?.room;
       onUpdateRooms([...rooms, saved || { ...roomForm }]);
       showSuccess("Room added");
       handleCloseModal();
