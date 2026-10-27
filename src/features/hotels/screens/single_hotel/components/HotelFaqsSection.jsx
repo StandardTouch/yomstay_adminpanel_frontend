@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/dialog";
 
 const HotelFaqsSection = memo(({ faqs = [], onUpdateFaqs }) => {
-  const [addFaq, setAddFaq] = useState({ question: "", answer: "" });
+  const emptyFaq = { question: "", questionAr: "", answer: "", answerAr: "" };
+  const [addFaq, setAddFaq] = useState({ ...emptyFaq });
   const [modal, setModal] = useState({ open: false, type: "faq" });
 
   const handleAddFaq = useCallback(
@@ -32,7 +33,7 @@ const HotelFaqsSection = memo(({ faqs = [], onUpdateFaqs }) => {
   );
 
   const handleCancel = useCallback(() => {
-    setAddFaq({ question: "", answer: "" });
+    setAddFaq({ ...emptyFaq });
     setModal({ ...modal, open: false });
   }, [modal]);
 
@@ -92,6 +93,19 @@ const HotelFaqsSection = memo(({ faqs = [], onUpdateFaqs }) => {
                 />
               </div>
               <div className="space-y-2">
+                <label htmlFor="faq-question-ar">Question (Arabic)</label>
+                <Input
+                  id="faq-question-ar"
+                  type="text"
+                  dir="rtl"
+                  value={addFaq.questionAr}
+                  onChange={(e) =>
+                    setAddFaq({ ...addFaq, questionAr: e.target.value })
+                  }
+                  placeholder="أدخل السؤال بالعربية"
+                />
+              </div>
+              <div className="space-y-2">
                 <label htmlFor="faq-answer">Answer</label>
                 <Textarea
                   id="faq-answer"
@@ -102,6 +116,19 @@ const HotelFaqsSection = memo(({ faqs = [], onUpdateFaqs }) => {
                   placeholder="Enter answer"
                   rows={3}
                   required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="faq-answer-ar">Answer (Arabic)</label>
+                <Textarea
+                  id="faq-answer-ar"
+                  dir="rtl"
+                  value={addFaq.answerAr}
+                  onChange={(e) =>
+                    setAddFaq({ ...addFaq, answerAr: e.target.value })
+                  }
+                  placeholder="أدخل الإجابة بالعربية"
+                  rows={3}
                 />
               </div>
               <div className="flex justify-end gap-2">
