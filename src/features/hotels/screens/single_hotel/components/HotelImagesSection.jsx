@@ -5,19 +5,40 @@ import { useApi } from "@/contexts/ApiContext";
 import { showError, showSuccess } from "@/utils/toast";
 
 const HotelImagesSection = memo(
-  ({ hotelId, images = [], onUpdateImages, onImageUpload }) => {
+  ({ hotelId, images = [], onUpdateImages }) => {
     const api = useApi();
     const [deletingIndex, setDeletingIndex] = useState(null);
+    const [uploading, setUploading] = useState(false);
 
+    // The star used to move in React state only, so the public site kept
+    // showing the old featured image.
     const handleSetPrimary = useCallback(
-      (imageId) => {
-        const updatedImages = images.map((img) => ({
-          ...img,
-          isPrimary: img.id === imageId,
-        }));
-        onUpdateImages(updatedImages);
+      async (imageId) => {
+        const apply = () =>
+          onUpdateImages(
+            images.map((img) => ({ ...img, isPrimary: img.id === imageId }))
+          );
+
+        // An image picked but not uploaded yet has no record on the server.
+        if (!imageId || !hotelId) {
+          apply();
+          return;
+        }
+
+        try {
+          await api.admin.updateHotelImage(hotelId, imageId, {
+            isPrimary: true,
+          });
+          apply();
+          showSuccess("Featured image updated");
+        } catch (error) {
+          showError(
+            error?.response?.data?.message ||
+              "Could not set the featured image. Please try again."
+          );
+        }
       },
-      [images, onUpdateImages]
+      [api, hotelId, images, onUpdateImages]
     );
 
     // This used to drop the image from React state and stop there. Nothing
@@ -57,14 +78,44 @@ const HotelImagesSection = memo(
       [api, deletingIndex, hotelId, images, onUpdateImages]
     );
 
+    // The picked file used to go into React state only, so nothing was ever
+    // uploaded and the hotel page never showed it.
     const handleFileUpload = useCallback(
-      (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          onImageUpload(file);
+      async (e) => {
+        const file = e.target.files?.[0];
+        // Clearing the input lets the same file be picked again after a failure.
+        e.target.value = "";
+        if (!file) return;
+
+        if (!hotelId) {
+          showError("Save the hotel first, then add its images.");
+          return;
+        }
+
+        setUploading(true);
+        try {
+          const response = await api.admin.uploadHotelImage(hotelId, file, {
+            altText: file.name.split(".").slice(0, -1).join(".") || file.name,
+            isPrimary: images.length === 0,
+          });
+          const saved = response?.data?.data?.image;
+
+          if (!saved) {
+            throw new Error("The server did not return the saved image");
+          }
+
+          onUpdateImages([...images, saved]);
+          showSuccess("Image uploaded");
+        } catch (error) {
+          showError(
+            error?.response?.data?.message ||
+              "Could not upload the image. Please try again."
+          );
+        } finally {
+          setUploading(false);
         }
       },
-      [onImageUpload]
+      [api, hotelId, images, onUpdateImages]
     );
 
     const featuredImage = images.find((img) => img.isPrimary);
@@ -106,16 +157,19 @@ const HotelImagesSection = memo(
             <div className="flex flex-col justify-center items-center w-full min-h-40 h-full rounded dark:bg-slate-800 bg-slate-300">
               <label
                 htmlFor="addImage"
-                className="cursor-pointer flex flex-col justify-center items-center w-full h-full text-sm"
+                className={`flex flex-col justify-center items-center w-full h-full text-sm ${
+                  uploading ? "cursor-wait opacity-60" : "cursor-pointer"
+                }`}
               >
                 <Upload className="w-6" />
-                Upload Image
+                {uploading ? "Uploading..." : "Upload Image"}
               </label>
               <input
                 type="file"
                 id="addImage"
                 className="hidden"
                 accept="image/*"
+                disabled={uploading}
                 onChange={handleFileUpload}
               />
             </div>

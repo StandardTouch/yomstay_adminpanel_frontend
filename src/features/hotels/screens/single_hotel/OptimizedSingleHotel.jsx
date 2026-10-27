@@ -283,23 +283,11 @@ const OptimizedSingleHotel = ({
     setSectionHasChanges((prev) => ({ ...prev, taxes: true }));
   }, []);
 
-  // Image handlers (different endpoint, will be implemented later)
+  // Image handlers. The images section sends the upload and the featured
+  // flag to the API itself, so this only mirrors the result in state.
   const handleImagesChange = useCallback((images) => {
     setImagesFields({ images });
   }, []);
-
-  const handleImageUpload = useCallback(
-    (file) => {
-      const newImage = {
-        id: Math.random().toString(),
-        url: URL.createObjectURL(file),
-        isPrimary: imagesFields.images.length === 0,
-      };
-      const updatedImages = [...imagesFields.images, newImage];
-      handleImagesChange(updatedImages);
-    },
-    [imagesFields.images, handleImagesChange]
-  );
 
   // Room handlers (different endpoint, will be implemented later)
   const handleRoomsChange = useCallback((rooms) => {
@@ -407,7 +395,6 @@ const OptimizedSingleHotel = ({
           hotelId={hotel?.id}
           images={imagesFields.images}
           onUpdateImages={handleImagesChange}
-          onImageUpload={handleImageUpload}
         />
       ),
       rooms: (
@@ -472,7 +459,6 @@ const OptimizedSingleHotel = ({
       handleTaxesChange,
       handlePlatformChange,
       handleImagesChange,
-      handleImageUpload,
       handleRoomsChange,
       handleDocumentsChange,
       defaultAmenities,
@@ -597,7 +583,7 @@ const OptimizedSingleHotel = ({
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
             <h2 className="text-lg sm:text-xl font-semibold">Images & Media</h2>
             <div className="text-sm text-gray-500">
-              Separate endpoint required (Coming soon)
+              Images save as soon as you upload them
             </div>
           </div>
           {tabSections.images}
