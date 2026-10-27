@@ -98,7 +98,7 @@ const HotelImagesSection = memo(
             altText: file.name.split(".").slice(0, -1).join(".") || file.name,
             isPrimary: images.length === 0,
           });
-          const saved = response?.data?.data?.image;
+          const saved = response?.data?.image;
 
           if (!saved) {
             throw new Error("The server did not return the saved image");
