@@ -289,7 +289,8 @@ const OptimizedSingleHotel = ({
     setImagesFields({ images });
   }, []);
 
-  // Room handlers (different endpoint, will be implemented later)
+  // Room handlers. The rooms section saves to the API itself, so this only
+  // mirrors the result in state.
   const handleRoomsChange = useCallback((rooms) => {
     setRoomsFields({ rooms });
   }, []);
@@ -399,6 +400,7 @@ const OptimizedSingleHotel = ({
       ),
       rooms: (
         <HotelRoomsSection
+          hotelId={hotel?.id}
           rooms={roomsFields.rooms}
           onUpdateRooms={handleRoomsChange}
         />
@@ -595,7 +597,7 @@ const OptimizedSingleHotel = ({
               Rooms & Pricing
             </h2>
             <div className="text-sm text-gray-500">
-              Separate endpoint required (Coming soon)
+              Rooms save when you press Update Room
             </div>
           </div>
           {tabSections.rooms}
