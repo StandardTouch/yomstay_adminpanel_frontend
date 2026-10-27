@@ -130,6 +130,74 @@ export class AdminService {
 
     return this.apiClient.put(`/admin/hotels/${hotelId}/images/${imageId}`, updates);
   }
+  /**
+   * Create a room on a hotel.
+   *
+   * @param {string} hotelId - Hotel ID
+   * @param {Object} data - name, roomTypeId, maxOccupancy and totalRooms at least
+   * @returns {Promise} API response
+   */
+  async createHotelRoom(hotelId, data) {
+    if (!hotelId) {
+      throw new Error("Hotel ID is required");
+    }
+
+    return this.apiClient.post(`/admin/hotels/${hotelId}/rooms`, data);
+  }
+
+  /**
+   * Update one room, bed types included.
+   *
+   * The rooms tab used to change React state only, so nothing was saved and
+   * the room came back unchanged on the next page load.
+   *
+   * @param {string} hotelId - Hotel ID
+   * @param {string} roomId - Room ID
+   * @param {Object} updates - Fields to change
+   * @returns {Promise} API response
+   */
+  async updateHotelRoom(hotelId, roomId, updates) {
+    if (!hotelId) {
+      throw new Error("Hotel ID is required");
+    }
+
+    if (!roomId) {
+      throw new Error("Room ID is required");
+    }
+
+    return this.apiClient.put(`/admin/hotels/${hotelId}/rooms/${roomId}`, updates);
+  }
+
+  /**
+   * Delete one room.
+   *
+   * @param {string} hotelId - Hotel ID
+   * @param {string} roomId - Room ID
+   * @returns {Promise} API response
+   */
+  async deleteHotelRoom(hotelId, roomId) {
+    if (!hotelId) {
+      throw new Error("Hotel ID is required");
+    }
+
+    if (!roomId) {
+      throw new Error("Room ID is required");
+    }
+
+    return this.apiClient.delete(`/admin/hotels/${hotelId}/rooms/${roomId}`);
+  }
+
+  /**
+   * List the bed types a room can carry.
+   *
+   * Bed types have no admin endpoint of their own, so they come from the
+   * public filter list, which reads the same table.
+   *
+   * @returns {Promise} API response
+   */
+  async listBedTypes() {
+    return this.apiClient.get("/hotels/filters");
+  }
 
   /**
    * Get platform settings
