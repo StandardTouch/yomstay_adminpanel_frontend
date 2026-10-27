@@ -118,6 +118,9 @@ export const updateHotelAmenitiesAndFaqs = createAsyncThunk(
         faq: faq.map((f) => ({
           question: f.question,
           answer: f.answer,
+          // Dropping these two here was what wiped the Arabic text on save.
+          questionAr: f.questionAr || "",
+          answerAr: f.answerAr || "",
         })),
       };
 
