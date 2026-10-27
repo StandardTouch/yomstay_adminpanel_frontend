@@ -78,6 +78,60 @@ export class AdminService {
   }
 
   /**
+   * Upload one image for a hotel.
+   *
+   * The images tab used to keep the picked file in React state only, so
+   * nothing ever reached S3 and the hotel page never showed it.
+   *
+   * @param {string} hotelId - Hotel ID
+   * @param {File} file - Image file
+   * @param {Object} options - altText, categoryId and isPrimary
+   * @returns {Promise} API response
+   */
+  async uploadHotelImage(hotelId, file, options = {}) {
+    if (!hotelId) {
+      throw new Error("Hotel ID is required");
+    }
+
+    if (!file) {
+      throw new Error("Image file is required");
+    }
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    if (options.altText) formData.append("altText", options.altText);
+    if (options.categoryId) formData.append("categoryId", options.categoryId);
+    if (options.isPrimary) formData.append("isPrimary", "true");
+
+    return this.apiClient.post(`/admin/hotels/${hotelId}/images`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  }
+
+  /**
+   * Update one hotel image, for example to make it the primary one.
+   *
+   * @param {string} hotelId - Hotel ID
+   * @param {string} imageId - Image ID
+   * @param {Object} updates - Fields to change
+   * @returns {Promise} API response
+   */
+  async updateHotelImage(hotelId, imageId, updates) {
+    if (!hotelId) {
+      throw new Error("Hotel ID is required");
+    }
+
+    if (!imageId) {
+      throw new Error("Image ID is required");
+    }
+
+    return this.apiClient.put(`/admin/hotels/${hotelId}/images/${imageId}`, updates);
+  }
+
+  /**
    * Get platform settings
    * @returns {Promise} API response
    */
